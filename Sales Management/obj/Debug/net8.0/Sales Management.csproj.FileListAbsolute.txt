@@ -1,0 +1,33 @@
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\bin\Debug\net8.0\appsettings.Development.json
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\bin\Debug\net8.0\appsettings.json
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\bin\Debug\net8.0\Sales Management.staticwebassets.runtime.json
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\bin\Debug\net8.0\Sales Management.staticwebassets.endpoints.json
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\bin\Debug\net8.0\Sales Management.exe
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\bin\Debug\net8.0\Sales Management.deps.json
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\bin\Debug\net8.0\Sales Management.runtimeconfig.json
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\bin\Debug\net8.0\Sales Management.dll
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\bin\Debug\net8.0\Sales Management.pdb
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\rpswa.dswa.cache.json
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\Sales Management.GeneratedMSBuildEditorConfig.editorconfig
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\Sales Management.AssemblyInfoInputs.cache
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\Sales Management.AssemblyInfo.cs
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\Sales Management.csproj.CoreCompileInputs.cache
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\Sales Management.MvcApplicationPartsAssemblyInfo.cache
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\Sales Management.RazorAssemblyInfo.cache
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\Sales Management.RazorAssemblyInfo.cs
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\Sales Management.sourcelink.json
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\rjimswa.dswa.cache.json
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\scopedcss\Views\Shared\_Layout.cshtml.rz.scp.css
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\scopedcss\bundle\Sales Management.styles.css
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\scopedcss\projectbundle\Sales Management.bundle.scp.css
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\staticwebassets.build.json
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\staticwebassets.build.json.cache
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\staticwebassets.development.json
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\staticwebassets.build.endpoints.json
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\Sales Management.dll
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\refint\Sales Management.dll
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\Sales Management.pdb
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\Sales Management.genruntimeconfig.cache
+F:\PRN222-REVIEW\Sales Management\sales-management-system\Sales Management\obj\Debug\net8.0\ref\Sales Management.dll
