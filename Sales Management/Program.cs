@@ -1,7 +1,13 @@
+using Microsoft.EntityFrameworkCore;
+using Sales_Management.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddDbContext<SalesManagementContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DBDefault")));
 
 var app = builder.Build();
 
