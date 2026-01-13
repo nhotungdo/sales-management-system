@@ -1,0 +1,22 @@
+﻿@model Sales_Management.Models.Product
+
+<h2>Create Product</h2>
+
+<form asp-action="Create" method="post">
+    <div>
+        <label>Code</label>
+        <input asp-for="Code" class="form-control" />
+    </div>
+
+    <div>
+        <label>Name</label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+
+    <div>
+        <label>Selling Price</label>
+        <input asp-for="SellingPrice" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-success mt-2">Save</button>
+</form>
