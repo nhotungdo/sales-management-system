@@ -3,6 +3,18 @@
   "WorkspaceRootPath": "F:\\PRN222-REVIEW\\Sales Management\\sales-management-system\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{ABCE74F6-C043-4FA8-95D1-712DAB99E857}|Sales Management\\Sales Management.csproj|f:\\prn222-review\\sales management\\sales-management-system\\sales management\\views\\products\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{ABCE74F6-C043-4FA8-95D1-712DAB99E857}|Sales Management\\Sales Management.csproj|solutionrelative:sales management\\views\\products\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{ABCE74F6-C043-4FA8-95D1-712DAB99E857}|Sales Management\\Sales Management.csproj|f:\\prn222-review\\sales management\\sales-management-system\\sales management\\views\\orders\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{ABCE74F6-C043-4FA8-95D1-712DAB99E857}|Sales Management\\Sales Management.csproj|solutionrelative:sales management\\views\\orders\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{ABCE74F6-C043-4FA8-95D1-712DAB99E857}|Sales Management\\Sales Management.csproj|f:\\prn222-review\\sales management\\sales-management-system\\sales management\\controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{ABCE74F6-C043-4FA8-95D1-712DAB99E857}|Sales Management\\Sales Management.csproj|solutionrelative:sales management\\controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{ABCE74F6-C043-4FA8-95D1-712DAB99E857}|Sales Management\\Sales Management.csproj|f:\\prn222-review\\sales management\\sales-management-system\\sales management\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{ABCE74F6-C043-4FA8-95D1-712DAB99E857}|Sales Management\\Sales Management.csproj|solutionrelative:sales management\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
@@ -27,6 +39,43 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "Details.cshtml",
+              "DocumentMoniker": "F:\\PRN222-REVIEW\\Sales Management\\sales-management-system\\Sales Management\\Views\\Products\\Details.cshtml",
+              "RelativeDocumentMoniker": "Sales Management\\Views\\Products\\Details.cshtml",
+              "ToolTip": "F:\\PRN222-REVIEW\\Sales Management\\sales-management-system\\Sales Management\\Views\\Products\\Details.cshtml",
+              "RelativeToolTip": "Sales Management\\Views\\Products\\Details.cshtml",
+              "ViewState": "AgIAADUAAAAAAAAAAADwv0QAAAB8AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-01-14T13:39:34.358Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Details.cshtml",
+              "DocumentMoniker": "F:\\PRN222-REVIEW\\Sales Management\\sales-management-system\\Sales Management\\Views\\Orders\\Details.cshtml",
+              "RelativeDocumentMoniker": "Sales Management\\Views\\Orders\\Details.cshtml",
+              "ToolTip": "F:\\PRN222-REVIEW\\Sales Management\\sales-management-system\\Sales Management\\Views\\Orders\\Details.cshtml",
+              "RelativeToolTip": "Sales Management\\Views\\Orders\\Details.cshtml",
+              "ViewState": "AgIAADUAAAAAAAAAAAAAAEEAAAB+AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-01-14T13:13:54.598Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "AdminController.cs",
+              "DocumentMoniker": "F:\\PRN222-REVIEW\\Sales Management\\sales-management-system\\Sales Management\\Controllers\\AdminController.cs",
+              "RelativeDocumentMoniker": "Sales Management\\Controllers\\AdminController.cs",
+              "ToolTip": "F:\\PRN222-REVIEW\\Sales Management\\sales-management-system\\Sales Management\\Controllers\\AdminController.cs",
+              "RelativeToolTip": "Sales Management\\Controllers\\AdminController.cs",
+              "ViewState": "AgIAAHsAAAAAAAAAAAAEwJMAAAASAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-14T12:58:36.53Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "launchSettings.json",
               "DocumentMoniker": "F:\\PRN222-REVIEW\\Sales Management\\sales-management-system\\Sales Management\\Properties\\launchSettings.json",
               "RelativeDocumentMoniker": "Sales Management\\Properties\\launchSettings.json",
@@ -34,12 +83,11 @@
               "RelativeToolTip": "Sales Management\\Properties\\launchSettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-01-12T13:54:56.685Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-12T13:54:56.685Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 4,
               "Title": "appsettings.json",
               "DocumentMoniker": "F:\\PRN222-REVIEW\\Sales Management\\sales-management-system\\Sales Management\\appsettings.json",
               "RelativeDocumentMoniker": "Sales Management\\appsettings.json",
@@ -47,12 +95,11 @@
               "RelativeToolTip": "Sales Management\\appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-01-12T13:43:43.865Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-12T13:43:43.865Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 5,
               "Title": "HomeController.cs",
               "DocumentMoniker": "F:\\PRN222-REVIEW\\Sales Management\\sales-management-system\\Sales Management\\Controllers\\HomeController.cs",
               "RelativeDocumentMoniker": "Sales Management\\Controllers\\HomeController.cs",
@@ -60,8 +107,7 @@
               "RelativeToolTip": "Sales Management\\Controllers\\HomeController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-08T16:53:53.147Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-08T16:53:53.147Z"
             }
           ]
         }

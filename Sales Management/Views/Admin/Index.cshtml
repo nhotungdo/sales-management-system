@@ -1,0 +1,171 @@
+@{
+    ViewData["Title"] = "Bảng quản trị";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Bảng điều khiển</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary">Chia sẻ</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary">Xuất</button>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
+                Tuần này
+            </button>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row">
+        <!-- Revenue Card -->
+        <div class="col-md-3 mb-4">
+            <div class="card text-white bg-primary shadow h-100 py-2" style="background: linear-gradient(45deg, #4e73df, #224abe);">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">
+                                Doanh thu (Hôm nay)</div>
+                            <div class="h5 mb-0 font-weight-bold">$@ViewBag.RevenueToday?.ToString("N2")</div>
+                            <small class="@((ViewBag.RevenueGrowth >= 0) ? "text-white" : "text-warning")">
+                                @(ViewBag.RevenueGrowth >= 0 ? "+" : "")@ViewBag.RevenueGrowth.ToString("N1")% so với hôm qua
+                            </small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Card -->
+        <div class="col-md-3 mb-4">
+            <div class="card text-white bg-success shadow h-100 py-2" style="background: linear-gradient(45deg, #1cc88a, #13855c);">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">
+                                Đơn hàng mới</div>
+                            <div class="h5 mb-0 font-weight-bold">@ViewBag.TotalOrdersToday</div>
+                            <small>@ViewBag.OrdersProcessing Đang xử lý</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employees Card -->
+        <div class="col-md-3 mb-4">
+            <div class="card text-white bg-info shadow h-100 py-2" style="background: linear-gradient(45deg, #36b9cc, #258391);">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">
+                                Nhân viên Online</div>
+                            <div class="h5 mb-0 font-weight-bold">@ViewBag.OnlineEmployees</div>
+                            <small class="text-danger">@ViewBag.MissedCheckins Vắng mặt</small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts Card -->
+        <div class="col-md-3 mb-4">
+            <div class="card text-white bg-warning shadow h-100 py-2" style="background: linear-gradient(45deg, #f6c23e, #dda20a);">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">
+                                Yêu cầu chờ xử lý</div>
+                            <div class="h5 mb-0 font-weight-bold">18</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-comments fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <!-- Area Chart -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Tổng quan doanh thu</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="myAreaChart" height="100"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pie Chart -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Cảnh báo tồn kho thấp</h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        @foreach (var product in ViewBag.LowStockProducts as IEnumerable<Sales_Management.Models.Product>)
+                        {
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                @product.Name
+                                <span class="badge bg-danger rounded-pill">@product.StockQuantity</span>
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Mock Data for Charts
+    var ctx = document.getElementById('myAreaChart').getContext('2d');
+    var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
+            datasets: [{
+                label: 'Thu nhập',
+                data: [12000, 19000, 3000, 5000, 2000, 3000, 25000],
+                backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                borderColor: 'rgba(78, 115, 223, 1)',
+                borderWidth: 2,
+                pointRadius: 3,
+                pointBackgroundColor: 'rgba(78, 115, 223, 1)',
+                pointBorderColor: 'rgba(78, 115, 223, 1)',
+                pointHoverRadius: 3,
+                pointHoverBackgroundColor: 'rgba(78, 115, 223, 1)',
+                pointHoverBorderColor: 'rgba(78, 115, 223, 1)',
+                pointHitRadius: 10,
+                pointBorderWidth: 2,
+                tension: 0.4 
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>

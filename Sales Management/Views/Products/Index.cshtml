@@ -1,0 +1,85 @@
+@model IEnumerable<Sales_Management.Models.Product>
+
+@{
+    ViewData["Title"] = "Quản lý sản phẩm";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Sản phẩm</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a asp-action="Create" class="btn btn-sm btn-primary">
+            <i class="fas fa-plus"></i> Sản phẩm mới
+        </a>
+    </div>
+</div>
+
+<form asp-action="Index" method="get" class="mb-4">
+    <div class="input-group">
+        <input type="text" name="searchString" class="form-control" placeholder="Tìm kiếm theo tên hoặc mã sản phẩm" value="@ViewData["CurrentFilter"]">
+        <button class="btn btn-outline-secondary" type="submit">Tìm kiếm</button>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-striped table-sm align-middle">
+        <thead>
+            <tr>
+                <th>Hình ảnh</th>
+                <th>
+                    <a asp-action="Index" asp-route-sortOrder="@ViewData["NameSortParm"]" class="text-decoration-none text-dark">
+                        Tên sản phẩm <i class="fas fa-sort"></i>
+                    </a>
+                </th>
+                <th>Mã</th>
+                <th>Danh mục</th>
+                <th>
+                    <a asp-action="Index" asp-route-sortOrder="@ViewData["PriceSortParm"]" class="text-decoration-none text-dark">
+                        Giá bán <i class="fas fa-sort"></i>
+                    </a>
+                </th>
+                <th>Tồn kho</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model) {
+                var primaryImg = item.ProductImages.FirstOrDefault(p => p.IsPrimary == true)?.ImageUrl ?? "/images/no-image.png";
+                <tr>
+                    <td>
+                        <img src="@primaryImg" alt="@item.Name" style="width: 50px; height: 50px; object-fit: cover;" class="rounded border" />
+                    </td>
+                    <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Code)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Category.Name)</td>
+                    <td>@item.SellingPrice.ToString("C")</td>
+                    <td>
+                        @if(item.StockQuantity < 10)
+                        {
+                            <span class="text-danger fw-bold">@item.StockQuantity</span>
+                        }
+                        else 
+                        {
+                            @item.StockQuantity
+                        }
+                    </td>
+                    <td>
+                        @if (item.Status == "Active")
+                        {
+                            <span class="badge bg-success">Hoạt động</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">@item.Status</span>
+                        }
+                    </td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-secondary">Sửa</a>
+                        <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-info">Chi tiết</a>
+                        <a asp-action="Delete" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-danger">Xóa</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

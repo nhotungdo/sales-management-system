@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Sales Admin</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        body {
+            overflow-x: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        #wrapper {
+            display: flex;
+            width: 100%;
+            align-items: stretch;
+        }
+
+        #sidebar-wrapper {
+            min-height: 100vh;
+            min-width: 260px;
+            max-width: 260px;
+            background: #2c3e50;
+            color: #ecf0f1;
+            transition: all 0.3s;
+        }
+
+        #sidebar-wrapper .sidebar-heading {
+            padding: 1.5rem;
+            font-size: 1.5rem;
+            text-align: center;
+            background: #1a252f;
+            color: #fff;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        #sidebar-wrapper .list-group-item {
+            background-color: transparent;
+            color: #bdc3c7;
+            border: none;
+            padding: 15px 20px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        #sidebar-wrapper .list-group-item:hover {
+            color: #fff;
+            background-color: #34495e;
+            padding-left: 25px;
+        }
+
+        #sidebar-wrapper .list-group-item.active {
+            color: #fff;
+            background-color: #3498db;
+        }
+
+        #sidebar-wrapper .sidebar-subheading {
+            padding: 10px 20px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: #7f8c8d;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        #page-content-wrapper {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar {
+            padding: 15px 20px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .container-fluid.main-content {
+            padding: 30px;
+            flex: 1;
+        }
+
+        /* Mobile specific */
+        @@media (max-width: 768px) {
+            #sidebar-wrapper {
+                margin-left: -260px;
+            }
+            #wrapper.toggled #sidebar-wrapper {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <div id="sidebar-wrapper">
+            <div class="sidebar-heading">
+                <i class="fas fa-chart-line me-2"></i>SalesAdmin
+            </div>
+            <div class="list-group list-group-flush">
+                <a class="list-group-item" asp-controller="Admin" asp-action="Index">
+                    <i class="fas fa-tachometer-alt me-2"></i> Bảng điều khiển
+                </a>
+
+                <div class="sidebar-subheading">Nhân sự</div>
+                <a class="list-group-item" asp-controller="Employees" asp-action="Index">
+                    <i class="fas fa-users me-2"></i> Nhân viên
+                </a>
+                <a class="list-group-item" asp-controller="Employees" asp-action="Create">
+                    <i class="fas fa-user-plus me-2"></i> Thêm nhân viên
+                </a>
+
+                <div class="sidebar-subheading">Kho hàng</div>
+                <a class="list-group-item" asp-controller="Products" asp-action="Index">
+                    <i class="fas fa-box me-2"></i> Sản phẩm
+                </a>
+                <a class="list-group-item" asp-controller="Products" asp-action="Create">
+                    <i class="fas fa-plus-circle me-2"></i> Thêm sản phẩm
+                </a>
+                <a class="list-group-item" asp-controller="Categories" asp-action="Index">
+                    <i class="fas fa-tags me-2"></i> Danh mục
+                </a>
+
+                <div class="sidebar-subheading">Phân tích</div>
+                <a class="list-group-item" asp-controller="Admin" asp-action="RevenueReport">
+                    <i class="fas fa-chart-pie me-2"></i> Báo cáo
+                </a>
+
+                <div class="sidebar-subheading">Hệ thống</div>
+                <a class="list-group-item" asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-home me-2"></i> Trang chủ
+                </a>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+                <div class="container-fluid">
+                    <button class="btn btn-outline-secondary" id="menu-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
+                             @if (User.Identity != null && User.Identity.IsAuthenticated)
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <i class="fas fa-user-circle me-1"></i> @User.Identity.Name
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                        <a class="dropdown-item" href="#">Hồ sơ</a>
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item" asp-controller="Account" asp-action="Logout">Đăng xuất</a>
+                                    </div>
+                                </li>
+                            }
+                            else
+                            {
+                                  <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Account" asp-action="Login">Đăng nhập</a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container-fluid main-content">
+                @if (TempData["Message"] != null)
+                {
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        @TempData["Message"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $("#menu-toggle").click(function (e) {
+            e.preventDefault();
+            $("#wrapper").toggleClass("toggled");
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

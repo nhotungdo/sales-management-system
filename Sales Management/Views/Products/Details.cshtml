@@ -1,0 +1,77 @@
+@model Sales_Management.Models.Product
+
+@{
+    ViewData["Title"] = "Chi tiết sản phẩm";
+}
+
+<h1>Chi tiết sản phẩm</h1>
+
+<div>
+    <h4>@Model.Name</h4>
+    <hr />
+    <div class="row">
+        <div class="col-md-4">
+             @if (Model.ProductImages != null && Model.ProductImages.Any())
+            {
+                <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
+                  <div class="carousel-inner">
+                    @{ int i = 0; }
+                    @foreach(var img in Model.ProductImages)
+                    {
+                        <div class="carousel-item @(i==0 ? "active" : "")">
+                          <img src="@img.ImageUrl" class="d-block w-100 rounded" alt="Product Image">
+                        </div>
+                        i++;
+                    }
+                  </div>
+                  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                  </button>
+                  <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                  </button>
+                </div>
+            }
+            else
+            {
+                <img src="/images/no-image.png" class="img-fluid rounded" alt="No Image" />
+            }
+        </div>
+        <div class="col-md-8">
+            <dl class="row">
+                <dt class = "col-sm-3">Mã sản phẩm</dt>
+                <dd class = "col-sm-9">@Html.DisplayFor(model => model.Code)</dd>
+                
+                <dt class = "col-sm-3">Danh mục</dt>
+                <dd class = "col-sm-9">@Html.DisplayFor(model => model.Category.Name)</dd>
+
+                <dt class = "col-sm-3">Giá nhập</dt>
+                <dd class = "col-sm-9">@(Model.ImportPrice.HasValue ? Model.ImportPrice.Value.ToString("C") : "")</dd>
+
+                <dt class = "col-sm-3">Giá bán</dt>
+                <dd class = "col-sm-9">@Model.SellingPrice.ToString("C")</dd>
+                
+                <dt class = "col-sm-3">Thuế VAT</dt>
+                <dd class = "col-sm-9">@Model.Vatrate%</dd>
+                
+                <dt class = "col-sm-3">Tồn kho</dt>
+                <dd class = "col-sm-9">@Model.StockQuantity</dd>
+                
+                <dt class = "col-sm-3">Trạng thái</dt>
+                <dd class = "col-sm-9"><span class="badge @(Model.Status == "Active" ? "bg-success" : "bg-secondary")">@Model.Status</span></dd>
+                
+                <dt class = "col-sm-3">Mô tả</dt>
+                <dd class = "col-sm-9">@Html.DisplayFor(model => model.Description)</dd>
+                
+                <dt class = "col-sm-3">Ngày tạo</dt>
+                <dd class = "col-sm-9">@(Model.CreatedDate.HasValue ? Model.CreatedDate.Value.ToString("dd/MM/yyyy HH:mm") : "")</dd>
+            </dl>
+             <div class="mt-3">
+                <a asp-action="Edit" asp-route-id="@Model.ProductId" class="btn btn-warning">Sửa</a> |
+                <a asp-action="Index" class="btn btn-secondary">Quay lại danh sách</a>
+            </div>
+        </div>
+    </div>
+</div>

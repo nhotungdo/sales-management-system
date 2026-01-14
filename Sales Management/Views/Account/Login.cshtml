@@ -1,0 +1,50 @@
+@model Sales_Management.Models.LoginViewModel
+
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-lg border-0 rounded-lg mt-5">
+                <div class="card-header bg-primary text-white text-center rounded-top">
+                    <h3 class="font-weight-light my-2">Đăng nhập</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Login" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        
+                        <div class="form-floating mb-3">
+                            <input asp-for="Username" class="form-control" id="inputUsername" placeholder="Username" />
+                            <label for="inputUsername">Tên đăng nhập</label>
+                            <span asp-validation-for="Username" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="form-floating mb-3">
+                            <input asp-for="Password" class="form-control" id="inputPassword" placeholder="Password" />
+                            <label for="inputPassword">Mật khẩu</label>
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" asp-for="RememberMe" id="inputRememberPassword" />
+                            <label class="form-check-label" for="inputRememberPassword">Ghi nhớ đăng nhập</label>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-4 mb-0">
+                            <button type="submit" class="btn btn-primary btn-lg">Đăng nhập</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center py-3">
+                    <div class="small"><a href="#">Chưa có tài khoản? Đăng ký ngay!</a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

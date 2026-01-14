@@ -1,0 +1,177 @@
+@model Sales_Management.Models.ViewModels.RevenueReportViewModel
+
+@{
+    ViewData["Title"] = "Báo cáo phân tích doanh thu";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Phân tích doanh thu</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()">Xuất PDF</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary">Xuất Excel</button>
+            </div>
+            <form asp-action="RevenueReport" method="get" class="d-flex gx-2">
+                <select name="period" class="form-select form-select-sm me-2">
+                    <option value="Month" selected="@(Model.PeriodType == "Month")">Tháng này</option>
+                    <option value="Year" selected="@(Model.PeriodType == "Year")">Năm nay</option>
+                </select>
+                <input type="date" name="startDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" class="form-control form-control-sm me-2" />
+                <input type="date" name="endDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" class="form-control form-control-sm me-2" />
+                <button type="submit" class="btn btn-sm btn-primary">Cập nhật</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row mb-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Tổng doanh thu</h5>
+                    <p class="card-text fs-3 fw-bold">@Model.TotalRevenue.ToString("C")</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Tổng đơn hàng</h5>
+                    <p class="card-text fs-3 fw-bold">@Model.TotalOrders</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Chart -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header font-weight-bold">Xu hướng doanh thu (@Model.PeriodType)</div>
+                <div class="card-body">
+                    <canvas id="revenueTrendChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <!-- Category Revenue -->
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">Doanh thu theo danh mục</div>
+                <div class="card-body">
+                     <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <!-- Employee Revenue -->
+        <div class="col-md-6">
+             <div class="card shadow-sm h-100">
+                <div class="card-header">Doanh thu theo nhân viên</div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Nhân viên</th>
+                                    <th class="text-end">Doanh thu</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach(var item in Model.RevenueByEmployee) {
+                                    <tr>
+                                        <td>@item.Label</td>
+                                        <td class="text-end">@item.Value.ToString("C")</td>
+                                        <td style="width: 40%">
+                                            <div class="progress" style="height: 5px;">
+                                              <div class="progress-bar" role="progressbar" style="width: @(Model.TotalRevenue > 0 ? (item.Value/Model.TotalRevenue)*100 : 0)%" aria-valuenow="@item.Value" aria-valuemin="0" aria-valuemax="@Model.TotalRevenue"></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Products -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">Top sản phẩm bán chạy</div>
+                <div class="card-body">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Danh mục</th>
+                                <th class="text-center">Số lượng bán</th>
+                                <th class="text-end">Doanh thu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ int i = 1; }
+                            @foreach(var prod in Model.TopProducts) {
+                                <tr>
+                                    <td>@(i++)</td>
+                                    <td>@prod.ProductName</td>
+                                    <td>@prod.Category</td>
+                                    <td class="text-center">@prod.QuantitySold</td>
+                                    <td class="text-end">@prod.RevenueGenerated.ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Revenue Trend Chart
+        const ctxTrend = document.getElementById('revenueTrendChart').getContext('2d');
+        const trendData = {
+            labels: @Html.Raw(Json.Serialize(Model.RevenueOverTime.Select(x => x.Label))),
+            datasets: [{
+                label: 'Doanh thu',
+                data: @Html.Raw(Json.Serialize(Model.RevenueOverTime.Select(x => x.Value))),
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 2,
+                tension: 0.3,
+                fill: true
+            }]
+        };
+        new Chart(ctxTrend, {
+            type: 'line',
+            data: trendData,
+            options: { scales: { y: { beginAtZero: true } } }
+        });
+
+        // Category Chart
+        const ctxCat = document.getElementById('categoryChart').getContext('2d');
+        const catData = {
+            labels: @Html.Raw(Json.Serialize(Model.RevenueByCategory.Select(x => x.Label))),
+            datasets: [{
+                data: @Html.Raw(Json.Serialize(Model.RevenueByCategory.Select(x => x.Value))),
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+                ]
+            }]
+        };
+        new Chart(ctxCat, {
+            type: 'doughnut',
+            data: catData
+        });
+    </script>
+}
