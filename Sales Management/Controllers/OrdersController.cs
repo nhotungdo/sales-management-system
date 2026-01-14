@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sales_Management.Models;
+using Sales_Management.Data;
 using Microsoft.AspNetCore.Authorization; // Assuming Admin access
 using System.Data;
 

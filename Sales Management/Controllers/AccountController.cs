@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sales_Management.Models;
+using Sales_Management.Data;
 using System.Security.Claims;
 
 namespace Sales_Management.Controllers
@@ -21,6 +22,10 @@ namespace Sales_Management.Controllers
         {
             if (User.Identity!.IsAuthenticated)
             {
+                if (User.IsInRole("Admin"))
+                {
+                    return RedirectToAction("Index", "Home");
+                }
                 return RedirectToAction("Index", "Home");
             }
             return View();
@@ -63,7 +68,7 @@ namespace Sales_Management.Controllers
 
                     if (user.Role == "Admin")
                     {
-                        return RedirectToAction("Index", "Admin");
+                        return RedirectToAction("Index", "Home");
                     }
 
                     return RedirectToAction("Index", "Home");

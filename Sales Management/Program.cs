@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Sales_Management.Models;
+using Sales_Management.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +37,11 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}"
+);
 
 app.MapControllerRoute(
     name: "default",

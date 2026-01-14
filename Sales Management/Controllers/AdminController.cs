@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sales_Management.Models;
+using Sales_Management.Data;
 using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Linq;
@@ -18,53 +19,9 @@ namespace Sales_Management.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            // Quick Metrics
-            var today = DateOnly.FromDateTime(DateTime.Today);
-            var yesterday = today.AddDays(-1);
-
-            // Revenue Today (assuming OrderDate is DateTime)
-            var revenueToday = await _context.Orders
-                .Where(o => o.OrderDate.HasValue && o.OrderDate.Value.Date == DateTime.Today && o.Status != "Cancelled")
-                .SumAsync(o => o.TotalAmount);
-
-            var revenueYesterday = await _context.Orders
-                .Where(o => o.OrderDate.HasValue && o.OrderDate.Value.Date == DateTime.Today.AddDays(-1) && o.Status != "Cancelled")
-                .SumAsync(o => o.TotalAmount);
-
-            // Total Orders
-            var totalOrdersToday = await _context.Orders
-                .CountAsync(o => o.OrderDate.HasValue && o.OrderDate.Value.Date == DateTime.Today);
-            
-            var ordersProcessing = await _context.Orders
-                .CountAsync(o => o.Status == "Processing");
-
-            // Low Stock Alerts (Threshold < 10)
-            var lowStockProducts = await _context.Products
-                .Where(p => p.StockQuantity < 10 && p.Status == "Active")
-                .OrderBy(p => p.StockQuantity)
-                .Take(5)
-                .ToListAsync();
-
-            // Employee Stats
-            // Assuming "Online" means checked in today and not checked out
-            var onlineEmployees = await _context.TimeAttendances
-                .CountAsync(t => t.Date == today && t.CheckInTime != null && t.CheckOutTime == null);
-
-            var missedCheckins = await _context.Employees
-                .Where(e => !e.TimeAttendances.Any(t => t.Date == today))
-                .CountAsync();
-
-            ViewBag.RevenueToday = revenueToday;
-            ViewBag.RevenueGrowth = revenueYesterday > 0 ? ((revenueToday - revenueYesterday) / revenueYesterday) * 100 : 0;
-            ViewBag.TotalOrdersToday = totalOrdersToday;
-            ViewBag.OrdersProcessing = ordersProcessing;
-            ViewBag.OnlineEmployees = onlineEmployees;
-            ViewBag.MissedCheckins = missedCheckins;
-            ViewBag.LowStockProducts = lowStockProducts;
-
-            return View();
+             return RedirectToAction("Index", "Home");
         }
 
         public async Task<IActionResult> RevenueReport(string period = "Month", DateTime? startDate = null, DateTime? endDate = null)
@@ -125,7 +82,7 @@ namespace Sales_Management.Controllers
 
             // Revenue by Employee (User)
             viewModel.RevenueByEmployee = ordersList
-                .GroupBy(o => o.CreatedByNavigation != null ? o.CreatedByNavigation.FullName : "Không xác định")
+                .GroupBy(o => o.CreatedByNavigation?.FullName ?? "Không xác định")
                 .Select(g => new Sales_Management.Models.ViewModels.ChartData
                 {
                     Label = g.Key,

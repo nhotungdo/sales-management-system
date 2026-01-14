@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Sales_Management.styles.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     <header>
@@ -32,7 +33,7 @@
                                     Quản lý
                                 </a>
                                 <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                    <li><a class="dropdown-item" asp-controller="Admin" asp-action="Index">Bảng điều khiển</a></li>
+
                                     <li><a class="dropdown-item" asp-controller="Orders" asp-action="Index">Quản lý đơn hàng</a></li>
                                     <li><a class="dropdown-item" asp-controller="Products" asp-action="Index">Sản phẩm</a></li>
                                     @if (User.IsInRole("Admin"))

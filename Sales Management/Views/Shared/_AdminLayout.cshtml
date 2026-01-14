@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,143 +7,423 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    @await RenderSectionAsync("Styles", required: false)
     <style>
+        :root {
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 70px;
+            --primary-color: #2563eb;
+            --primary-dark: #1e40af;
+            --sidebar-bg: #1e293b;
+            --sidebar-hover: #334155;
+            --sidebar-active: #2563eb;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             overflow-x: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
         }
 
         #wrapper {
             display: flex;
             width: 100%;
-            align-items: stretch;
-        }
-
-        #sidebar-wrapper {
             min-height: 100vh;
-            min-width: 260px;
-            max-width: 260px;
-            background: #2c3e50;
-            color: #ecf0f1;
-            transition: all 0.3s;
         }
 
-        #sidebar-wrapper .sidebar-heading {
-            padding: 1.5rem;
+        /* ===== SIDEBAR ===== */
+        #sidebar-wrapper {
+            width: var(--sidebar-width);
+            min-height: 100vh;
+            background: linear-gradient(180deg, var(--sidebar-bg) 0%, #0f172a 100%);
+            color: #e2e8f0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        #sidebar-wrapper::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #sidebar-wrapper::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        #sidebar-wrapper::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        #wrapper.toggled #sidebar-wrapper {
+            width: var(--sidebar-collapsed-width);
+        }
+
+        .sidebar-heading {
+            padding: 1.75rem 1.5rem;
             font-size: 1.5rem;
             text-align: center;
-            background: #1a252f;
+            background: rgba(37, 99, 235, 0.1);
             color: #fff;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
-
-        #sidebar-wrapper .list-group-item {
-            background-color: transparent;
-            color: #bdc3c7;
-            border: none;
-            padding: 15px 20px;
-            font-weight: 500;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
             transition: all 0.3s;
         }
 
-        #sidebar-wrapper .list-group-item:hover {
-            color: #fff;
-            background-color: #34495e;
-            padding-left: 25px;
+        #wrapper.toggled .sidebar-heading {
+            padding: 1.75rem 0.5rem;
+            font-size: 1.25rem;
         }
 
-        #sidebar-wrapper .list-group-item.active {
-            color: #fff;
-            background-color: #3498db;
+        #wrapper.toggled .sidebar-heading .heading-text {
+            display: none;
         }
 
-        #sidebar-wrapper .sidebar-subheading {
-            padding: 10px 20px;
-            font-size: 0.85rem;
+        .sidebar-heading i {
+            font-size: 1.75rem;
+            color: var(--primary-color);
+        }
+
+        .list-group-item {
+            background-color: transparent;
+            color: #cbd5e1;
+            border: none;
+            padding: 0.875rem 1.5rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            position: relative;
+            white-space: nowrap;
+        }
+
+        .list-group-item i {
+            font-size: 1.125rem;
+            width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .list-group-item:hover {
+            color: #fff;
+            background-color: var(--sidebar-hover);
+            padding-left: 1.75rem;
+        }
+
+        .list-group-item.active {
+            color: #fff;
+            background-color: var(--sidebar-active);
+            border-left: 4px solid #60a5fa;
+        }
+
+        .list-group-item.active::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 60%;
+            background: #60a5fa;
+            border-radius: 4px 0 0 4px;
+        }
+
+        #wrapper.toggled .list-group-item {
+            padding: 0.875rem 0.5rem;
+            justify-content: center;
+        }
+
+        #wrapper.toggled .list-group-item span {
+            display: none;
+        }
+
+        #wrapper.toggled .list-group-item:hover {
+            padding-left: 0.5rem;
+        }
+
+        .sidebar-subheading {
+            padding: 1.25rem 1.5rem 0.5rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
-            color: #7f8c8d;
-            font-weight: bold;
-            margin-top: 10px;
+            color: #64748b;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-top: 0.5rem;
         }
 
+        #wrapper.toggled .sidebar-subheading {
+            text-align: center;
+            padding: 1.25rem 0.5rem 0.5rem;
+        }
+
+        #wrapper.toggled .sidebar-subheading span {
+            display: none;
+        }
+
+        #wrapper.toggled .sidebar-subheading::after {
+            content: '•••';
+            display: block;
+            font-size: 1rem;
+        }
+
+        /* ===== PAGE CONTENT ===== */
         #page-content-wrapper {
             width: 100%;
+            margin-left: var(--sidebar-width);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
+            min-height: 100vh;
         }
 
+        #wrapper.toggled #page-content-wrapper {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+
+        /* ===== NAVBAR ===== */
         .navbar {
-            padding: 15px 20px;
-            background: #fff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            padding: 1rem 1.5rem;
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 999;
         }
 
+        #menu-toggle {
+            border: none;
+            background: #f1f5f9;
+            color: #475569;
+            padding: 0.625rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 1.125rem;
+        }
+
+        #menu-toggle:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .navbar .nav-link {
+            color: #475569;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .navbar .nav-link:hover {
+            background: #f1f5f9;
+            color: var(--primary-color);
+        }
+
+        .navbar .dropdown-menu {
+            border: none;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .navbar .dropdown-item {
+            padding: 0.625rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .navbar .dropdown-item:hover {
+            background: #f1f5f9;
+            color: var(--primary-color);
+        }
+
+        /* ===== MAIN CONTENT ===== */
         .container-fluid.main-content {
-            padding: 30px;
+            padding: 2rem;
             flex: 1;
+            background: #f8fafc;
         }
 
-        /* Mobile specific */
-        @@media (max-width: 768px) {
-            #sidebar-wrapper {
-                margin-left: -260px;
+        /* ===== ALERTS ===== */
+        .alert {
+            border: none;
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            animation: slideDown 0.3s ease;
+        }
+
+        @@keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
             }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @@media (max-width: 992px) {
+            #sidebar-wrapper {
+                margin-left: calc(-1 * var(--sidebar-width));
+            }
+
             #wrapper.toggled #sidebar-wrapper {
                 margin-left: 0;
+                width: var(--sidebar-width);
             }
+
+            #page-content-wrapper {
+                margin-left: 0;
+            }
+
+            #wrapper.toggled #page-content-wrapper {
+                margin-left: 0;
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .container-fluid.main-content {
+                padding: 1rem;
+            }
+
+            .navbar {
+                padding: 0.75rem 1rem;
+            }
+        }
+
+        /* ===== LOADING OVERLAY ===== */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e2e8f0;
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @@keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
     <div id="wrapper">
         <!-- Sidebar -->
         <div id="sidebar-wrapper">
             <div class="sidebar-heading">
-                <i class="fas fa-chart-line me-2"></i>SalesAdmin
+                <i class="fas fa-chart-line"></i>
+                <span class="heading-text">SalesAdmin</span>
             </div>
             <div class="list-group list-group-flush">
-                <a class="list-group-item" asp-controller="Admin" asp-action="Index">
-                    <i class="fas fa-tachometer-alt me-2"></i> Bảng điều khiển
-                </a>
-
-                <div class="sidebar-subheading">Nhân sự</div>
+                <div class="sidebar-subheading">
+                    <span>Nhân sự</span>
+                </div>
                 <a class="list-group-item" asp-controller="Employees" asp-action="Index">
-                    <i class="fas fa-users me-2"></i> Nhân viên
+                    <i class="fas fa-users"></i>
+                    <span>Nhân viên</span>
                 </a>
                 <a class="list-group-item" asp-controller="Employees" asp-action="Create">
-                    <i class="fas fa-user-plus me-2"></i> Thêm nhân viên
+                    <i class="fas fa-user-plus"></i>
+                    <span>Thêm nhân viên</span>
                 </a>
 
-                <div class="sidebar-subheading">Kho hàng</div>
+                <div class="sidebar-subheading">
+                    <span>Kho hàng</span>
+                </div>
                 <a class="list-group-item" asp-controller="Products" asp-action="Index">
-                    <i class="fas fa-box me-2"></i> Sản phẩm
+                    <i class="fas fa-box"></i>
+                    <span>Sản phẩm</span>
                 </a>
                 <a class="list-group-item" asp-controller="Products" asp-action="Create">
-                    <i class="fas fa-plus-circle me-2"></i> Thêm sản phẩm
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Thêm sản phẩm</span>
                 </a>
                 <a class="list-group-item" asp-controller="Categories" asp-action="Index">
-                    <i class="fas fa-tags me-2"></i> Danh mục
+                    <i class="fas fa-tags"></i>
+                    <span>Danh mục</span>
                 </a>
 
-                <div class="sidebar-subheading">Phân tích</div>
+                <div class="sidebar-subheading">
+                    <span>Bán hàng</span>
+                </div>
+                <a class="list-group-item" asp-controller="Orders" asp-action="Index">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Đơn hàng</span>
+                </a>
+
+                <div class="sidebar-subheading">
+                    <span>Phân tích</span>
+                </div>
                 <a class="list-group-item" asp-controller="Admin" asp-action="RevenueReport">
-                    <i class="fas fa-chart-pie me-2"></i> Báo cáo
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Báo cáo</span>
                 </a>
 
-                <div class="sidebar-subheading">Hệ thống</div>
+                <div class="sidebar-subheading">
+                    <span>Hệ thống</span>
+                </div>
                 <a class="list-group-item" asp-controller="Home" asp-action="Index">
-                    <i class="fas fa-home me-2"></i> Trang chủ
+                    <i class="fas fa-home"></i>
+                    <span>Trang chủ</span>
                 </a>
             </div>
         </div>
 
         <!-- Page Content -->
         <div id="page-content-wrapper">
-            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
                 <div class="container-fluid">
-                    <button class="btn btn-outline-secondary" id="menu-toggle">
+                    <button class="btn" id="menu-toggle">
                         <i class="fas fa-bars"></i>
                     </button>
 
@@ -160,16 +440,17 @@
                                         <i class="fas fa-user-circle me-1"></i> @User.Identity.Name
                                     </a>
                                     <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                        <a class="dropdown-item" href="#">Hồ sơ</a>
+                                        <a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Hồ sơ</a>
+                                        <a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Cài đặt</a>
                                         <div class="dropdown-divider"></div>
-                                        <a class="dropdown-item" asp-controller="Account" asp-action="Logout">Đăng xuất</a>
+                                        <a class="dropdown-item" asp-controller="Account" asp-action="Logout"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a>
                                     </div>
                                 </li>
                             }
                             else
                             {
                                   <li class="nav-item">
-                                    <a class="nav-link" asp-controller="Account" asp-action="Login">Đăng nhập</a>
+                                    <a class="nav-link" asp-controller="Account" asp-action="Login"><i class="fas fa-sign-in-alt me-2"></i>Đăng nhập</a>
                                 </li>
                             }
                         </ul>
@@ -181,7 +462,24 @@
                 @if (TempData["Message"] != null)
                 {
                     <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
                         @TempData["Message"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        @TempData["Success"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        @TempData["Error"]
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 }
@@ -193,10 +491,46 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Sidebar Toggle
         $("#menu-toggle").click(function (e) {
             e.preventDefault();
             $("#wrapper").toggleClass("toggled");
+            
+            // Save state to localStorage
+            const isToggled = $("#wrapper").hasClass("toggled");
+            localStorage.setItem('sidebarToggled', isToggled);
         });
+
+        // Restore sidebar state on page load
+        $(document).ready(function() {
+            const sidebarToggled = localStorage.getItem('sidebarToggled');
+            if (sidebarToggled === 'true') {
+                $("#wrapper").addClass("toggled");
+            }
+
+            // Set active menu item
+            const currentPath = window.location.pathname;
+            $('.list-group-item').each(function() {
+                const href = $(this).attr('href');
+                if (href && currentPath.includes(href)) {
+                    $(this).addClass('active');
+                }
+            });
+        });
+
+        // Loading overlay helper
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('active');
+        }
+
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

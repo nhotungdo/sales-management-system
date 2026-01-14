@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sales_Management.Models;
+using Sales_Management.Data;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
