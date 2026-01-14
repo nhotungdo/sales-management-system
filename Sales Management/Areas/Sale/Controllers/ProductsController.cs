@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Sales_Management.Data;
 using Sales_Management.Models;
@@ -18,12 +19,15 @@ namespace Sales_Management.Areas.Sale.Controllers
         // GET: Sale/Products
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Products.ToListAsync());
+            var products = _context.Products
+                                   .Include(p => p.Category);
+            return View(await products.ToListAsync());
         }
 
         // GET: Sale/Products/Create
         public IActionResult Create()
         {
+            ViewBag.CategoryId = new SelectList(_context.Categories, "CategoryId", "Name");
             return View();
         }
 
@@ -38,14 +42,30 @@ namespace Sales_Management.Areas.Sale.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+
+            ViewBag.CategoryId = new SelectList(
+                _context.Categories,
+                "CategoryId",
+                "Name",
+                product.CategoryId
+            );
             return View(product);
         }
 
         // GET: Sale/Products/Edit/5
-        public async Task<IActionResult> Edit(int id)
+        public async Task<IActionResult> Edit(int? id)
         {
+            if (id == null) return NotFound();
+
             var product = await _context.Products.FindAsync(id);
             if (product == null) return NotFound();
+
+            ViewBag.CategoryId = new SelectList(
+                _context.Categories,
+                "CategoryId",
+                "Name",
+                product.CategoryId
+            );
             return View(product);
         }
 
@@ -58,18 +78,41 @@ namespace Sales_Management.Areas.Sale.Controllers
 
             if (ModelState.IsValid)
             {
-                _context.Update(product);
-                await _context.SaveChangesAsync();
+                try
+                {
+                    _context.Update(product);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!_context.Products.Any(e => e.ProductId == id))
+                        return NotFound();
+                    else
+                        throw;
+                }
                 return RedirectToAction(nameof(Index));
             }
+
+            ViewBag.CategoryId = new SelectList(
+                _context.Categories,
+                "CategoryId",
+                "Name",
+                product.CategoryId
+            );
             return View(product);
         }
 
         // GET: Sale/Products/Delete/5
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int? id)
         {
-            var product = await _context.Products.FindAsync(id);
+            if (id == null) return NotFound();
+
+            var product = await _context.Products
+                .Include(p => p.Category)
+                .FirstOrDefaultAsync(m => m.ProductId == id);
+
             if (product == null) return NotFound();
+
             return View(product);
         }
 
@@ -79,8 +122,11 @@ namespace Sales_Management.Areas.Sale.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var product = await _context.Products.FindAsync(id);
-            _context.Products.Remove(product);
-            await _context.SaveChangesAsync();
+            if (product != null)
+            {
+                _context.Products.Remove(product);
+                await _context.SaveChangesAsync();
+            }
             return RedirectToAction(nameof(Index));
         }
     }
