@@ -2,26 +2,50 @@
 
 <h2>Products</h2>
 
-<a asp-action="Create" class="btn btn-primary">Create New</a>
+<p>
+    <a asp-area="Sale"
+       asp-controller="Products"
+       asp-action="Create"
+       class="btn btn-primary">
+        Create New
+    </a>
+</p>
 
-<table class="table mt-3">
-    <tr>
-        <th>Code</th>
-        <th>Name</th>
-        <th>Price</th>
-        <th></th>
-    </tr>
-
-    @foreach (var item in Model)
-    {
+<table class="table table-bordered">
+    <thead>
         <tr>
-            <td>@item.Code</td>
-            <td>@item.Name</td>
-            <td>@item.SellingPrice</td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.ProductId">Edit</a> |
-                <a asp-action="Delete" asp-route-id="@item.ProductId">Delete</a>
-            </td>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Category</th>
+            <th>Action</th>
         </tr>
-    }
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+				<td>@item.ProductId</td>
+                <td>@item.Name</td>
+                <td>@item.SellingPrice</td>
+                <td>@item.StockQuantity</td>
+                <td>@item.Category?.Name</td>
+                <td>
+                    <a asp-area="Sale"
+                       asp-controller="Products"
+                       asp-action="Edit"
+                       asp-route-id="@item.ProductId">
+                        Edit
+                    </a> |
+                    <a asp-area="Sale"
+                       asp-controller="Products"
+                       asp-action="Delete"
+                       asp-route-id="@item.ProductId">
+                        Delete
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
 </table>
