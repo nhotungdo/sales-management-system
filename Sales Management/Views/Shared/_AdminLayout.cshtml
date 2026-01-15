@@ -6,20 +6,26 @@
     <title>@ViewData["Title"] - Sales Admin</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin-modern.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     @await RenderSectionAsync("Styles", required: false)
     <style>
         :root {
             --sidebar-width: 280px;
             --sidebar-collapsed-width: 70px;
-            --primary-color: #2563eb;
-            --primary-dark: #1e40af;
-            --sidebar-bg: #1e293b;
-            --sidebar-hover: #334155;
-            --sidebar-active: #2563eb;
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --sidebar-bg: #0f172a;
+            --sidebar-hover: #1e293b;
+            --sidebar-active: #6366f1;
+            --accent-color: #ec4899;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
         }
 
         * {
@@ -31,7 +37,7 @@
         body {
             overflow-x: hidden;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f8fafc;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
             color: #1e293b;
         }
 
@@ -45,16 +51,17 @@
         #sidebar-wrapper {
             width: var(--sidebar-width);
             min-height: 100vh;
-            background: linear-gradient(180deg, var(--sidebar-bg) 0%, #0f172a 100%);
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
             color: #e2e8f0;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: fixed;
             left: 0;
             top: 0;
             z-index: 1000;
-            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+            box-shadow: 8px 0 32px rgba(0, 0, 0, 0.15);
             overflow-y: auto;
             overflow-x: hidden;
+            backdrop-filter: blur(10px);
         }
 
         #sidebar-wrapper::-webkit-scrollbar {
@@ -75,19 +82,20 @@
         }
 
         .sidebar-heading {
-            padding: 1.75rem 1.5rem;
+            padding: 2rem 1.5rem;
             font-size: 1.5rem;
             text-align: center;
-            background: rgba(37, 99, 235, 0.1);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
             color: #fff;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 800;
+            letter-spacing: 1px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 0.75rem;
             transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
 
         #wrapper.toggled .sidebar-heading {
@@ -101,23 +109,26 @@
 
         .sidebar-heading i {
             font-size: 1.75rem;
-            color: var(--primary-color);
+            color: #fff;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
         }
 
         .list-group-item {
             background-color: transparent;
-            color: #cbd5e1;
+            color: #94a3b8;
             border: none;
             padding: 0.875rem 1.5rem;
+            margin: 0.25rem 0.75rem;
             font-weight: 500;
             font-size: 0.95rem;
-            transition: all 0.2s ease;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 0.875rem;
             position: relative;
             white-space: nowrap;
+            border-radius: 12px;
         }
 
         .list-group-item i {
@@ -125,35 +136,50 @@
             width: 24px;
             text-align: center;
             flex-shrink: 0;
+            transition: all 0.25s;
         }
 
         .list-group-item:hover {
             color: #fff;
-            background-color: var(--sidebar-hover);
-            padding-left: 1.75rem;
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.15) 0%, rgba(236, 72, 153, 0.1) 100%);
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+
+        .list-group-item:hover i {
+            transform: scale(1.1);
+            color: var(--primary-light);
         }
 
         .list-group-item.active {
             color: #fff;
-            background-color: var(--sidebar-active);
-            border-left: 4px solid #60a5fa;
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+            transform: translateX(4px);
+        }
+
+        .list-group-item.active i {
+            color: #fff;
+            transform: scale(1.15);
         }
 
         .list-group-item.active::before {
             content: '';
             position: absolute;
-            right: 0;
+            left: -0.75rem;
             top: 50%;
             transform: translateY(-50%);
             width: 4px;
-            height: 60%;
-            background: #60a5fa;
-            border-radius: 4px 0 0 4px;
+            height: 70%;
+            background: linear-gradient(180deg, var(--primary-light) 0%, var(--accent-color) 100%);
+            border-radius: 0 4px 4px 0;
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
         }
 
         #wrapper.toggled .list-group-item {
             padding: 0.875rem 0.5rem;
             justify-content: center;
+            margin: 0.25rem 0.5rem;
         }
 
         #wrapper.toggled .list-group-item span {
@@ -161,17 +187,33 @@
         }
 
         #wrapper.toggled .list-group-item:hover {
-            padding-left: 0.5rem;
+            transform: translateX(0) scale(1.05);
+        }
+
+        #wrapper.toggled .list-group-item.active::before {
+            left: -0.5rem;
         }
 
         .sidebar-subheading {
-            padding: 1.25rem 1.5rem 0.5rem;
-            font-size: 0.75rem;
+            padding: 1.5rem 1.5rem 0.75rem;
+            font-size: 0.7rem;
             text-transform: uppercase;
-            color: #64748b;
-            font-weight: 700;
-            letter-spacing: 1px;
-            margin-top: 0.5rem;
+            color: #475569;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            margin-top: 1rem;
+            position: relative;
+        }
+
+        .sidebar-subheading::after {
+            content: '';
+            position: absolute;
+            bottom: 0.25rem;
+            left: 1.5rem;
+            right: 1.5rem;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-color) 0%, transparent 100%);
+            opacity: 0.3;
         }
 
         #wrapper.toggled .sidebar-subheading {
@@ -184,9 +226,9 @@
         }
 
         #wrapper.toggled .sidebar-subheading::after {
-            content: '•••';
-            display: block;
-            font-size: 1rem;
+            content: '';
+            left: 0.5rem;
+            right: 0.5rem;
         }
 
         /* ===== PAGE CONTENT ===== */
@@ -205,10 +247,11 @@
 
         /* ===== NAVBAR ===== */
         .navbar {
-            padding: 1rem 1.5rem;
-            background: #ffffff;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
             position: sticky;
             top: 0;
             z-index: 999;
@@ -216,73 +259,135 @@
 
         #menu-toggle {
             border: none;
-            background: #f1f5f9;
-            color: #475569;
-            padding: 0.625rem 1rem;
-            border-radius: 8px;
-            transition: all 0.2s;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-size: 1.125rem;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
 
         #menu-toggle:hover {
-            background: var(--primary-color);
-            color: white;
-            transform: scale(1.05);
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--accent-color) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        #menu-toggle:active {
+            transform: translateY(0);
         }
 
         .navbar .nav-link {
             color: #475569;
-            font-weight: 500;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            transition: all 0.2s;
+            font-weight: 600;
+            padding: 0.625rem 1.25rem;
+            border-radius: 10px;
+            transition: all 0.3s;
+            position: relative;
         }
 
         .navbar .nav-link:hover {
-            background: #f1f5f9;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(236, 72, 153, 0.05) 100%);
             color: var(--primary-color);
+            transform: translateY(-1px);
         }
 
         .navbar .dropdown-menu {
             border: none;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-            border-radius: 12px;
-            padding: 0.5rem;
-            margin-top: 0.5rem;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+            border-radius: 16px;
+            padding: 0.75rem;
+            margin-top: 0.75rem;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
         }
 
         .navbar .dropdown-item {
-            padding: 0.625rem 1rem;
-            border-radius: 8px;
-            transition: all 0.2s;
+            padding: 0.75rem 1.25rem;
+            border-radius: 10px;
+            transition: all 0.25s;
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .navbar .dropdown-item:hover {
-            background: #f1f5f9;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(236, 72, 153, 0.05) 100%);
             color: var(--primary-color);
+            transform: translateX(4px);
+        }
+
+        .navbar .dropdown-item i {
+            width: 20px;
+            text-align: center;
         }
 
         /* ===== MAIN CONTENT ===== */
         .container-fluid.main-content {
-            padding: 2rem;
+            padding: 2.5rem;
             flex: 1;
-            background: #f8fafc;
+            background: transparent;
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(236, 72, 153, 0.02) 100%);
+            border-bottom: 2px solid rgba(99, 102, 241, 0.1);
+            border-radius: 16px 16px 0 0 !important;
+            padding: 1.25rem 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
         }
 
         /* ===== ALERTS ===== */
         .alert {
             border: none;
-            border-radius: 12px;
-            padding: 1rem 1.25rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            animation: slideDown 0.3s ease;
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            font-weight: 500;
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(6, 182, 212, 0.05) 100%);
+            color: #0e7490;
+            border-left: 4px solid #06b6d4;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%);
+            color: #047857;
+            border-left: 4px solid #10b981;
+        }
+
+        .alert-danger {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%);
+            color: #b91c1c;
+            border-left: 4px solid #ef4444;
         }
 
         @@keyframes slideDown {
             from {
                 opacity: 0;
-                transform: translateY(-10px);
+                transform: translateY(-20px);
             }
             to {
                 opacity: 1;
@@ -361,16 +466,16 @@
         <!-- Sidebar -->
         <div id="sidebar-wrapper">
             <div class="sidebar-heading">
-                <i class="fas fa-chart-line"></i>
-                <span class="heading-text">SalesAdmin</span>
+                <i class="fas fa-store"></i>
+                <span class="heading-text">SalesHub</span>
             </div>
             <div class="list-group list-group-flush">
                 <div class="sidebar-subheading">
-                    <span>Nhân sự</span>
+                    <span>Dashboard nhân sự</span>
                 </div>
                 <a class="list-group-item" asp-controller="Employees" asp-action="Index">
                     <i class="fas fa-users"></i>
-                    <span>Nhân viên</span>
+                    <span>Danh sách nhân viên</span>
                 </a>
                 <a class="list-group-item" asp-controller="Employees" asp-action="Create">
                     <i class="fas fa-user-plus"></i>
@@ -378,23 +483,19 @@
                 </a>
 
                 <div class="sidebar-subheading">
-                    <span>Kho hàng</span>
+                    <span>Dashboard kho</span>
                 </div>
                 <a class="list-group-item" asp-controller="Products" asp-action="Index">
-                    <i class="fas fa-box"></i>
+                    <i class="fas fa-box-open"></i>
                     <span>Sản phẩm</span>
                 </a>
-                <a class="list-group-item" asp-controller="Products" asp-action="Create">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>Thêm sản phẩm</span>
-                </a>
                 <a class="list-group-item" asp-controller="Categories" asp-action="Index">
-                    <i class="fas fa-tags"></i>
+                    <i class="fas fa-layer-group"></i>
                     <span>Danh mục</span>
                 </a>
 
                 <div class="sidebar-subheading">
-                    <span>Bán hàng</span>
+                    <span>Dashboard bán hàng</span>
                 </div>
                 <a class="list-group-item" asp-controller="Orders" asp-action="Index">
                     <i class="fas fa-shopping-cart"></i>
@@ -402,19 +503,19 @@
                 </a>
 
                 <div class="sidebar-subheading">
-                    <span>Phân tích</span>
+                    <span>Dashboard báo cáo</span>
                 </div>
                 <a class="list-group-item" asp-controller="Admin" asp-action="RevenueReport">
-                    <i class="fas fa-chart-pie"></i>
-                    <span>Báo cáo</span>
+                    <i class="fas fa-chart-line"></i>
+                    <span>Doanh thu</span>
                 </a>
 
                 <div class="sidebar-subheading">
-                    <span>Hệ thống</span>
+                    <span>Dashboard khác</span>
                 </div>
-                <a class="list-group-item" asp-controller="Home" asp-action="Index">
-                    <i class="fas fa-home"></i>
-                    <span>Trang chủ</span>
+                <a class="list-group-item" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-globe"></i>
+                    <span>Trang công khai</span>
                 </a>
             </div>
         </div>
@@ -509,13 +610,24 @@
             }
 
             // Set active menu item
-            const currentPath = window.location.pathname;
+            const currentPath = window.location.pathname.toLowerCase();
             $('.list-group-item').each(function() {
                 const href = $(this).attr('href');
-                if (href && currentPath.includes(href)) {
-                    $(this).addClass('active');
+                if (href) {
+                    const hrefLower = href.toLowerCase();
+                    // Exact match or contains check
+                    if (currentPath === hrefLower || 
+                        (currentPath.includes(hrefLower) && hrefLower.length > 1)) {
+                        $(this).addClass('active');
+                    }
                 }
             });
+
+            // Special handling for dashboard
+            if (currentPath.includes('/admin/home/dashboard')) {
+                $('.list-group-item').removeClass('active');
+                $('a[href*="Dashboard"]').addClass('active');
+            }
         });
 
         // Loading overlay helper

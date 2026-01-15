@@ -17,81 +17,8 @@ namespace Sales_Management.Areas.Admin.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            // Quick Metrics
-            var today = DateOnly.FromDateTime(DateTime.Today);
-            var yesterday = today.AddDays(-1);
-
-            // Revenue Today (assuming OrderDate is DateTime)
-            var revenueToday = await _context.Orders
-                .Where(o => o.OrderDate.HasValue && o.OrderDate.Value.Date == DateTime.Today && o.Status != "Cancelled")
-                .SumAsync(o => o.TotalAmount);
-
-            var revenueYesterday = await _context.Orders
-                .Where(o => o.OrderDate.HasValue && o.OrderDate.Value.Date == DateTime.Today.AddDays(-1) && o.Status != "Cancelled")
-                .SumAsync(o => o.TotalAmount);
-
-            // Total Orders
-            var totalOrdersToday = await _context.Orders
-                .CountAsync(o => o.OrderDate.HasValue && o.OrderDate.Value.Date == DateTime.Today);
-            
-            var ordersProcessing = await _context.Orders
-                .CountAsync(o => o.Status == "Processing");
-
-            // Low Stock Alerts (Threshold < 10)
-            var lowStockProducts = await _context.Products
-                .Where(p => p.StockQuantity < 10 && p.Status == "Active")
-                .OrderBy(p => p.StockQuantity)
-                .Take(5)
-                .ToListAsync();
-
-            // Employee Stats
-            var onlineEmployees = await _context.TimeAttendances
-                .CountAsync(t => t.Date == today && t.CheckInTime != null && t.CheckOutTime == null);
-
-            var missedCheckins = await _context.Employees
-                .Where(e => !e.TimeAttendances.Any(t => t.Date == today))
-                .CountAsync();
-
-            // Chart Data: Revenue Last 7 Days
-            var sevenDaysAgo = today.AddDays(-6);
-            var chartData = await _context.Orders
-                .Where(o => o.OrderDate.HasValue && o.OrderDate.Value.Date >= sevenDaysAgo.ToDateTime(TimeOnly.MinValue) && o.Status != "Cancelled")
-                .GroupBy(o => o.OrderDate.Value.Date)
-                .Select(g => new { Date = g.Key, Revenue = g.Sum(o => o.TotalAmount ?? 0) })
-                .ToListAsync();
-
-            var last7Days = Enumerable.Range(0, 7).Select(i => sevenDaysAgo.AddDays(i)).ToList();
-            var revenueChartData = last7Days.Select(date => {
-                var dataPoint = chartData.FirstOrDefault(d => DateOnly.FromDateTime(d.Date) == date);
-                return dataPoint?.Revenue ?? 0;
-            }).ToList();
-            
-            var revenueChartLabels = last7Days.Select(d => d.ToString("dd/MM")).ToList();
-
-            // Chart Data: Revenue by Category
-            var categoryData = await _context.OrderDetails
-                .Include(od => od.Product).ThenInclude(p => p.Category)
-                .Where(od => od.Order.OrderDate.HasValue && od.Order.OrderDate.Value.Date >= sevenDaysAgo.ToDateTime(TimeOnly.MinValue) && od.Order.Status != "Cancelled")
-                .GroupBy(od => od.Product.Category.Name)
-                .Select(g => new { Label = g.Key, Value = g.Sum(od => od.Total ?? 0) })
-                .ToListAsync();
-
-            ViewBag.RevenueToday = revenueToday;
-            ViewBag.RevenueGrowth = revenueYesterday > 0 ? ((revenueToday - revenueYesterday) / revenueYesterday) * 100 : 0;
-            ViewBag.TotalOrdersToday = totalOrdersToday;
-            ViewBag.OrdersProcessing = ordersProcessing;
-            ViewBag.OnlineEmployees = onlineEmployees;
-            ViewBag.MissedCheckins = missedCheckins;
-            ViewBag.LowStockProducts = lowStockProducts;
-            
-            // Pass Chart Data
-            ViewBag.RevenueChartLabels = revenueChartLabels;
-            ViewBag.RevenueChartData = revenueChartData;
-            ViewBag.CategoryChartLabels = categoryData.Select(c => c.Label).ToList();
-            ViewBag.CategoryChartData = categoryData.Select(c => c.Value).ToList();
-
             return View();
         }
 

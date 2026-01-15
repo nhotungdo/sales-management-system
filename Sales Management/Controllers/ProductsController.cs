@@ -67,62 +67,26 @@ namespace Sales_Management.Controllers
                     break;
             }
 
-            // Implement simple pagination next time or use List for now
             return View(await products.ToListAsync());
         }
 
-        // GET: Products/Create
-        public IActionResult Create()
+        // GET: Products/Details/5
+        public async Task<IActionResult> Details(int? id)
         {
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "Name");
-            return View();
-        }
-
-        // POST: Products/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Code,Name,Description,CategoryId,ImportPrice,SellingPrice,Vatrate,StockQuantity,Status")] Product product, List<IFormFile> images, string Specs)
-        {
-            if (ModelState.IsValid)
+            if (id == null)
             {
-                _context.Add(product);
-                await _context.SaveChangesAsync();
-
-                // Handle Image Upload
-                if (images != null)
-                {
-                    foreach (var image in images)
-                    {
-                        string wwwRootPath = _hostEnvironment.WebRootPath;
-                        string fileName = Path.GetFileNameWithoutExtension(image.FileName);
-                        string extension = Path.GetExtension(image.FileName);
-                        string newFileName = fileName + DateTime.Now.ToString("yymmssfff") + extension;
-                        string path = Path.Combine(wwwRootPath + "/images/products/", newFileName);
-                        
-                        // Ensure directory exists
-                        Directory.CreateDirectory(Path.Combine(wwwRootPath, "images/products"));
-
-                        using (var fileStream = new FileStream(path, FileMode.Create))
-                        {
-                            await image.CopyToAsync(fileStream);
-                        }
-
-                        var productImage = new ProductImage
-                        {
-                            ProductId = product.ProductId,
-                            ImageUrl = "/images/products/" + newFileName,
-                            IsPrimary = _context.ProductImages.Count(pi => pi.ProductId == product.ProductId) == 0
-                        };
-                        _context.Add(productImage);
-                    }
-                    await _context.SaveChangesAsync();
-                }
-
-                // TODO: Handle Specs (save as separate entity or JSON in description)
-
-                return RedirectToAction(nameof(Index));
+                return NotFound();
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "Name", product.CategoryId);
+
+            var product = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.ProductImages)
+                .FirstOrDefaultAsync(m => m.ProductId == id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+
             return View(product);
         }
     }
