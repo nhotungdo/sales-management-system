@@ -1,0 +1,108 @@
+@model Sales_Management.Models.Product
+
+@{
+    ViewData["Title"] = "Chi tiết sản phẩm";
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Chi tiết sản phẩm</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a asp-area="" asp-controller="Home" asp-action="Index">Dashboard</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">Sản phẩm</a></li>
+        <li class="breadcrumb-item active">@Model.Name</li>
+    </ol>
+
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-header bg-white border-bottom-0">
+            <h4 class="mb-0 text-primary">@Model.Name</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-5 mb-4 mb-md-0">
+                     @if (Model.ProductImages != null && Model.ProductImages.Any())
+                    {
+                        <div id="productCarousel" class="carousel slide border rounded shadow-sm overflow-hidden" data-bs-ride="carousel">
+                          <div class="carousel-inner">
+                            @{ int i = 0; }
+                            @foreach(var img in Model.ProductImages)
+                            {
+                                <div class="carousel-item @(i==0 ? "active" : "")">
+                                  <img src="@img.ImageUrl" class="d-block w-100 object-fit-cover" style="height: 400px;" alt="Product Image">
+                                </div>
+                                i++;
+                            }
+                          </div>
+                          @if(Model.ProductImages.Count > 1) {
+                              <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon bg-dark rounded-circle p-2" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                              </button>
+                              <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                                <span class="carousel-control-next-icon bg-dark rounded-circle p-2" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                              </button>
+                          }
+                        </div>
+                    }
+                    else
+                    {
+                        <img src="/images/no-image.png" class="img-fluid rounded shadow-sm border" alt="No Image" />
+                    }
+                </div>
+                <div class="col-md-7">
+                    <div class="card shadow-none border-light bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title border-bottom pb-2">Thông tin chi tiết</h5>
+                            <dl class="row mt-3">
+                                <dt class = "col-sm-4 text-muted">Mã sản phẩm</dt>
+                                <dd class = "col-sm-8 fw-bold text-dark">@Html.DisplayFor(model => model.Code)</dd>
+                                
+                                <dt class = "col-sm-4 text-muted">Danh mục</dt>
+                                <dd class = "col-sm-8">
+                                    <span class="badge bg-info text-dark">@Html.DisplayFor(model => model.Category.Name)</span>
+                                </dd>
+
+                                <dt class = "col-sm-4 text-muted">Giá nhập</dt>
+                                <dd class = "col-sm-8">@(Model.ImportPrice.HasValue ? Model.ImportPrice.Value.ToString("C") : "")</dd>
+
+                                <dt class = "col-sm-4 text-muted">Giá bán</dt>
+                                <dd class = "col-sm-8 text-primary fw-bold fs-5">@Model.SellingPrice.ToString("C")</dd>
+                                
+                                <dt class = "col-sm-4 text-muted">Thuế VAT</dt>
+                                <dd class = "col-sm-8">@Model.Vatrate%</dd>
+                                
+                                <dt class = "col-sm-4 text-muted">Tồn kho</dt>
+                                <dd class = "col-sm-8">
+                                    @if(Model.StockQuantity < 10) {
+                                         <span class="text-danger fw-bold">@Model.StockQuantity (Sắp hết)</span>
+                                    } else {
+                                        @Model.StockQuantity
+                                    }
+                                </dd>
+                                
+                                <dt class = "col-sm-4 text-muted">Trạng thái</dt>
+                                <dd class = "col-sm-8">
+                                    <span class="badge @(Model.Status == "Active" ? "bg-success" : "bg-secondary")">
+                                        @Model.Status
+                                    </span>
+                                </dd>
+                                
+                                <dt class = "col-sm-4 text-muted">Ngày tạo</dt>
+                                <dd class = "col-sm-8">@(Model.CreatedDate.HasValue ? Model.CreatedDate.Value.ToString("dd/MM/yyyy") : "")</dd>
+
+                                <dt class = "col-sm-4 text-muted">Mô tả</dt>
+                                <dd class = "col-sm-8">@Html.DisplayFor(model => model.Description)</dd>
+                            </dl>
+                        </div>
+                    </div>
+                     <div class="mt-4">
+                        <!-- Edit button removed -->
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

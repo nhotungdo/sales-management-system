@@ -1,0 +1,99 @@
+@model IEnumerable<Sales_Management.Models.Product>
+
+@{
+    ViewData["Title"] = "Quản lý sản phẩm";
+}
+
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Quản lý sản phẩm</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a asp-area="" asp-controller="Home" asp-action="Index">Dashboard</a></li>
+        <li class="breadcrumb-item active">Sản phẩm</li>
+    </ol>
+    
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <i class="fas fa-table me-1"></i>
+            Danh sách sản phẩm
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                     <!-- Filter/Search could go here -->
+                     <form asp-action="Index" method="get" class="d-flex">
+                        <input type="text" name="searchString" class="form-control me-2" placeholder="Tìm kiếm theo tên/mã..." value="@ViewData["CurrentFilter"]">
+                        <button class="btn btn-outline-primary" type="submit"><i class="fas fa-search"></i></button>
+                    </form>
+                </div>
+                <div class="col-md-6 text-end">
+                    <!-- Create button removed as per requirements -->
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Hình ảnh</th>
+                            <th scope="col">
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["NameSortParm"]" class="text-decoration-none text-dark">
+                                    Tên sản phẩm <i class="fas fa-sort"></i>
+                                </a>
+                            </th>
+                            <th scope="col">Mã</th>
+                            <th scope="col">Danh mục</th>
+                            <th scope="col">
+                                <a asp-action="Index" asp-route-sortOrder="@ViewData["PriceSortParm"]" class="text-decoration-none text-dark">
+                                    Giá bán <i class="fas fa-sort"></i>
+                                </a>
+                            </th>
+                            <th scope="col">Tồn kho</th>
+                            <th scope="col">Trạng thái</th>
+                            <th scope="col">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model) {
+                            var primaryImg = item.ProductImages.FirstOrDefault(p => p.IsPrimary == true)?.ImageUrl ?? "/images/no-image.png";
+                            <tr>
+                                <td class="text-center">
+                                    <img src="@primaryImg" alt="@item.Name" style="width: 50px; height: 50px; object-fit: cover;" class="rounded border shadow-sm" />
+                                </td>
+                                <td class="fw-bold text-primary">@Html.DisplayFor(modelItem => item.Name)</td>
+                                <td><span class="badge bg-light text-dark border">@Html.DisplayFor(modelItem => item.Code)</span></td>
+                                <td>@Html.DisplayFor(modelItem => item.Category.Name)</td>
+                                <td class="text-end pe-4">@item.SellingPrice.ToString("C")</td>
+                                <td class="text-center">
+                                    @if(item.StockQuantity < 10)
+                                    {
+                                        <span class="badge bg-danger">@item.StockQuantity</span>
+                                    }
+                                    else 
+                                    {
+                                        <span class="badge bg-success">@item.StockQuantity</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (item.Status == "Active")
+                                    {
+                                        <span class="badge bg-success rounded-pill">Hoạt động</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary rounded-pill">@item.Status</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-sm btn-info text-white" title="Xem chi tiết">
+                                        <i class="fas fa-info-circle"></i> Chi tiết
+                                    </a>
+                                    <!-- Edit/Delete actions removed -->
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

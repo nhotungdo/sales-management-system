@@ -1,2 +1,337 @@
-﻿<h1>ADMIN AREA OK 🎉</h1>
+﻿@{
+    ViewData["Title"] = "Trang Quản trị Hệ thống";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/admin-dashboard.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+}
+
+<div class="container-fluid dashboard-container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom dashboard-header">
+        <div>
+            <h1 class="h2 text-gray-800">Tổng quan Quản trị</h1>
+            <p class="text-muted mb-0">Xin chào, @User.Identity.Name! Đây là tình hình kinh doanh hôm nay.</p>
+        </div>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <a asp-action="RevenueReport" asp-controller="Home" asp-area="Admin" class="btn btn-sm btn-outline-primary"><i class="fas fa-chart-line me-1"></i> Báo cáo chi tiết</a>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()"><i class="fas fa-print me-1"></i> Xuất PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards Row -->
+    <div class="row mb-4">
+        <!-- Revenue Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card dashboard-card bg-gradient-primary text-white h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-white-50 small text-uppercase fw-bold mb-1">Doanh thu Hôm nay</div>
+                            <div class="h3 mb-0 fw-bold">@ViewBag.RevenueToday?.ToString("N0") đ</div>
+                            <div class="mt-2 text-white-50 small">
+                                <span class="@((ViewBag.RevenueGrowth >= 0) ? "text-white" : "text-warning") fw-bold">
+                                    <i class="fas @((ViewBag.RevenueGrowth >= 0) ? "fa-arrow-up" : "fa-arrow-down")"></i>
+                                    @Math.Abs((double)(ViewBag.RevenueGrowth ?? 0)).ToString("N1")%
+                                </span>
+                                <span> so với hôm qua</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign card-stat-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card dashboard-card bg-gradient-success text-white h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-white-50 small text-uppercase fw-bold mb-1">Đơn hàng Mới</div>
+                            <div class="h3 mb-0 fw-bold">@ViewBag.TotalOrdersToday</div>
+                            <div class="mt-2 text-white-50 small">
+                                <span class="fw-bold">@ViewBag.OrdersProcessing</span> Đang xử lý
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-shopping-bag card-stat-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employees Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card dashboard-card bg-gradient-info text-white h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-white-50 small text-uppercase fw-bold mb-1">Nhân sự Online</div>
+                            <div class="h3 mb-0 fw-bold">@ViewBag.OnlineEmployees</div>
+                            <div class="mt-2 text-white-50 small">
+                                <span class="text-white fw-bold">@ViewBag.MissedCheckins</span> Vắng mặt
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-clock card-stat-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card dashboard-card bg-gradient-warning text-white h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-white-50 small text-uppercase fw-bold mb-1">Cảnh báo tồn kho</div>
+                            <div class="h3 mb-0 fw-bold">@(((IEnumerable<Sales_Management.Models.Product>)ViewBag.LowStockProducts).Count())</div>
+                            <div class="mt-2 text-white-50 small">Sản phẩm sắp hết</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle card-stat-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- Revenue Line Chart -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow mb-4 h-100 border-0 rounded-lg">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-white border-bottom-0">
+                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-chart-area me-2"></i>Biểu đồ Doanh thu (7 ngày qua)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Doughnut Chart -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow mb-4 h-100 border-0 rounded-lg">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-white border-bottom-0">
+                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-chart-pie me-2"></i>Phân bố theo Danh mục</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small">
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-primary"></i> Danh mục chính
+                        </span>
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-success"></i> Doanh số cao
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Lists Row -->
+    <div class="row">
+        <!-- Low Stock Alerts -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4 border-0 rounded-lg">
+                <div class="card-header py-3 bg-white border-bottom-0">
+                    <h6 class="m-0 font-weight-bold text-danger"><i class="fas fa-fire me-2"></i>Cảnh báo Tồn kho Thấp</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @if (ViewBag.LowStockProducts != null)
+                        {
+                            foreach (var product in ViewBag.LowStockProducts as IEnumerable<Sales_Management.Models.Product>)
+                            {
+                                <div class="list-group-item d-flex justify-content-between align-items-center border-left-warning">
+                                    <div>
+                                        <div class="fw-bold text-dark">@product.Name</div>
+                                        <div class="small text-muted">@product.Category?.Name</div>
+                                    </div>
+                                    <span class="badge bg-danger rounded-pill badge-pulse">Còn: @product.StockQuantity</span>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="p-3 text-center text-muted">Không có cảnh báo nào.</div>
+                        }
+                    </div>
+                </div>
+                <div class="card-footer bg-white text-center border-top-0">
+                    <a asp-controller="Products" asp-action="Index" class="small text-primary fw-bold text-decoration-none">Quản lý kho hàng <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions / Navigation -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4 border-0 rounded-lg">
+                <div class="card-header py-3 bg-white border-bottom-0">
+                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-rocket me-2"></i>Thao tác nhanh</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <!-- 'Create Product' removed per requirements -->
+                        <div class="col-md-6">
+                            <a asp-controller="Employees" asp-action="Create" class="card h-100 text-decoration-none text-dark hover-shadow bg-light border-0">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-user-plus fa-2x text-success mb-2"></i>
+                                    <h6 class="card-title fw-bold">Thêm Nhân viên</h6>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a asp-controller="Home" asp-action="RevenueReport" asp-area="Admin" class="card h-100 text-decoration-none text-dark hover-shadow bg-light border-0">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-file-invoice-dollar fa-2x text-info mb-2"></i>
+                                    <h6 class="card-title fw-bold">Xem Báo cáo</h6>
+                                </div>
+                            </a>
+                        </div>
+                         <div class="col-md-6">
+                            <a asp-controller="Orders" asp-action="Index" class="card h-100 text-decoration-none text-dark hover-shadow bg-light border-0">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-clipboard-check fa-2x text-warning mb-2"></i>
+                                    <h6 class="card-title fw-bold">Duyệt Đơn hàng</h6>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Data from Server
+        var revenueLabels = @Json.Serialize(ViewBag.RevenueChartLabels);
+        var revenueData = @Json.Serialize(ViewBag.RevenueChartData);
+        var categoryLabels = @Json.Serialize(ViewBag.CategoryChartLabels);
+        var categoryData = @Json.Serialize(ViewBag.CategoryChartData);
+
+        // Revenue Chart Area
+        var ctxRev = document.getElementById('revenueChart').getContext('2d');
+        var revenueChart = new Chart(ctxRev, {
+            type: 'line',
+            data: {
+                labels: revenueLabels,
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: revenueData,
+                    backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                    borderColor: 'rgba(78, 115, 223, 1)',
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointBackgroundColor: 'rgba(78, 115, 223, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: 'rgba(78, 115, 223, 1)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                var label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false, drawBorder: false },
+                        ticks: { maxTicksLimit: 7 }
+                    },
+                    y: {
+                        ticks: {
+                            maxTicksLimit: 5,
+                            padding: 10,
+                            callback: function(value, index, values) {
+                                return new Intl.NumberFormat('vi-VN', { notation: 'compact', compactDisplay: 'short' }).format(value) + 'đ';
+                            }
+                        },
+                        grid: {
+                            color: "rgb(234, 236, 244)",
+                            zeroLineColor: "rgb(234, 236, 244)",
+                            drawBorder: false,
+                            borderDash: [2],
+                            zeroLineBorderDash: [2]
+                        }
+                    }
+                }
+            }
+        });
+
+        // Category Pie Chart
+        var ctxCat = document.getElementById('categoryChart').getContext('2d');
+        var categoryChart = new Chart(ctxCat, {
+            type: 'doughnut',
+            data: {
+                labels: categoryLabels,
+                datasets: [{
+                    data: categoryData,
+                    backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'],
+                    hoverBackgroundColor: ['#2e59d9', '#17a673', '#2c9faf', '#dda20a', '#be2617', '#717384'],
+                    hoverBorderColor: "rgba(234, 236, 244, 1)",
+                }],
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { padding: 20, boxWidth: 12 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                var label = context.label || '';
+                                var value = context.parsed;
+                                var total = context.chart._metasets[context.datasetIndex].total;
+                                var percentage = ((value / total) * 100).toFixed(1) + "%";
+                                return label + ': ' + new Intl.NumberFormat('vi-VN').format(value) + ' (' + percentage + ')';
+                            }
+                        }
+                    }
+                },
+                cutout: '70%',
+            },
+        });
+    </script>
+}
 

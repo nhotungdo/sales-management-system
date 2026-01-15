@@ -77,6 +77,38 @@ CREATE TABLE Customers (
 );
 GO
 
+-- Bảng TimeAttendances
+CREATE TABLE TimeAttendances (
+    AttendanceId INT IDENTITY(1,1) PRIMARY KEY,
+    EmployeeId INT NOT NULL,
+    Date DATE NOT NULL,
+    CheckInTime DATETIME,
+    CheckOutTime DATETIME,
+    Status NVARCHAR(50), -- Present, Absent, Late, LeftEarly
+    Platform NVARCHAR(50), -- Web, Mobile
+    Notes NVARCHAR(MAX),
+    FOREIGN KEY (EmployeeId) REFERENCES Employees(EmployeeId)
+);
+GO
+
+-- Bảng Payrolls
+CREATE TABLE Payrolls (
+    PayrollId INT IDENTITY(1,1) PRIMARY KEY,
+    EmployeeId INT NOT NULL,
+    Month INT NOT NULL,
+    Year INT NOT NULL,
+    BaseSalary DECIMAL(18, 2) NOT NULL,
+    Benefits DECIMAL(18, 2) NOT NULL DEFAULT 0,
+    Bonus DECIMAL(18, 2) NOT NULL DEFAULT 0,
+    Penalty DECIMAL(18, 2) NOT NULL DEFAULT 0,
+    TotalSalary DECIMAL(18, 2) NOT NULL,
+    Status NVARCHAR(50) DEFAULT 'Pending', -- Pending, Paid
+    CreatedDate DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (EmployeeId) REFERENCES Employees(EmployeeId)
+);
+GO
+
+
 -- Bảng Wallets
 CREATE TABLE Wallets (
     WalletId INT IDENTITY(1,1) PRIMARY KEY,
