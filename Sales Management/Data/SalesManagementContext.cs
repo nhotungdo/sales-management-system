@@ -44,6 +44,10 @@ public partial class SalesManagementContext : DbContext
 
     public virtual DbSet<WalletTransaction> WalletTransactions { get; set; }
 
+    public virtual DbSet<TimeAttendance> TimeAttendances { get; set; }
+
+    public virtual DbSet<Payroll> Payrolls { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Category>(entity =>
@@ -361,6 +365,28 @@ public partial class SalesManagementContext : DbContext
                 .HasForeignKey(d => d.WalletId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__WalletTra__Walle__5CD6CB2B");
+        });
+
+        modelBuilder.Entity<TimeAttendance>(entity =>
+        {
+            entity.HasKey(e => e.AttendanceId);
+            entity.HasOne(d => d.Employee).WithMany(p => p.TimeAttendances)
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+            entity.Property(e => e.Date).HasColumnType("date");
+        });
+
+        modelBuilder.Entity<Payroll>(entity =>
+        {
+            entity.HasKey(e => e.PayrollId);
+            entity.HasOne(d => d.Employee).WithMany(p => p.Payrolls)
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+            entity.Property(e => e.BaseSalary).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.Benefits).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.Bonus).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.Penalty).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalSalary).HasColumnType("decimal(18, 2)");
         });
 
         OnModelCreatingPartial(modelBuilder);

@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Sales Admin</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin-modern.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    @await RenderSectionAsync("Styles", required: false)
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 70px;
+            --primary-color: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --sidebar-bg: #0f172a;
+            --sidebar-hover: #1e293b;
+            --sidebar-active: #6366f1;
+            --accent-color: #ec4899;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow-x: hidden;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+            color: #1e293b;
+        }
+
+        #wrapper {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* ===== SIDEBAR ===== */
+        #sidebar-wrapper {
+            width: var(--sidebar-width);
+            min-height: 100vh;
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 8px 0 32px rgba(0, 0, 0, 0.15);
+            overflow-y: auto;
+            overflow-x: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        #sidebar-wrapper::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #sidebar-wrapper::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        #sidebar-wrapper::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        #wrapper.toggled #sidebar-wrapper {
+            width: var(--sidebar-collapsed-width);
+        }
+
+        .sidebar-heading {
+            padding: 2rem 1.5rem;
+            font-size: 1.5rem;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            color: #fff;
+            font-weight: 800;
+            letter-spacing: 1px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        #wrapper.toggled .sidebar-heading {
+            padding: 1.75rem 0.5rem;
+            font-size: 1.25rem;
+        }
+
+        #wrapper.toggled .sidebar-heading .heading-text {
+            display: none;
+        }
+
+        .sidebar-heading i {
+            font-size: 1.75rem;
+            color: #fff;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+
+        .list-group-item {
+            background-color: transparent;
+            color: #94a3b8;
+            border: none;
+            padding: 0.875rem 1.5rem;
+            margin: 0.25rem 0.75rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            position: relative;
+            white-space: nowrap;
+            border-radius: 12px;
+        }
+
+        .list-group-item i {
+            font-size: 1.125rem;
+            width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+            transition: all 0.25s;
+        }
+
+        .list-group-item:hover {
+            color: #fff;
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.15) 0%, rgba(236, 72, 153, 0.1) 100%);
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+
+        .list-group-item:hover i {
+            transform: scale(1.1);
+            color: var(--primary-light);
+        }
+
+        .list-group-item.active {
+            color: #fff;
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+            transform: translateX(4px);
+        }
+
+        .list-group-item.active i {
+            color: #fff;
+            transform: scale(1.15);
+        }
+
+        .list-group-item.active::before {
+            content: '';
+            position: absolute;
+            left: -0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 70%;
+            background: linear-gradient(180deg, var(--primary-light) 0%, var(--accent-color) 100%);
+            border-radius: 0 4px 4px 0;
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
+        }
+
+        #wrapper.toggled .list-group-item {
+            padding: 0.875rem 0.5rem;
+            justify-content: center;
+            margin: 0.25rem 0.5rem;
+        }
+
+        #wrapper.toggled .list-group-item span {
+            display: none;
+        }
+
+        #wrapper.toggled .list-group-item:hover {
+            transform: translateX(0) scale(1.05);
+        }
+
+        #wrapper.toggled .list-group-item.active::before {
+            left: -0.5rem;
+        }
+
+        .sidebar-subheading {
+            padding: 1.5rem 1.5rem 0.75rem;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #475569;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            margin-top: 1rem;
+            position: relative;
+        }
+
+        .sidebar-subheading::after {
+            content: '';
+            position: absolute;
+            bottom: 0.25rem;
+            left: 1.5rem;
+            right: 1.5rem;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-color) 0%, transparent 100%);
+            opacity: 0.3;
+        }
+
+        #wrapper.toggled .sidebar-subheading {
+            text-align: center;
+            padding: 1.25rem 0.5rem 0.5rem;
+        }
+
+        #wrapper.toggled .sidebar-subheading span {
+            display: none;
+        }
+
+        #wrapper.toggled .sidebar-subheading::after {
+            content: '';
+            left: 0.5rem;
+            right: 0.5rem;
+        }
+
+        /* ===== PAGE CONTENT ===== */
+        #page-content-wrapper {
+            width: 100%;
+            margin-left: var(--sidebar-width);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        #wrapper.toggled #page-content-wrapper {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+
+        /* ===== NAVBAR ===== */
+        .navbar {
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+
+        #menu-toggle {
+            border: none;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 1.125rem;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        #menu-toggle:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--accent-color) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        #menu-toggle:active {
+            transform: translateY(0);
+        }
+
+        .navbar .nav-link {
+            color: #475569;
+            font-weight: 600;
+            padding: 0.625rem 1.25rem;
+            border-radius: 10px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .navbar .nav-link:hover {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(236, 72, 153, 0.05) 100%);
+            color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+
+        .navbar .dropdown-menu {
+            border: none;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+            border-radius: 16px;
+            padding: 0.75rem;
+            margin-top: 0.75rem;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+        }
+
+        .navbar .dropdown-item {
+            padding: 0.75rem 1.25rem;
+            border-radius: 10px;
+            transition: all 0.25s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .navbar .dropdown-item:hover {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(236, 72, 153, 0.05) 100%);
+            color: var(--primary-color);
+            transform: translateX(4px);
+        }
+
+        .navbar .dropdown-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .container-fluid.main-content {
+            padding: 2.5rem;
+            flex: 1;
+            background: transparent;
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(236, 72, 153, 0.02) 100%);
+            border-bottom: 2px solid rgba(99, 102, 241, 0.1);
+            border-radius: 16px 16px 0 0 !important;
+            padding: 1.25rem 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        /* ===== ALERTS ===== */
+        .alert {
+            border: none;
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            font-weight: 500;
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(6, 182, 212, 0.05) 100%);
+            color: #0e7490;
+            border-left: 4px solid #06b6d4;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%);
+            color: #047857;
+            border-left: 4px solid #10b981;
+        }
+
+        .alert-danger {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%);
+            color: #b91c1c;
+            border-left: 4px solid #ef4444;
+        }
+
+        @@keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @@media (max-width: 992px) {
+            #sidebar-wrapper {
+                margin-left: calc(-1 * var(--sidebar-width));
+            }
+
+            #wrapper.toggled #sidebar-wrapper {
+                margin-left: 0;
+                width: var(--sidebar-width);
+            }
+
+            #page-content-wrapper {
+                margin-left: 0;
+            }
+
+            #wrapper.toggled #page-content-wrapper {
+                margin-left: 0;
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .container-fluid.main-content {
+                padding: 1rem;
+            }
+
+            .navbar {
+                padding: 0.75rem 1rem;
+            }
+        }
+
+        /* ===== LOADING OVERLAY ===== */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e2e8f0;
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @@keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <div id="sidebar-wrapper">
+            <div class="sidebar-heading">
+                <i class="fas fa-store"></i>
+                <span class="heading-text">SalesHub</span>
+            </div>
+            <div class="list-group list-group-flush">
+                <div class="sidebar-subheading">
+                    <span>Dashboard nhân sự</span>
+                </div>
+                <a class="list-group-item" asp-controller="Employees" asp-action="Index">
+                    <i class="fas fa-users"></i>
+                    <span>Danh sách nhân viên</span>
+                </a>
+                <a class="list-group-item" asp-controller="Employees" asp-action="Create">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Thêm nhân viên</span>
+                </a>
+
+                <div class="sidebar-subheading">
+                    <span>Dashboard kho</span>
+                </div>
+                <a class="list-group-item" asp-controller="Products" asp-action="Index">
+                    <i class="fas fa-box-open"></i>
+                    <span>Sản phẩm</span>
+                </a>
+                <a class="list-group-item" asp-controller="Categories" asp-action="Index">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Danh mục</span>
+                </a>
+
+                <div class="sidebar-subheading">
+                    <span>Dashboard bán hàng</span>
+                </div>
+                <a class="list-group-item" asp-controller="Orders" asp-action="Index">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Đơn hàng</span>
+                </a>
+
+                <div class="sidebar-subheading">
+                    <span>Dashboard báo cáo</span>
+                </div>
+                <a class="list-group-item" asp-controller="Admin" asp-action="RevenueReport">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Doanh thu</span>
+                </a>
+
+                <div class="sidebar-subheading">
+                    <span>Dashboard khác</span>
+                </div>
+                <a class="list-group-item" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-globe"></i>
+                    <span>Trang công khai</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+                    <button class="btn" id="menu-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
+                             @if (User.Identity != null && User.Identity.IsAuthenticated)
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <i class="fas fa-user-circle me-1"></i> @User.Identity.Name
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                        <a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Hồ sơ</a>
+                                        <a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Cài đặt</a>
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item" asp-controller="Account" asp-action="Logout"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a>
+                                    </div>
+                                </li>
+                            }
+                            else
+                            {
+                                  <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Account" asp-action="Login"><i class="fas fa-sign-in-alt me-2"></i>Đăng nhập</a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container-fluid main-content">
+                @if (TempData["Message"] != null)
+                {
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        @TempData["Message"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        @TempData["Success"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        @TempData["Error"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sidebar Toggle
+        $("#menu-toggle").click(function (e) {
+            e.preventDefault();
+            $("#wrapper").toggleClass("toggled");
+            
+            // Save state to localStorage
+            const isToggled = $("#wrapper").hasClass("toggled");
+            localStorage.setItem('sidebarToggled', isToggled);
+        });
+
+        // Restore sidebar state on page load
+        $(document).ready(function() {
+            const sidebarToggled = localStorage.getItem('sidebarToggled');
+            if (sidebarToggled === 'true') {
+                $("#wrapper").addClass("toggled");
+            }
+
+            // Set active menu item
+            const currentPath = window.location.pathname.toLowerCase();
+            $('.list-group-item').each(function() {
+                const href = $(this).attr('href');
+                if (href) {
+                    const hrefLower = href.toLowerCase();
+                    // Exact match or contains check
+                    if (currentPath === hrefLower || 
+                        (currentPath.includes(hrefLower) && hrefLower.length > 1)) {
+                        $(this).addClass('active');
+                    }
+                }
+            });
+
+            // Special handling for dashboard
+            if (currentPath.includes('/admin/home/dashboard')) {
+                $('.list-group-item').removeClass('active');
+                $('a[href*="Dashboard"]').addClass('active');
+            }
+        });
+
+        // Loading overlay helper
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('active');
+        }
+
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
