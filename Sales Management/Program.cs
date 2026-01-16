@@ -1,5 +1,8 @@
+
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Sales_Management.Data;
+using Sales_Management.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +23,28 @@ builder.Services.AddAuthentication(options =>
     options.LogoutPath = "/Account/Logout";
 });
 
+// Configure Authentication
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.AccessDeniedPath = "/";  // Redirect về Home khi không có quyền
+        options.ExpireTimeSpan = TimeSpan.FromHours(1);
+        options.SlidingExpiration = true;
+    });
+
+// Register AuthService
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Add Session
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -35,8 +60,12 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// Authentication & Authorization (THỨ TỰ QUAN TRỌNG!)
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Session
+app.UseSession();
 
 app.MapControllerRoute(
     name: "areas",
