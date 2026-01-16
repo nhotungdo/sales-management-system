@@ -1,10 +1,10 @@
 @model Sales_Management.Models.Employee
 
 @{
-    ViewData["Title"] = "Delete Employee";
+    ViewData["Title"] = "Xóa nhân viên";
 }
 
-<h1>Delete Employee</h1>
+<h1>Xóa nhân viên</h1>
 
 <h3>Bạn có chắc chắn muốn xóa nhân viên này không?</h3>
 <div>
@@ -12,13 +12,13 @@
     <hr />
     <dl class="row">
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Position)
+            Chức vụ
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Position)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Department)
+            Phòng ban
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Department)

@@ -21,13 +21,15 @@ namespace Sales_Management.Controllers
         }
 
         // GET: Employees
-        public async Task<IActionResult> Index( string searchString)
+        public async Task<IActionResult> Index(string searchString)
         {
             var employees = _context.Employees.Include(e => e.User).Where(e => !e.IsDeleted);
 
             if (!string.IsNullOrEmpty(searchString))
             {
-                employees = employees.Where(e => e.User.FullName.Contains(searchString) || e.Position.Contains(searchString));
+                employees = employees.Where(e =>
+                    (e.User.FullName != null && e.User.FullName.Contains(searchString)) ||
+                    (e.Position != null && e.Position.Contains(searchString)));
             }
 
             return View(await employees.ToListAsync());

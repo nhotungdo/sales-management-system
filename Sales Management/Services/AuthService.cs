@@ -26,7 +26,23 @@ namespace Sales_Management.Services
             if (user == null) return null;
 
             // Verify password với BCrypt
-            if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash)) return null;
+            bool isValid = false;
+            try
+            {
+                isValid = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
+            }
+            catch (BCrypt.Net.SaltParseException)
+            {
+                // Fallback: Check if password was stored as plain text
+                if (user.PasswordHash == password)
+                {
+                    isValid = true;
+                    // Auto-heal: Update to BCrypt hash
+                    user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
+                }
+            }
+
+            if (!isValid) return null;
 
             // Update last login
             user.LastLogin = DateTime.Now;

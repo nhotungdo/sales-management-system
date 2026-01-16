@@ -29,7 +29,7 @@
                     <div class="row mb-3">
                         <div class="col-sm-3 fw-bold">Trạng thái thanh toán:</div>
                         <div class="col-sm-9">
-                            <span class="badge @(Model.PaymentStatus == "Paid" ? "bg-success" : "bg-warning text-dark")">@Model.PaymentStatus</span>
+                            <span class="badge @(Model.PaymentStatus == "Paid" ? "bg-success" : "bg-warning text-dark")">@(Model.PaymentStatus == "Paid" ? "Đã thanh toán" : "Chưa thanh toán")</span>
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -117,7 +117,13 @@
                         <div class="mb-3">
                             <label class="form-label">Trạng thái hiện tại</label>
                             <span class="d-block badge @(Model.Status == "Completed" ? "bg-success" : Model.Status == "Cancelled" ? "bg-danger" : "bg-primary") p-2 fs-6">
-                                @Model.Status
+                                @(Model.Status switch {
+                                    "Completed" => "Hoàn thành",
+                                    "Processing" => "Đang xử lý",
+                                    "Cancelled" => "Đã hủy",
+                                    "Draft" => "Nháp",
+                                    _ => Model.Status
+                                })
                             </span>
                         </div>
                         <div class="mb-3">

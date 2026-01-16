@@ -1,7 +1,7 @@
 @model Sales_Management.Models.Employee
 
 @{
-    ViewData["Title"] = "Edit Employee";
+    ViewData["Title"] = "Chỉnh sửa nhân viên";
 }
 
 <h1>Chỉnh sửa nhân viên</h1>
@@ -16,34 +16,34 @@
             <input type="hidden" asp-for="UserId" />
 
             <div class="mb-3">
-                <label asp-for="Position" class="control-label"></label>
+                <label asp-for="Position" class="control-label">Chức vụ</label>
                 <input asp-for="Position" class="form-control" />
                 <span asp-validation-for="Position" class="text-danger"></span>
             </div>
              <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label asp-for="BasicSalary" class="control-label"></label>
+                    <label asp-for="BasicSalary" class="control-label">Lương cơ bản</label>
                     <input asp-for="BasicSalary" class="form-control" />
                     <span asp-validation-for="BasicSalary" class="text-danger"></span>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label asp-for="StartWorkingDate" class="control-label"></label>
+                    <label asp-for="StartWorkingDate" class="control-label">Ngày bắt đầu</label>
                     <input asp-for="StartWorkingDate" class="form-control" type="date" />
                     <span asp-validation-for="StartWorkingDate" class="text-danger"></span>
                 </div>
             </div>
              <div class="mb-3">
-                <label asp-for="Department" class="control-label"></label>
+                <label asp-for="Department" class="control-label">Phòng ban</label>
                 <input asp-for="Department" class="form-control" />
                 <span asp-validation-for="Department" class="text-danger"></span>
             </div>
             <div class="mb-3">
-                <label asp-for="ContractType" class="control-label"></label>
+                <label asp-for="ContractType" class="control-label">Loại hợp đồng</label>
                 <select asp-for="ContractType" class="form-select">
-                    <option value="FullTime">Full Time</option>
-                    <option value="PartTime">Part Time</option>
-                    <option value="Intern">Intern</option>
-                    <option value="Contract">Contract</option>
+                    <option value="FullTime">Toàn thời gian</option>
+                    <option value="PartTime">Bán thời gian</option>
+                    <option value="Intern">Thực tập sinh</option>
+                    <option value="Contract">Hợp đồng</option>
                 </select>
                 <span asp-validation-for="ContractType" class="text-danger"></span>
             </div>

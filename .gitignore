@@ -9,3 +9,5 @@ obj/
 *.suo
 *.user
 *.cache
+
+.fake
