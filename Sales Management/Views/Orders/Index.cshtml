@@ -1,12 +1,12 @@
 @model IEnumerable<Sales_Management.Models.Order>
 
 @{
-    ViewData["Title"] = "Dashboard đơn hàng";
+    ViewData["Title"] = "Quản lý đơn hàng";
 }
 
 <div class="row mb-3">
     <div class="col-md-6">
-        <h1>Dashboard đơn hàng</h1>
+        <h1>Quản lý đơn hàng</h1>
     </div>
     <div class="col-md-6 text-end">
         <!-- Optional: Add Create Order button if needed -->
@@ -68,10 +68,20 @@
                                 _ => "bg-info"
                             };
                         }
-                        <span class="badge @badgeClass">@item.Status</span>
+                        @{
+                            string statusDisplay = item.Status switch
+                            {
+                                "Completed" => "Hoàn thành",
+                                "Processing" => "Đang xử lý",
+                                "Cancelled" => "Đã hủy",
+                                "Draft" => "Nháp",
+                                _ => item.Status
+                            };
+                        }
+                        <span class="badge @badgeClass">@statusDisplay</span>
                     </td>
                     <td>
-                         <span class="badge @(item.PaymentStatus == "Paid" ? "bg-success" : "bg-warning text-dark")">@item.PaymentStatus</span>
+                         <span class="badge @(item.PaymentStatus == "Paid" ? "bg-success" : "bg-warning text-dark")">@(item.PaymentStatus == "Paid" ? "Đã thanh toán" : "Chưa thanh toán")</span>
                     </td>
                     <td>
                         <a asp-action="Details" asp-route-id="@item.OrderId" class="btn btn-sm btn-outline-primary">Chi tiết</a>

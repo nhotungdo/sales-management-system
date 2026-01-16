@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Sales_Management.Models;
 
@@ -7,8 +8,10 @@ public partial class Product
 {
     public int ProductId { get; set; }
 
+    [Required(ErrorMessage = "Mã sản phẩm là bắt buộc")]
     public string Code { get; set; } = null!;
 
+    [Required(ErrorMessage = "Tên sản phẩm là bắt buộc")]
     public string Name { get; set; } = null!;
 
     public string? Description { get; set; }
@@ -17,6 +20,7 @@ public partial class Product
 
     public decimal? ImportPrice { get; set; }
 
+    [Required(ErrorMessage = "Giá bán là bắt buộc")]
     public decimal SellingPrice { get; set; }
 
     public decimal? Vatrate { get; set; }

@@ -48,6 +48,8 @@ public partial class SalesManagementContext : DbContext
 
     public virtual DbSet<Payroll> Payrolls { get; set; }
 
+    public virtual DbSet<SystemSetting> SystemSettings { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Category>(entity =>
@@ -55,6 +57,11 @@ public partial class SalesManagementContext : DbContext
             entity.HasKey(e => e.CategoryId).HasName("PK__Categori__19093A0B6A3254B2");
 
             entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.ImageUrl).HasMaxLength(255);
+            entity.Property(e => e.Status).HasMaxLength(20).HasDefaultValue("Active");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+            entity.Property(e => e.UpdatedDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
 
             entity.HasOne(d => d.Parent).WithMany(p => p.InverseParent)
                 .HasForeignKey(d => d.ParentId)

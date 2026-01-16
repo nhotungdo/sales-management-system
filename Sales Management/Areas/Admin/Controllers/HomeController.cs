@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Sales_Management.Models;
-using Sales_Management.Data;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Sales_Management.Areas.Admin.ViewModels;
+using Sales_Management.Data;
+using Sales_Management.Models;
+using System.Globalization;
 
 namespace Sales_Management.Areas.Admin.Controllers
 {
@@ -17,102 +19,76 @@ namespace Sales_Management.Areas.Admin.Controllers
             _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
-        }
+            // 1. Fetch Key Metrics
+            var totalRevenue = await _context.Orders
+                .Where(o => o.Status == "Completed" || o.PaymentStatus == "Paid")
+                .SumAsync(o => o.TotalAmount) ?? 0;
 
-        public async Task<IActionResult> RevenueReport(string period = "Month", DateTime? startDate = null, DateTime? endDate = null)
-        {
-             // Default to this month
-            if (!startDate.HasValue) startDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-            if (!endDate.HasValue) endDate = DateTime.Today;
+            var totalOrders = await _context.Orders.CountAsync();
 
-            var viewModel = new Sales_Management.Models.ViewModels.RevenueReportViewModel
+            var pendingOrders = await _context.Orders
+                .CountAsync(o => o.Status == "Pending" || o.Status == "Processing");
+
+            // New Users (e.g., created this month)
+            var currentMonth = DateTime.Now.Month;
+            var currentYear = DateTime.Now.Year;
+            var newUsers = await _context.Users
+                .CountAsync(u => u.CreatedDate.Month == currentMonth && u.CreatedDate.Year == currentYear);
+
+            // 2. Fetch Recent Transactions
+            var recentOrders = await _context.Orders
+                .Include(o => o.Customer)
+                .OrderByDescending(o => o.OrderDate)
+                .Take(5)
+                .ToListAsync();
+
+            // 3. Prepare Chart Data (Revenue per Month for current year)
+            var revenueData = new List<int>();
+            for (int i = 1; i <= 12; i++)
             {
-                PeriodType = period,
-                StartDate = startDate.Value,
-                EndDate = endDate.Value
+                var monthlyRevenue = await _context.Orders
+                    .Where(o => o.OrderDate.HasValue && 
+                                o.OrderDate.Value.Year == currentYear && 
+                                o.OrderDate.Value.Month == i &&
+                                (o.Status == "Completed" || o.PaymentStatus == "Paid"))
+                    .SumAsync(o => o.TotalAmount) ?? 0;
+                revenueData.Add((int)monthlyRevenue);
+            }
+
+            // 4. Prepare Chart Data (Sales by Category)
+            // Need to join OrderDetail -> Product -> Category
+            // Filtering out null Categories to prevent runtime errors
+            var categoryStats = await _context.OrderDetails
+                .Include(od => od.Product)
+                .ThenInclude(p => p.Category)
+                .Where(od => od.Product.Category != null)
+                .GroupBy(od => od.Product.Category.Name)
+                .Select(g => new { 
+                    CategoryName = g.Key, 
+                    Count = g.Sum(od => od.Quantity) 
+                }) 
+                .OrderByDescending(x => x.Count)
+                .Take(5)
+                .ToListAsync();
+
+            var categoryLabels = categoryStats.Select(x => x.CategoryName ?? "Unknown").ToList();
+            var categoryData = categoryStats.Select(x => x.Count).ToList();
+
+            var viewModel = new DashboardViewModel
+            {
+                TotalRevenue = totalRevenue,
+                TotalOrders = totalOrders,
+                PendingOrders = pendingOrders,
+                NewUsers = newUsers,
+                RecentOrders = recentOrders ?? new List<Order>(),
+                RevenueData = revenueData,
+                CategoryLabels = categoryLabels,
+                CategoryData = categoryData
             };
 
-            // Base Query
-            var orders = _context.Orders
-                .Include(o => o.OrderDetails).ThenInclude(od => od.Product).ThenInclude(p => p.Category)
-                .Include(o => o.CreatedByNavigation)
-                .Where(o => o.OrderDate >= startDate && o.OrderDate <= endDate.Value.AddDays(1) && o.Status != "Cancelled");
-
-            // Total Metrics
-            viewModel.TotalRevenue = await orders.SumAsync(o => o.TotalAmount ?? 0);
-            viewModel.TotalOrders = await orders.CountAsync();
-
-            // Revenue Over Time
-            var ordersList = await orders.ToListAsync(); 
-            
-            IEnumerable<Sales_Management.Models.ViewModels.ChartData> timelineData;
-
-            if (period == "Year")
-            {
-                // Group by Month
-                timelineData = ordersList
-                    .Where(o => o.OrderDate.HasValue)
-                    .GroupBy(o => String.Format("{0:MMM yyyy}", o.OrderDate!.Value))
-                    .Select(g => new Sales_Management.Models.ViewModels.ChartData 
-                    { 
-                        Label = g.Key, 
-                        Value = g.Sum(o => o.TotalAmount ?? 0) 
-                    });
-            }
-            else
-            {
-                // Group by Day
-                timelineData = ordersList
-                    .Where(o => o.OrderDate.HasValue)
-                    .GroupBy(o => String.Format("{0:dd/MM}", o.OrderDate!.Value))
-                    .Select(g => new Sales_Management.Models.ViewModels.ChartData 
-                    { 
-                        Label = g.Key, 
-                        Value = g.Sum(o => o.TotalAmount ?? 0) 
-                    });
-            }
-            viewModel.RevenueOverTime = timelineData.ToList();
-
-            // Revenue by Employee (User)
-            viewModel.RevenueByEmployee = ordersList
-                .GroupBy(o => o.CreatedByNavigation != null ? o.CreatedByNavigation.FullName : "Không xác định")
-                .Select(g => new Sales_Management.Models.ViewModels.ChartData
-                {
-                    Label = g.Key,
-                    Value = g.Sum(o => o.TotalAmount ?? 0)
-                })
-                .OrderByDescending(x => x.Value)
-                .ToList();
-
-            // Revenue By Category
-            viewModel.RevenueByCategory = ordersList.SelectMany(o => o.OrderDetails)
-                .GroupBy(od => od.Product.Category != null ? od.Product.Category.Name : "Chưa phân loại")
-                .Select(g => new Sales_Management.Models.ViewModels.ChartData
-                {
-                    Label = g.Key,
-                    Value = g.Sum(od => od.Total ?? 0)
-                })
-                .OrderByDescending(x => x.Value)
-                .ToList();
-
-            // Top Selling Products
-            viewModel.TopProducts = ordersList.SelectMany(o => o.OrderDetails)
-                .GroupBy(od => od.Product)
-                .Select(g => new Sales_Management.Models.ViewModels.ProductPerformance
-                {
-                    ProductName = g.Key.Name,
-                    Category = g.Key.Category != null ? g.Key.Category.Name : "N/A",
-                    QuantitySold = g.Sum(od => od.Quantity),
-                    RevenueGenerated = g.Sum(od => od.Total ?? 0)
-                })
-                .OrderByDescending(p => p.RevenueGenerated)
-                .Take(10)
-                .ToList();
-
-             return View(viewModel);
+            return View(viewModel);
         }
     }
 }

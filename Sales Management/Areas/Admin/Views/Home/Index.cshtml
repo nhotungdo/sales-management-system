@@ -1,273 +1,187 @@
-﻿@{
-    ViewData["Title"] = "Trang Quản trị Hệ thống";
+@model Sales_Management.Areas.Admin.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Tổng quan Dashboard";
 }
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/admin-dashboard.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-}
-
-<div class="container-fluid dashboard-container">
-    <!-- Header -->
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom dashboard-header">
-        <div>
-            <h1 class="h2 text-gray-800">Tổng quan Quản trị</h1>
-            <p class="text-muted mb-0">Xin chào, @User.Identity.Name! Đây là tình hình kinh doanh hôm nay.</p>
-        </div>
-        <div class="btn-toolbar mb-2 mb-md-0">
-            <div class="btn-group me-2">
-                <a asp-action="RevenueReport" asp-controller="Home" asp-area="Admin" class="btn btn-sm btn-outline-primary"><i class="fas fa-chart-line me-1"></i> Báo cáo chi tiết</a>
-                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()"><i class="fas fa-print me-1"></i> Xuất PDF</button>
+<div class="row g-4 mb-4">
+    <!-- Stat Card 1: Revenue -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card-modern stat-card-modern">
+            <div class="stat-content">
+                <h6>Tổng doanh thu</h6>
+                <h3>@Model.TotalRevenue.ToString("C")</h3>
+                <span class="stat-trend text-success"><i class="bi bi-graph-up-arrow"></i> +12% tháng này</span>
+            </div>
+            <div class="stat-icon-wrapper bg-light-primary">
+                <i class="bi bi-currency-dollar"></i>
             </div>
         </div>
     </div>
 
-    <!-- Stats Cards Row -->
-    <div class="row mb-4">
-        <!-- Revenue Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card dashboard-card bg-gradient-primary text-white h-100">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-white-50 small text-uppercase fw-bold mb-1">Doanh thu Hôm nay</div>
-                            <div class="h3 mb-0 fw-bold">@ViewBag.RevenueToday?.ToString("N0") đ</div>
-                            <div class="mt-2 text-white-50 small">
-                                <span class="@((ViewBag.RevenueGrowth >= 0) ? "text-white" : "text-warning") fw-bold">
-                                    <i class="fas @((ViewBag.RevenueGrowth >= 0) ? "fa-arrow-up" : "fa-arrow-down")"></i>
-                                    @Math.Abs((double)(ViewBag.RevenueGrowth ?? 0)).ToString("N1")%
-                                </span>
-                                <span> so với hôm qua</span>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-dollar-sign card-stat-icon"></i>
-                        </div>
-                    </div>
-                </div>
+    <!-- Stat Card 2: Orders -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card-modern stat-card-modern">
+            <div class="stat-content">
+                <h6>Tổng đơn hàng</h6>
+                <h3>@Model.TotalOrders</h3>
+                <span class="stat-trend text-info">Toàn thời gian</span>
             </div>
-        </div>
-
-        <!-- Orders Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card dashboard-card bg-gradient-success text-white h-100">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-white-50 small text-uppercase fw-bold mb-1">Đơn hàng Mới</div>
-                            <div class="h3 mb-0 fw-bold">@ViewBag.TotalOrdersToday</div>
-                            <div class="mt-2 text-white-50 small">
-                                <span class="fw-bold">@ViewBag.OrdersProcessing</span> Đang xử lý
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-shopping-bag card-stat-icon"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Employees Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card dashboard-card bg-gradient-info text-white h-100">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-white-50 small text-uppercase fw-bold mb-1">Nhân sự Online</div>
-                            <div class="h3 mb-0 fw-bold">@ViewBag.OnlineEmployees</div>
-                            <div class="mt-2 text-white-50 small">
-                                <span class="text-white fw-bold">@ViewBag.MissedCheckins</span> Vắng mặt
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user-clock card-stat-icon"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Alerts Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card dashboard-card bg-gradient-warning text-white h-100">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-white-50 small text-uppercase fw-bold mb-1">Cảnh báo tồn kho</div>
-                            <div class="h3 mb-0 fw-bold">@(((IEnumerable<Sales_Management.Models.Product>)ViewBag.LowStockProducts).Count())</div>
-                            <div class="mt-2 text-white-50 small">Sản phẩm sắp hết</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-exclamation-triangle card-stat-icon"></i>
-                        </div>
-                    </div>
-                </div>
+            <div class="stat-icon-wrapper bg-light-info">
+                <i class="bi bi-bag-fill"></i>
             </div>
         </div>
     </div>
 
-    <!-- Charts Row -->
-    <div class="row mb-4">
-        <!-- Revenue Line Chart -->
-        <div class="col-lg-8 mb-4">
-            <div class="card shadow mb-4 h-100 border-0 rounded-lg">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-white border-bottom-0">
-                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-chart-area me-2"></i>Biểu đồ Doanh thu (7 ngày qua)</h6>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="revenueChart"></canvas>
-                    </div>
-                </div>
+    <!-- Stat Card 3: Pending -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card-modern stat-card-modern">
+             <div class="stat-content">
+                <h6>Chờ xử lý</h6>
+                <h3>@Model.PendingOrders</h3>
+                <span class="stat-trend text-warning">Cần hành động ngay</span>
             </div>
-        </div>
-
-        <!-- Category Doughnut Chart -->
-        <div class="col-lg-4 mb-4">
-            <div class="card shadow mb-4 h-100 border-0 rounded-lg">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-white border-bottom-0">
-                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-chart-pie me-2"></i>Phân bố theo Danh mục</h6>
-                </div>
-                <div class="card-body">
-                    <div class="chart-container">
-                        <canvas id="categoryChart"></canvas>
-                    </div>
-                    <div class="mt-4 text-center small">
-                        <span class="mr-2">
-                            <i class="fas fa-circle text-primary"></i> Danh mục chính
-                        </span>
-                        <span class="mr-2">
-                            <i class="fas fa-circle text-success"></i> Doanh số cao
-                        </span>
-                    </div>
-                </div>
+            <div class="stat-icon-wrapper bg-light-warning">
+                <i class="bi bi-hourglass-split"></i>
             </div>
         </div>
     </div>
 
-    <!-- Detailed Lists Row -->
-    <div class="row">
-        <!-- Low Stock Alerts -->
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow mb-4 border-0 rounded-lg">
-                <div class="card-header py-3 bg-white border-bottom-0">
-                    <h6 class="m-0 font-weight-bold text-danger"><i class="fas fa-fire me-2"></i>Cảnh báo Tồn kho Thấp</h6>
-                </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        @if (ViewBag.LowStockProducts != null)
+    <!-- Stat Card 4: Users -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card-modern stat-card-modern">
+            <div class="stat-content">
+                <h6>Khách hàng mới</h6>
+                <h3>@Model.NewUsers</h3>
+                <span class="stat-trend text-secondary">Tháng này</span>
+            </div>
+             <div class="stat-icon-wrapper bg-light-success">
+                <i class="bi bi-people-fill"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Revenue Chart -->
+    <div class="col-xl-8 col-lg-7">
+        <div class="card-modern">
+            <h5 class="mb-4 text-dark fw-bold">Biểu đồ doanh thu</h5>
+            <div class="chart-area" style="height: 350px;">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Chart -->
+    <div class="col-xl-4 col-lg-5">
+        <div class="card-modern">
+            <h5 class="mb-4 text-dark fw-bold">Top danh mục</h5>
+            <div class="chart-area d-flex justify-content-center" style="height: 300px;">
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="table-modern-wrapper">
+            <h5 class="mb-4 text-dark fw-bold ps-2">Giao dịch gần đây</h5>
+             <div class="table-responsive">
+                <table class="table-modern">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Ngày đặt</th>
+                            <th>Số tiền</th>
+                            <th>Trạng thái</th>
+                            <th class="text-center">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.RecentOrders)
                         {
-                            foreach (var product in ViewBag.LowStockProducts as IEnumerable<Sales_Management.Models.Product>)
-                            {
-                                <div class="list-group-item d-flex justify-content-between align-items-center border-left-warning">
-                                    <div>
-                                        <div class="fw-bold text-dark">@product.Name</div>
-                                        <div class="small text-muted">@product.Category?.Name</div>
+                            <tr>
+                                <td class="fw-bold text-primary">#@order.OrderId</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                                            <i class="bi bi-person text-secondary"></i>
+                                        </div>
+                                        <span>@order.Customer?.FullName</span>
                                     </div>
-                                    <span class="badge bg-danger rounded-pill badge-pulse">Còn: @product.StockQuantity</span>
-                                </div>
-                            }
+                                </td>
+                                <td>@(order.OrderDate.HasValue ? order.OrderDate.Value.ToString("dd/MM/yyyy HH:mm") : "")</td>
+                                <td class="fw-bold">@(order.TotalAmount.HasValue ? order.TotalAmount.Value.ToString("C") : "")</td>
+                                <td>
+                                    @if(order.Status == "Completed") { <span class="badge-modern badge-success-modern">Hoàn thành</span> }
+                                    else if(order.Status == "Processing") { <span class="badge-modern badge-info-modern">Đang xử lý</span> }
+                                    else if(order.Status == "Cancelled") { <span class="badge-modern badge-danger-modern">Đã hủy</span> }
+                                    else if(order.Status == "Pending") { <span class="badge-modern badge-warning-modern">Chờ xử lý</span> }
+                                    else { <span class="badge-modern badge-secondary">@order.Status</span> }
+                                </td>
+                                <td class="text-center">
+                                    <a asp-area="" asp-controller="Orders" asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                        <i class="bi bi-eye"></i> Xem
+                                    </a>
+                                </td>
+                            </tr>
                         }
-                        else
+                        @if(!Model.RecentOrders.Any())
                         {
-                            <div class="p-3 text-center text-muted">Không có cảnh báo nào.</div>
+                            <tr><td colspan="6" class="text-center text-muted py-4">Chưa có giao dịch nào</td></tr>
                         }
-                    </div>
-                </div>
-                <div class="card-footer bg-white text-center border-top-0">
-                    <a asp-controller="Products" asp-action="Index" class="small text-primary fw-bold text-decoration-none">Quản lý kho hàng <i class="fas fa-arrow-right"></i></a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quick Actions / Navigation -->
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow mb-4 border-0 rounded-lg">
-                <div class="card-header py-3 bg-white border-bottom-0">
-                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-rocket me-2"></i>Thao tác nhanh</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <!-- 'Create Product' removed per requirements -->
-                        <div class="col-md-6">
-                            <a asp-controller="Employees" asp-action="Create" class="card h-100 text-decoration-none text-dark hover-shadow bg-light border-0">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-user-plus fa-2x text-success mb-2"></i>
-                                    <h6 class="card-title fw-bold">Thêm Nhân viên</h6>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="col-md-6">
-                            <a asp-controller="Home" asp-action="RevenueReport" asp-area="Admin" class="card h-100 text-decoration-none text-dark hover-shadow bg-light border-0">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-file-invoice-dollar fa-2x text-info mb-2"></i>
-                                    <h6 class="card-title fw-bold">Xem Báo cáo</h6>
-                                </div>
-                            </a>
-                        </div>
-                         <div class="col-md-6">
-                            <a asp-controller="Orders" asp-action="Index" class="card h-100 text-decoration-none text-dark hover-shadow bg-light border-0">
-                                <div class="card-body text-center">
-                                    <i class="fas fa-clipboard-check fa-2x text-warning mb-2"></i>
-                                    <h6 class="card-title fw-bold">Duyệt Đơn hàng</h6>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-                </div>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Data from Server
-        var revenueLabels = @Json.Serialize(ViewBag.RevenueChartLabels);
-        var revenueData = @Json.Serialize(ViewBag.RevenueChartData);
-        var categoryLabels = @Json.Serialize(ViewBag.CategoryChartLabels);
-        var categoryData = @Json.Serialize(ViewBag.CategoryChartData);
+        // Set new default font family and font color to mimic Bootstrap's default styling
+        Chart.defaults.font.family = 'Inter';
+        Chart.defaults.color = '#858796';
 
-        // Revenue Chart Area
-        var ctxRev = document.getElementById('revenueChart').getContext('2d');
-        var revenueChart = new Chart(ctxRev, {
+        // Revenue Chart (Line)
+        var ctx = document.getElementById("revenueChart");
+        var myLineChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: revenueLabels,
+                labels: ["Th 1", "Th 2", "Th 3", "Th 4", "Th 5", "Th 6", "Th 7", "Th 8", "Th 9", "Th 10", "Th 11", "Th 12"],
                 datasets: [{
-                    label: 'Doanh thu (VNĐ)',
-                    data: revenueData,
-                    backgroundColor: 'rgba(78, 115, 223, 0.05)',
-                    borderColor: 'rgba(78, 115, 223, 1)',
-                    borderWidth: 2,
+                    label: "Doanh thu",
+                    lineTension: 0.4,
+                    backgroundColor: "rgba(67, 97, 238, 0.05)",
+                    borderColor: "rgba(67, 97, 238, 1)",
                     pointRadius: 4,
-                    pointBackgroundColor: 'rgba(78, 115, 223, 1)',
-                    pointBorderColor: '#fff',
-                    pointHoverRadius: 5,
-                    pointHoverBackgroundColor: 'rgba(78, 115, 223, 1)',
-                    fill: true,
-                    tension: 0.3
-                }]
+                    pointBackgroundColor: "#fff",
+                    pointBorderColor: "rgba(67, 97, 238, 1)",
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: "rgba(67, 97, 238, 1)",
+                    pointHoverBorderColor: "#fff",
+                    pointHitRadius: 10,
+                    pointBorderWidth: 2,
+                    data: @Html.Raw(Json.Serialize(Model.RevenueData)),
+                    fill: true
+                }],
             },
             options: {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        callbacks: {
+                         backgroundColor: '#232d3f',
+                         titleFont: { size: 13 },
+                         bodyFont: { size: 13 },
+                         padding: 10,
+                         cornerRadius: 8,
+                         displayColors: false,
+                         callbacks: {
                             label: function(context) {
-                                var label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed.y !== null) {
-                                    label += new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.parsed.y);
-                                }
-                                return label;
+                                return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
                             }
                         }
                     }
@@ -275,63 +189,52 @@
                 scales: {
                     x: {
                         grid: { display: false, drawBorder: false },
-                        ticks: { maxTicksLimit: 7 }
+                        ticks: { color: '#8c9097' }
                     },
                     y: {
                         ticks: {
-                            maxTicksLimit: 5,
+                            color: '#8c9097',
                             padding: 10,
-                            callback: function(value, index, values) {
-                                return new Intl.NumberFormat('vi-VN', { notation: 'compact', compactDisplay: 'short' }).format(value) + 'đ';
-                            }
+                            callback: function(value) { return '$' + value; }
                         },
                         grid: {
-                            color: "rgb(234, 236, 244)",
-                            zeroLineColor: "rgb(234, 236, 244)",
-                            drawBorder: false,
-                            borderDash: [2],
-                            zeroLineBorderDash: [2]
+                            color: "rgba(0,0,0,0.03)",
+                            borderDash: [5, 5],
+                            drawBorder: false
                         }
-                    }
+                    },
                 }
             }
         });
 
-        // Category Pie Chart
-        var ctxCat = document.getElementById('categoryChart').getContext('2d');
-        var categoryChart = new Chart(ctxCat, {
+        // Pie Chart
+        var ctxPool = document.getElementById("pieChart");
+        var myPieChart = new Chart(ctxPool, {
             type: 'doughnut',
             data: {
-                labels: categoryLabels,
+                labels: @Html.Raw(Json.Serialize(Model.CategoryLabels)),
                 datasets: [{
-                    data: categoryData,
-                    backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'],
-                    hoverBackgroundColor: ['#2e59d9', '#17a673', '#2c9faf', '#dda20a', '#be2617', '#717384'],
-                    hoverBorderColor: "rgba(234, 236, 244, 1)",
+                    data: @Html.Raw(Json.Serialize(Model.CategoryData)),
+                    backgroundColor: ['#4361ee', '#2bbd7e', '#f7b731', '#f83f37', '#0099ff', '#8c9097'],
+                    borderWidth: 0,
+                    hoverOffset: 4
                 }],
             },
             options: {
                 maintainAspectRatio: false,
+                cutout: '75%',
                 plugins: {
                     legend: {
+                        display: true,
                         position: 'bottom',
-                        labels: { padding: 20, boxWidth: 12 }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                var label = context.label || '';
-                                var value = context.parsed;
-                                var total = context.chart._metasets[context.datasetIndex].total;
-                                var percentage = ((value / total) * 100).toFixed(1) + "%";
-                                return label + ': ' + new Intl.NumberFormat('vi-VN').format(value) + ' (' + percentage + ')';
-                            }
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: { size: 12 }
                         }
                     }
-                },
-                cutout: '70%',
+                }
             },
         });
     </script>
 }
-

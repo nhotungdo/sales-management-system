@@ -1,0 +1,109 @@
+@model IEnumerable<Sales_Management.Models.Employee>
+
+@{
+    ViewData["Title"] = "Quản lý nhân viên";
+}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-4">
+    <div>
+        <h3 class="fw-bold text-dark">Quản lý nhân viên</h3>
+        <p class="text-muted mb-0">Danh sách nhân viên và phân quyền hệ thống</p>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
+            <i class="bi bi-plus-lg me-2"></i> Thêm nhân viên
+        </a>
+    </div>
+</div>
+
+<div class="card-modern">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <form asp-action="Index" method="get" class="d-flex">
+            <div class="input-group">
+                <span class="input-group-text bg-light border-end-0 rounded-start-pill"><i class="bi bi-search text-secondary"></i></span>
+                <input type="text" name="searchString" class="form-control bg-light border-start-0 rounded-end-pill ps-0" placeholder="Tìm kiếm nhân viên..." value="@ViewData["CurrentFilter"]" style="min-width: 250px;">
+            </div>
+        </form>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary rounded-pill"><i class="bi bi-funnel"></i> Lọc</button>
+            <button class="btn btn-outline-secondary rounded-pill"><i class="bi bi-download"></i> Xuất</button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table-modern">
+            <thead>
+                <tr>
+                    <th>Nhân viên</th>
+                    <th>Chức vụ</th>
+                    <th>Phòng ban</th>
+                    <th>Loại hợp đồng</th>
+                    <th>Ngày vào làm</th>
+                    <th>Trạng thái</th>
+                    <th class="text-center">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model) {
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="user-avatar-small me-3" style="width: 40px; height: 40px; border-radius: 50%; background-color: #eaf0ff; color: #4361ee; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                    @item.User.FullName?.Substring(0,1).ToUpper()
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">@item.User.FullName</div>
+                                    <div class="small text-muted">@item.User.Email</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>@item.Position</td>
+                        <td>@item.Department</td>
+                        <td>
+                            @{
+                                var contractClass = item.ContractType switch {
+                                    "FullTime" => "badge-info-modern",
+                                    "PartTime" => "badge-warning-modern",
+                                    "Intern" => "badge-secondary",
+                                    _ => "badge-secondary"
+                                };
+                                var contractText = item.ContractType switch {
+                                    "FullTime" => "Toàn thời gian",
+                                    "PartTime" => "Bán thời gian",
+                                    "Intern" => "Thực tập",
+                                    "Contract" => "Hợp đồng",
+                                    _ => item.ContractType
+                                };
+                            }
+                            <span class="badge-modern @contractClass">@contractText</span>
+                        </td>
+                        <td>@item.StartWorkingDate?.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            @if (!item.IsDeleted)
+                            {
+                                <span class="badge-modern badge-success-modern">Hoạt động</span>
+                            }
+                            else
+                            {
+                                <span class="badge-modern badge-danger-modern">Đã khóa</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                             <div class="dropdown">
+                                <button class="btn btn-sm btn-light rounded-circle" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                    <li><a class="dropdown-item" asp-action="Edit" asp-route-id="@item.EmployeeId"><i class="bi bi-pencil me-2"></i> Chỉnh sửa</a></li>
+                                    <li><a class="dropdown-item" asp-action="Details" asp-route-id="@item.EmployeeId"><i class="bi bi-info-circle me-2"></i> Chi tiết</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" asp-action="Delete" asp-route-id="@item.EmployeeId"><i class="bi bi-trash me-2"></i> Xóa</a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
