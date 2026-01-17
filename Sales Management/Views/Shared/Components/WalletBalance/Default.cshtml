@@ -1,0 +1,7 @@
+@model decimal
+
+<li class="nav-item">
+    <a class="nav-link text-dark" asp-area="" asp-controller="Wallet" asp-action="Index" title="Số dư ví">
+        <i class="bi bi-wallet2"></i> <span class="fw-bold text-success">@Model.ToString("N0") ₫</span>
+    </a>
+</li>

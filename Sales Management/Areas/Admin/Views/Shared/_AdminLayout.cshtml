@@ -55,6 +55,13 @@
                 </a>
             </li>
 
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "WalletManagement" ? "active" : "")" 
+                   asp-area="Admin" asp-controller="WalletManagement" asp-action="Index">
+                    <i class="bi bi-wallet-fill"></i> Nạp xu
+                </a>
+            </li>
+
             <li class="px-3 pt-3 pb-1 text-uppercase small text-muted font-weight-bold">Hệ thống</li>
 
              <li class="nav-item">

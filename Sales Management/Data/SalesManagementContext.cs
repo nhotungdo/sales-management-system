@@ -367,6 +367,8 @@ public partial class SalesManagementContext : DbContext
                 .HasMaxLength(20)
                 .HasDefaultValue("Pending");
             entity.Property(e => e.TransactionType).HasMaxLength(20);
+            entity.Property(e => e.TransactionCode).HasMaxLength(50);
+            entity.Property(e => e.AmountMoney).HasColumnType("decimal(15, 2)");
 
             entity.HasOne(d => d.Wallet).WithMany(p => p.WalletTransactions)
                 .HasForeignKey(d => d.WalletId)

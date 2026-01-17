@@ -22,4 +22,8 @@ public partial class WalletTransaction
     public DateTime? CreatedDate { get; set; }
 
     public virtual Wallet Wallet { get; set; } = null!;
+
+    public string? TransactionCode { get; set; }
+
+    public decimal? AmountMoney { get; set; }
 }

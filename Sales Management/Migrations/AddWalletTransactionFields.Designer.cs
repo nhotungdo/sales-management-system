@@ -12,8 +12,8 @@ using Sales_Management.Data;
 namespace Sales_Management.Migrations
 {
     [DbContext(typeof(SalesManagementContext))]
-    [Migration("20260116144350_AddSystemSettings")]
-    partial class AddSystemSettings
+    [Migration("AddWalletTransactionFields")]
+    partial class AddWalletTransactionFields
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -792,6 +792,9 @@ namespace Sales_Management.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(15, 2)");
 
+                    b.Property<decimal?>("AmountMoney")
+                        .HasColumnType("decimal(15, 2)");
+
                     b.Property<DateTime?>("CreatedDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime")
@@ -812,6 +815,10 @@ namespace Sales_Management.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)")
                         .HasDefaultValue("Pending");
+
+                    b.Property<string>("TransactionCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("TransactionType")
                         .IsRequired()

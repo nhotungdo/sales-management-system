@@ -13,7 +13,7 @@ using Sales_Management.Data;
 namespace Sales_Management.Migrations
 {
     [DbContext(typeof(SalesManagementContext))]
-    [Migration("20260114160437_AddEmployeeColumns")]
+    [Migration("AddEmployeeColumns")]
     partial class AddEmployeeColumns
     {
         /// <inheritdoc />
