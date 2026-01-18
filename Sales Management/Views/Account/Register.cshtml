@@ -2,87 +2,80 @@
 
 @{
     ViewData["Title"] = "Đăng ký";
+    Layout = "_AuthLayout";
 }
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/auth.css" />
-    <style>
-        body {
-            background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
-            min-height: 100vh;
-        }
-        .auth-card {
-            max-width: 600px;
-        }
-    </style>
-}
+<div class="auth-page">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
 
-<div class="auth-wrapper">
-    <div class="auth-card animate-fade-in-up">
-        <div class="auth-header">
-            <div class="icon-box" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); box-shadow: 0 4px 10px rgba(67, 233, 123, 0.3);">
-                 <i class="bi bi-person-plus-fill"></i>
+    <div class="glass-container">
+        <div class="glass-card">
+            <div class="brand-logo">
+                <i class="bi bi-box-seam-fill me-2"></i>SalesM
             </div>
-            <h2 class="auth-title">Đăng ký tài khoản</h2>
-            <p class="auth-subtitle">Trở thành thành viên ngay hôm nay</p>
-        </div>
-        <div class="auth-body">
+
+            <div class="auth-header">
+                <h2 class="auth-title">Tạo tài khoản</h2>
+                <p class="auth-subtitle">Bắt đầu hành trình của bạn ngay hôm nay</p>
+            </div>
+
             <form asp-action="Register" method="post">
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
 
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="form-floating mb-3 form-floating-custom">
-                            <input asp-for="Username" class="form-control" placeholder="Tên đăng nhập" autofocus />
+                        <div class="form-floating-custom">
                             <label asp-for="Username">Tên đăng nhập</label>
-                            <span asp-validation-for="Username" class="text-danger small ms-2"></span>
+                            <input asp-for="Username" placeholder="user123" autofocus />
+                            <span asp-validation-for="Username" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="col-md-6">
-                         <div class="form-floating mb-3 form-floating-custom">
-                            <input asp-for="Email" class="form-control" placeholder="Email" />
+                         <div class="form-floating-custom">
                             <label asp-for="Email">Email</label>
-                            <span asp-validation-for="Email" class="text-danger small ms-2"></span>
+                            <input asp-for="Email" placeholder="name@example.com" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
                     </div>
                 </div>
 
-                <div class="form-floating mb-3 form-floating-custom">
-                    <input asp-for="FullName" class="form-control" placeholder="Họ và tên" />
+                <div class="form-floating-custom">
                     <label asp-for="FullName">Họ và tên</label>
-                    <span asp-validation-for="FullName" class="text-danger small ms-2"></span>
+                    <input asp-for="FullName" placeholder="Nguyễn Văn A" />
+                    <span asp-validation-for="FullName" class="text-danger"></span>
                 </div>
 
-                <div class="form-floating mb-3 form-floating-custom">
-                    <input asp-for="PhoneNumber" class="form-control" placeholder="Số điện thoại" />
+                <div class="form-floating-custom">
                     <label asp-for="PhoneNumber">Số điện thoại</label>
-                    <span asp-validation-for="PhoneNumber" class="text-danger small ms-2"></span>
+                    <input asp-for="PhoneNumber" placeholder="0123456789" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="form-floating mb-3 form-floating-custom">
-                            <input asp-for="Password" type="password" class="form-control" placeholder="Mật khẩu" />
+                        <div class="form-floating-custom">
                             <label asp-for="Password">Mật khẩu</label>
-                            <span asp-validation-for="Password" class="text-danger small ms-2"></span>
+                            <input asp-for="Password" type="password" placeholder="••••••••" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="form-floating mb-3 form-floating-custom">
-                            <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Nhập lại mật khẩu" />
+                        <div class="form-floating-custom">
                             <label asp-for="ConfirmPassword">Nhập lại mật khẩu</label>
-                            <span asp-validation-for="ConfirmPassword" class="text-danger small ms-2"></span>
+                            <input asp-for="ConfirmPassword" type="password" placeholder="••••••••" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                         </div>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-auth mt-2" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                    <i class="bi bi-person-plus me-2"></i> Tạo tài khoản
+                <button type="submit" class="btn-auth mt-2">
+                    Tạo tài khoản
                 </button>
 
-                <div class="auth-links">
-                    <span class="text-muted">Đã có tài khoản?</span> 
-                    <a asp-action="Login" style="color: #2da44e;">Đăng nhập ngay</a>
+                <div class="auth-footer">
+                    Đã có tài khoản? 
+                    <a asp-action="Login">Đăng nhập</a>
                 </div>
             </form>
         </div>
