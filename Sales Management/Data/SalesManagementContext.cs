@@ -50,6 +50,8 @@ public partial class SalesManagementContext : DbContext
 
     public virtual DbSet<SystemSetting> SystemSettings { get; set; }
 
+    public virtual DbSet<VipPackage> VipPackages { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Category>(entity =>

@@ -1,3 +1,5 @@
+@model IEnumerable<Sales_Management.Models.Promotion>
+
 @{
     ViewData["Title"] = "Mã giảm giá";
 }
@@ -8,9 +10,9 @@
         <p class="text-muted mb-0">Tạo và quản lý các chương trình khuyến mãi</p>
     </div>
     <div>
-        <button class="btn btn-primary rounded-pill px-4 shadow-sm">
+        <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
             <i class="bi bi-plus-lg me-2"></i> Tạo mã mới
-        </button>
+        </a>
     </div>
 </div>
 
@@ -25,19 +27,102 @@
         </div>
     </div>
 
-    <!-- Empty State / Placeholder -->
-    <div class="text-center py-5">
-        <div class="mb-4">
-            <div class="d-inline-flex align-items-center justify-content-center bg-light-primary rounded-circle" style="width: 80px; height: 80px;">
-                <i class="bi bi-tags-fill fs-1 text-primary"></i>
-            </div>
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="border-0 rounded-start-3">Mã Code</th>
+                        <th class="border-0">Loại</th>
+                        <th class="border-0">Giá trị</th>
+                        <th class="border-0">Thời gian</th>
+                        <th class="border-0">Trạng thái</th>
+                        <th class="border-0 rounded-end-3 text-end">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-light rounded p-2 me-2 text-primary">
+                                        <i class="bi bi-ticket-perforated-fill"></i>
+                                    </div>
+                                    <span class="fw-bold text-dark">@item.Code</span>
+                                </div>
+                            </td>
+                            <td>
+                                @if (item.DiscountType == "Percent")
+                                {
+                                    <span class="badge bg-info-subtle text-info rounded-pill">Phần trăm</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning-subtle text-warning rounded-pill">Tiền mặt</span>
+                                }
+                            </td>
+                            <td class="fw-semibold text-primary">
+                                @if (item.DiscountType == "Percent")
+                                {
+                                    <span>@item.Value.ToString("0")%</span>
+                                    if(item.MaxDiscountAmount.HasValue)
+                                    {
+                                        <small class="text-muted d-block fw-normal" style="font-size: 0.75rem">Tối đa @item.MaxDiscountAmount?.ToString("N0")</small>
+                                    }
+                                }
+                                else
+                                {
+                                    <span>@item.Value.ToString("N0") đ</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="small">
+                                    <div class="text-muted">Bắt đầu: <span class="text-dark">@item.StartDate?.ToString("dd/MM/yyyy")</span></div>
+                                    <div class="text-muted">Kết thúc: <span class="text-dark">@item.EndDate?.ToString("dd/MM/yyyy")</span></div>
+                                </div>
+                            </td>
+                            <td>
+                                @if (item.Status == "Active")
+                                {
+                                    <span class="badge bg-success-subtle text-success rounded-pill">Hoạt động</span>
+                                }
+                                else if (item.Status == "Expired")
+                                {
+                                    <span class="badge bg-secondary-subtle text-secondary rounded-pill">Hết hạn</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger-subtle text-danger rounded-pill">Tạm ngưng</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="Edit" asp-route-id="@item.PromotionId" class="btn btn-sm btn-icon btn-light rounded-circle"><i class="bi bi-pencil"></i></a>
+                                <button class="btn btn-sm btn-icon btn-light rounded-circle text-danger"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
-        <h4 class="text-dark fw-bold">Chưa có mã giảm giá nào</h4>
-        <p class="text-muted mb-4" style="max-width: 400px; margin: 0 auto;">
-            Bắt đầu chiến dịch tiếp thị của bạn bằng cách tạo các mã giảm giá cho khách hàng.
-        </p>
-        <button class="btn btn-primary rounded-pill px-4">
-            <i class="bi bi-plus-lg me-2"></i> Tạo mã đầu tiên
-        </button>
-    </div>
+    }
+    else
+    {
+        <!-- Empty State / Placeholder -->
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center bg-light-primary rounded-circle" style="width: 80px; height: 80px;">
+                    <i class="bi bi-tags-fill fs-1 text-primary"></i>
+                </div>
+            </div>
+            <h4 class="text-dark fw-bold">Chưa có mã giảm giá nào</h4>
+            <p class="text-muted mb-4" style="max-width: 400px; margin: 0 auto;">
+                Bắt đầu chiến dịch tiếp thị của bạn bằng cách tạo các mã giảm giá cho khách hàng.
+            </p>
+            <a asp-action="Create" class="btn btn-primary rounded-pill px-4">
+                <i class="bi bi-plus-lg me-2"></i> Tạo mã đầu tiên
+            </a>
+        </div>
+    }
 </div>
