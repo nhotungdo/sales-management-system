@@ -1,0 +1,112 @@
+@model Sales_Management.Models.WalletTransaction
+@{
+    ViewData["Title"] = "Thanh toán";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-header bg-primary text-white py-3 text-center">
+                    <h4 class="mb-0 fw-bold">Thông tin thanh toán</h4>
+                </div>
+                <div class="card-body p-0">
+                    <div class="row g-0">
+                        <!-- QR Code Section -->
+                        <div class="col-md-5 bg-light d-flex flex-column align-items-center justify-content-center p-4 border-end">
+                            <h6 class="text-uppercase text-muted fw-bold mb-3 ls-1">Quét mã để thanh toán</h6>
+                            <div class="bg-white p-2 rounded shadow-sm mb-3">
+                                <img src="@ViewBag.QrUrl" alt="QR Code" class="img-fluid" style="max-width: 250px;">
+                            </div>
+                            <p class="small text-muted text-center mb-0">
+                                Sử dụng App Ngân hàng hoặc Ví điện tử để quét mã
+                            </p>
+                        </div>
+
+                        <!-- Details Section -->
+                        <div class="col-md-7 p-4 p-md-5">
+                            <div class="text-center mb-4">
+                                <div class="spinner-border text-primary mb-2" role="status" id="loadingSpinner">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <h5 class="fw-bold" id="statusText">Đang chờ thanh toán...</h5>
+                                <p class="text-muted small">Hệ thống sẽ tự động cập nhật khi nhận được tiền.</p>
+                            </div>
+
+                            <div class="bg-light p-3 rounded-3 mb-4">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Ngân hàng:</span>
+                                        <span class="fw-bold">MB Bank</span>
+                                    </li>
+                                    <li class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Chủ tài khoản:</span>
+                                        <span class="fw-bold">NGUYEN HO TUNG</span>
+                                    </li>
+                                    <li class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Số tài khoản:</span>
+                                        <span class="fw-bold font-monospace">0336653228</span>
+                                    </li>
+                                    <li class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Số tiền:</span>
+                                        <span class="fw-bold text-primary fs-5">@Model.AmountMoney?.ToString("N0") VND</span>
+                                    </li>
+                                    <li class="d-flex justify-content-between border-top pt-2 mt-2">
+                                        <span class="text-muted">Nội dung CK:</span>
+                                        <span class="fw-bold text-danger font-monospace fs-6">@Model.TransactionCode</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                            <div class="alert alert-warning small d-flex align-items-start" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-2 flex-shrink-0 mt-1"></i>
+                                <div>
+                                    <strong>Lưu ý quan trọng:</strong> Vui lòng nhập đúng chính xác <strong>Nội dung chuyển khoản</strong> để hệ thống tự động ghi nhận.
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2 mt-4">
+                                <a asp-action="Index" class="btn btn-outline-secondary rounded-pill">
+                                    <i class="bi bi-arrow-left me-2"></i>Quay lại ví
+                                </a>
+                                <form asp-action="CancelTransaction" asp-route-id="@Model.TransactionId" method="post" class="d-grid" onsubmit="return confirm('Bạn có chắc muốn hủy giao dịch này?');">
+                                    <button type="submit" class="btn btn-link text-danger text-decoration-none small">Hủy giao dịch</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const transactionId = @Model.TransactionId;
+        const checkStatusUrl = '@Url.Action("CheckStatus", "Wallet", new { id = Model.TransactionId })';
+        const successUrl = '@Url.Action("Index", "Wallet")';
+
+        function checkStatus() {
+            fetch(checkStatusUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'Completed') {
+                        document.getElementById('statusText').innerText = 'Giao dịch thành công!';
+                        document.getElementById('statusText').classList.remove('text-dark');
+                        document.getElementById('statusText').classList.add('text-success');
+                        document.getElementById('loadingSpinner').classList.remove('spinner-border');
+                        document.getElementById('loadingSpinner').innerHTML = '<i class="bi bi-check-circle-fill text-success fs-1"></i>';
+                        
+                        setTimeout(() => {
+                            window.location.href = successUrl;
+                        }, 2000);
+                    }
+                })
+                .catch(error => console.error('Error checking status:', error));
+        }
+
+        // Check every 3 seconds
+        setInterval(checkStatus, 3000);
+    </script>
+}

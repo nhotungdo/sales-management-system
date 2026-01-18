@@ -1,3 +1,4 @@
+@model IEnumerable<Sales_Management.Models.User>
 @{
     ViewData["Title"] = "Quản lý người dùng";
 }
@@ -11,89 +12,104 @@
 
 <div class="card-modern">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="input-group" style="max-width: 350px;">
+        <form method="get" action="@Url.Action("Index")" class="input-group" style="max-width: 350px;">
            <span class="input-group-text bg-light border-end-0 rounded-start-pill"><i class="bi bi-search text-secondary"></i></span>
-           <input type="text" class="form-control bg-light border-start-0 rounded-end-pill ps-0" placeholder="Tìm kiếm theo tên, email, sđt...">
-        </div>
+           <input type="text" name="search" class="form-control bg-light border-start-0 rounded-end-pill ps-0" placeholder="Tìm kiếm theo tên, email, sđt..." value="@ViewBag.CurrentFilter">
+        </form>
         <div class="d-flex gap-2">
-             <button class="btn btn-outline-secondary rounded-pill"><i class="bi bi-filter"></i> Lọc vai trò</button>
-             <button class="btn btn-outline-secondary rounded-pill"><i class="bi bi-sort-down"></i> Sắp xếp</button>
+             <div class="dropdown">
+                <button class="btn btn-outline-secondary rounded-pill dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-filter"></i> Lọc vai trò
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="@Url.Action("Index", new { role = "", search = ViewBag.CurrentFilter })">Tất cả</a></li>
+                    <li><a class="dropdown-item" href="@Url.Action("Index", new { role = "Admin", search = ViewBag.CurrentFilter })">Admin</a></li>
+                    <li><a class="dropdown-item" href="@Url.Action("Index", new { role = "Sales", search = ViewBag.CurrentFilter })">Sales</a></li>
+                    <li><a class="dropdown-item" href="@Url.Action("Index", new { role = "Customer", search = ViewBag.CurrentFilter })">Customer</a></li>
+                </ul>
+            </div>
+             <a href="@Url.Action("Index", new { sortOrder = ViewBag.DateSortParm, search = ViewBag.CurrentFilter, role = ViewBag.CurrentRole })" class="btn btn-outline-secondary rounded-pill"><i class="bi bi-sort-down"></i> Sắp xếp Ngày</a>
         </div>
     </div>
 
-    <!-- Static User Table Mockup -->
     <div class="table-responsive">
-        <table class="table-modern">
+        <table class="table-modern w-100">
             <thead>
                 <tr>
                     <th>Khách hàng</th>
                     <th>Email</th>
-                    <th>Ngày đăng ký</th>
+                    <th><a href="@Url.Action("Index", new { sortOrder = ViewBag.DateSortParm, search = ViewBag.CurrentFilter, role = ViewBag.CurrentRole })" class="text-decoration-none text-muted">Ngày đăng ký <i class="bi bi-arrow-down-up small"></i></a></th>
                     <th>Vai trò</th>
                     <th>Trạng thái</th>
                     <th class="text-center">Hành động</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>
-                        <div class="d-flex align-items-center">
-                            <img src="https://ui-avatars.com/api/?name=Nguyen+Van+A&background=random" class="rounded-circle me-3" width="40" height="40" alt="Avatar">
-                            <span class="fw-bold">Nguyễn Văn A</span>
-                        </div>
-                    </td>
-                    <td>nguyenvana@example.com</td>
-                    <td>15/01/2026</td>
-                    <td><span class="badge-modern badge-info-modern">Khách hàng</span></td>
-                    <td><span class="badge-modern badge-success-modern">Hoạt động</span></td>
-                    <td class="text-center">
-                        <button class="btn btn-sm btn-icon btn-light rounded-circle"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm btn-icon btn-light rounded-circle text-danger"><i class="bi bi-trash"></i></button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="d-flex align-items-center">
-                            <img src="https://ui-avatars.com/api/?name=Tran+Thi+B&background=random" class="rounded-circle me-3" width="40" height="40" alt="Avatar">
-                            <span class="fw-bold">Trần Thị B</span>
-                        </div>
-                    </td>
-                    <td>tranthib@example.com</td>
-                    <td>14/01/2026</td>
-                    <td><span class="badge-modern badge-warning-modern">Sales</span></td>
-                    <td><span class="badge-modern badge-success-modern">Hoạt động</span></td>
-                    <td class="text-center">
-                        <button class="btn btn-sm btn-icon btn-light rounded-circle"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm btn-icon btn-light rounded-circle text-danger"><i class="bi bi-trash"></i></button>
-                    </td>
-                </tr>
-                 <tr>
-                    <td>
-                        <div class="d-flex align-items-center">
-                            <img src="https://ui-avatars.com/api/?name=Admin+User&background=0D8ABC&color=fff" class="rounded-circle me-3" width="40" height="40" alt="Avatar">
-                            <span class="fw-bold text-danger">Quản trị viên</span>
-                        </div>
-                    </td>
-                    <td>admin@system.com</td>
-                    <td>01/01/2026</td>
-                    <td><span class="badge-modern badge-danger-modern">Admin</span></td>
-                     <td><span class="badge-modern badge-success-modern">Hoạt động</span></td>
-                    <td class="text-center">
-                        <button class="btn btn-sm btn-icon btn-light rounded-circle"><i class="bi bi-pencil"></i></button>
-                    </td>
-                </tr>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    @{
+                                        var avatarUrl = !string.IsNullOrEmpty(item.Avatar) ? item.Avatar : $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(item.FullName ?? item.Username)}&background=random";
+                                    }
+                                    <img src="@avatarUrl" class="rounded-circle me-3" width="40" height="40" alt="Avatar">
+                                    <div>
+                                        <div class="fw-bold">@(item.FullName ?? item.Username)</div>
+                                        <div class="small text-muted">@item.Username</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>@item.Email</td>
+                            <td>@item.CreatedDate.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @if (item.Role == "Admin")
+                                {
+                                    <span class="badge-modern badge-danger-modern">Admin</span>
+                                }
+                                else if (item.Role == "Sales")
+                                {
+                                    <span class="badge-modern badge-warning-modern">Sales</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-modern badge-info-modern">Khách hàng</span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.IsActive)
+                                {
+                                    <span class="badge-modern badge-success-modern">Hoạt động</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-modern badge-secondary-modern">Đã khóa</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-icon btn-light rounded-circle" title="Sửa"><i class="bi bi-pencil"></i></button>
+                                @if (item.Role != "Admin") // Prevent deleting admins mostly
+                                {
+                                    <button class="btn btn-sm btn-icon btn-light rounded-circle text-danger" title="Xóa"><i class="bi bi-trash"></i></button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                     <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">Không tìm thấy người dùng nào.</td>
+                    </tr>
+                }
             </tbody>
         </table>
     </div>
     
-    <!-- Modern Pagination -->
-    <nav class="mt-4 d-flex justify-content-center">
-        <ul class="pagination pagination-modern">
-            <li class="page-item disabled"><a class="page-link rounded-circle mx-1" href="#"><i class="bi bi-chevron-left"></i></a></li>
-            <li class="page-item active"><a class="page-link rounded-circle mx-1" href="#">1</a></li>
-            <li class="page-item"><a class="page-link rounded-circle mx-1" href="#">2</a></li>
-            <li class="page-item"><a class="page-link rounded-circle mx-1" href="#">3</a></li>
-            <li class="page-item"><a class="page-link rounded-circle mx-1" href="#"><i class="bi bi-chevron-right"></i></a></li>
-        </ul>
-    </nav>
+    <!-- Simplified Pagination info (Optional) -->
+    <div class="mt-4 text-center text-muted small">
+        Hiển thị @Model.Count() kết quả
+    </div>
 </div>

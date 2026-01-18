@@ -742,6 +742,60 @@ namespace Sales_Management.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Sales_Management.Models.VipPackage", b =>
+                {
+                    b.Property<int>("VipPackageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VipPackageId"));
+
+                    b.Property<string>("ColorCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<double>("DiscountPercent")
+                        .HasColumnType("float");
+
+                    b.Property<int>("DurationMonth")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Features")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Icon")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Tag")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("VipPackageId");
+
+                    b.ToTable("VipPackages");
+                });
+
             modelBuilder.Entity("Sales_Management.Models.Wallet", b =>
                 {
                     b.Property<int>("WalletId")
@@ -789,6 +843,9 @@ namespace Sales_Management.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(15, 2)");
 
+                    b.Property<decimal?>("AmountMoney")
+                        .HasColumnType("decimal(15, 2)");
+
                     b.Property<DateTime?>("CreatedDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime")
@@ -809,6 +866,10 @@ namespace Sales_Management.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)")
                         .HasDefaultValue("Pending");
+
+                    b.Property<string>("TransactionCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("TransactionType")
                         .IsRequired()

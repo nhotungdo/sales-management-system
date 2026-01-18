@@ -12,7 +12,7 @@ using Sales_Management.Data;
 namespace Sales_Management.Migrations
 {
     [DbContext(typeof(SalesManagementContext))]
-    [Migration("20260116143433_UpdateCategorySchema")]
+    [Migration("UpdateCategorySchema")]
     partial class UpdateCategorySchema
     {
         /// <inheritdoc />

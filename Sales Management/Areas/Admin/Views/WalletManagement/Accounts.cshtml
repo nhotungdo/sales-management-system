@@ -1,0 +1,92 @@
+@model IEnumerable<Sales_Management.Models.Wallet>
+@{
+    ViewData["Title"] = "Quản lý tài khoản ví";
+}
+
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+        <h1 class="m-0">Quản lý tài khoản ví</h1>
+        <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> Quay lại DS Giao dịch</a>
+    </div>
+
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-body">
+            <form method="get" class="row">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" placeholder="Tìm tên, email, sđt..." value="@ViewBag.Search">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Tìm kiếm</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card mb-4 shadow border-0">
+        <div class="card-header bg-white py-3">
+            <i class="bi bi-people me-1"></i> Danh sách tài khoản
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-muted small text-uppercase">
+                        <tr>
+                            <th class="ps-3 py-3">Khách hàng</th>
+                            <th class="py-3">Thông tin liên hệ</th>
+                            <th class="py-3 text-end">Số dư Coin</th>
+                            <th class="py-3 text-center">Trạng thái</th>
+                            <th class="py-3 text-end pe-3">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-3">
+                                    <div class="fw-bold">@item.Customer?.FullName</div>
+                                    <span class="badge bg-light text-dark border">ID: @item.Customer?.CustomerId</span>
+                                </td>
+                                <td>
+                                    <div class="small"><i class="bi bi-envelope me-1"></i> @item.Customer?.Email</div>
+                                    <div class="small text-muted"><i class="bi bi-telephone me-1"></i> @item.Customer?.PhoneNumber</div>
+                                </td>
+                                <td class="text-end fw-bold fs-5 text-primary">
+                                    @item.Balance?.ToString("N0")
+                                </td>
+                                <td class="text-center">
+                                    @if (item.Status == "Active")
+                                    {
+                                        <span class="badge bg-success rounded-pill px-3">Hoạt động</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger rounded-pill px-3">@item.Status</span>
+                                    }
+                                </td>
+                                <td class="text-end pe-3">
+                                    <a asp-action="AdjustBalance" asp-route-id="@item.WalletId" class="btn btn-warning btn-sm fw-bold">
+                                        <i class="bi bi-pencil-square me-1"></i> Điều chỉnh số dư
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">Không tìm thấy tài khoản nào</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

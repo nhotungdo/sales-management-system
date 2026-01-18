@@ -46,6 +46,7 @@
                     <ul class="navbar-nav">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
+                            @await Component.InvokeAsync("WalletBalance")
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="bi bi-person-circle"></i> @User.Identity.Name
@@ -59,6 +60,7 @@
                                     {
                                         <li><a class="dropdown-item" asp-area="Admin" asp-controller="Home" asp-action="Index"><i class="bi bi-speedometer2"></i> Trang quản trị</a></li>
                                     }
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Wallet" asp-action="Index"><i class="bi bi-wallet2"></i> Ví của tôi</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">

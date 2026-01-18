@@ -1,0 +1,105 @@
+@model Sales_Management.Models.VipPackage
+
+@{
+    ViewData["Title"] = "Thêm gói VIP mới";
+}
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold text-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Thêm gói VIP mới
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="Name" class="form-label">Tên gói</label>
+                                <input asp-for="Name" class="form-control" placeholder="Ví dụ: Vàng (Gold)" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label asp-for="Tag" class="form-label">Tag (Nhãn)</label>
+                                <input asp-for="Tag" class="form-control" placeholder="Ví dụ: Popular, Premium" />
+                                <span asp-validation-for="Tag" class="text-danger"></span>
+                            </div>
+
+                             <div class="col-md-6">
+                                <label asp-for="Price" class="form-label">Giá (VNĐ)</label>
+                                <input asp-for="Price" type="number" class="form-control" />
+                                <span asp-validation-for="Price" class="text-danger"></span>
+                            </div>
+                             <div class="col-md-6">
+                                <label asp-for="DurationMonth" class="form-label">Thời hạn (Tháng)</label>
+                                <input asp-for="DurationMonth" type="number" class="form-control" value="12" />
+                                <span asp-validation-for="DurationMonth" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="DiscountPercent" class="form-label">Phần trăm tích điểm (%)</label>
+                                <input asp-for="DiscountPercent" type="number" step="0.1" class="form-control" />
+                                <span asp-validation-for="DiscountPercent" class="text-danger"></span>
+                            </div>
+
+                             <div class="col-md-6">
+                                <label asp-for="Status" class="form-label">Trạng thái</label>
+                                <select asp-for="Status" class="form-select">
+                                    <option value="Active">Hoạt động</option>
+                                    <option value="Inactive">Ngừng hoạt động</option>
+                                </select>
+                                <span asp-validation-for="Status" class="text-danger"></span>
+                            </div>
+
+                             <div class="col-md-6">
+                                <label asp-for="ColorCode" class="form-label">Màu sắc (Bootstrap)</label>
+                                <select asp-for="ColorCode" class="form-select">
+                                    <option value="secondary">Xám (Silver)</option>
+                                    <option value="warning">Vàng (Gold)</option>
+                                    <option value="info">Xanh (Diamond)</option>
+                                    <option value="primary">Xanh dương</option>
+                                    <option value="success">Xanh lá</option>
+                                    <option value="danger">Đỏ</option>
+                                </select>
+                                <span asp-validation-for="ColorCode" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Icon" class="form-label">Icon (Bootstrap Icon Class)</label>
+                                <input asp-for="Icon" class="form-control" placeholder="bi-star, bi-trophy" />
+                                <span asp-validation-for="Icon" class="text-danger"></span>
+                             </div>
+
+                            <div class="col-12">
+                                <label asp-for="Description" class="form-label">Mô tả ngắn</label>
+                                <input asp-for="Description" class="form-control" />
+                                <span asp-validation-for="Description" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="Features" class="form-label">Đặc quyền (Mỗi dòng một ý)</label>
+                                <textarea asp-for="Features" class="form-control" rows="5" placeholder="Tích điểm 1%&#10;Quà sinh nhật&#10;Miễn phí vận chuyển"></textarea>
+                                <span asp-validation-for="Features" class="text-danger"></span>
+                            </div>
+
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a asp-action="Index" class="btn btn-light border">Hủy bỏ</a>
+                            <button type="submit" class="btn btn-primary px-4">Lưu gói VIP</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

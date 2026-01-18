@@ -1,0 +1,109 @@
+@model Sales_Management.Models.Wallet
+@{
+    ViewData["Title"] = "Điều chỉnh số dư";
+}
+
+<div class="container-fluid px-4">
+    <div class="d-flex align-items-center mt-4 mb-3">
+        <a asp-action="Accounts" class="btn btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i></a>
+        <h1 class="m-0">Điều chỉnh số dư ví</h1>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow border-0">
+                <div class="card-header bg-warning text-dark fw-bold py-3">
+                    <i class="bi bi-pencil-square me-2"></i> Thông tin điều chỉnh
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info border-0 bg-opacity-10 shadow-sm mb-4">
+                         <div class="d-flex align-items-center mb-2">
+                             <div class="flex-shrink-0">
+                                 <div class="avatar-initial rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                     <i class="bi bi-person-fill"></i>
+                                 </div>
+                             </div>
+                             <div class="ms-3">
+                                 <h5 class="fw-bold mb-0">@Model.Customer?.FullName</h5>
+                                 <small class="text-muted">@Model.Customer?.Email</small>
+                             </div>
+                         </div>
+                         <hr>
+                         <div class="d-flex justify-content-between align-items-center">
+                             <span>Số dư hiện tại:</span>
+                             <span class="fs-4 fw-bold text-primary">@Model.Balance?.ToString("N0") <span class="fs-6 text-muted">Coin</span></span>
+                         </div>
+                    </div>
+
+                    <form asp-action="AdjustBalance" method="post">
+                        <input type="hidden" name="walletId" value="@Model.WalletId" />
+                        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Loại điều chỉnh</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check custom-option">
+                                    <input class="form-check-input" type="radio" name="type" id="typeAdd" value="add" checked>
+                                    <label class="form-check-label" for="typeAdd">
+                                        <i class="bi bi-plus-circle text-success me-1"></i> Cộng thêm (+)
+                                    </label>
+                                </div>
+                                <div class="form-check custom-option">
+                                    <input class="form-check-input" type="radio" name="type" id="typeDeduct" value="deduct">
+                                    <label class="form-check-label" for="typeDeduct">
+                                        <i class="bi bi-dash-circle text-danger me-1"></i> Trừ đi (-)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Số lượng Coin <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" id="amountInput" name="amount" class="form-control form-control-lg" min="1" required placeholder="Nhập số coin">
+                            </div>
+                            <div class="mt-2 d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addAmount(10)">+10</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addAmount(50)">+50</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addAmount(100)">+100</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addAmount(500)">+500</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addAmount(1000)">+1000</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="setAmount(0)">Xóa</button>
+                            </div>
+                        </div>
+
+                        <script>
+                            function addAmount(val) {
+                                var input = document.getElementById('amountInput');
+                                var current = parseInt(input.value) || 0;
+                                input.value = current + val;
+                            }
+                            function setAmount(val) {
+                                document.getElementById('amountInput').value = val == 0 ? '' : val;
+                            }
+                        </script>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Lý do điều chỉnh <span class="text-danger">*</span></label>
+                            <textarea name="reason" class="form-control" rows="3" required placeholder="VD: Hoàn tiền, Thưởng khuyến mãi..."></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold" onclick="return confirm('Bạn có chắc chắn muốn thực hiện thay đổi này? Hành động này sẽ được lưu vào lịch sử giao dịch.')">
+                                <i class="bi bi-save me-2"></i> Lưu thay đổi
+                            </button>
+                            <a asp-action="Accounts" class="btn btn-light">Hủy bỏ</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .custom-option .form-check-input:checked + .form-check-label {
+        color: var(--bs-primary);
+        font-weight: bold;
+    }
+</style>

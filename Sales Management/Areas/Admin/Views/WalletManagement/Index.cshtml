@@ -1,0 +1,155 @@
+@model IEnumerable<Sales_Management.Models.WalletTransaction>
+@{
+    ViewData["Title"] = "Quản lý nạp tiền";
+}
+
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+        <h1 class="m-0">Quản lý nạp tiền</h1>
+        <a asp-action="Accounts" class="btn btn-outline-primary"><i class="bi bi-person-lines-fill me-1"></i> Quản lý tài khoản ví</a>
+    </div>
+
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+            <i class="bi bi-funnel me-1"></i> Bộ lọc tìm kiếm
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small">Trạng thái</label>
+                    <select name="status" class="form-select" onchange="this.form.submit()">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="Pending" selected="@(ViewBag.CurrentStatus == "Pending")">Chờ duyệt</option>
+                        <option value="Completed" selected="@(ViewBag.CurrentStatus == "Completed")">Hoàn thành</option>
+                        <option value="Cancelled" selected="@(ViewBag.CurrentStatus == "Cancelled")">Đã hủy</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small">Từ ngày</label>
+                    <input type="date" name="fromDate" class="form-control" value="@ViewBag.FromDate">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small">Đến ngày</label>
+                    <input type="date" name="toDate" class="form-control" value="@ViewBag.ToDate">
+                </div>
+                <div class="col-md-3 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-search me-1"></i> Lọc</button>
+                    <button type="submit" asp-action="Export" class="btn btn-outline-success"><i class="bi bi-file-earmark-excel me-1"></i> Xuất Excel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h6 class="text-white-50 text-uppercase small fw-bold">Tổng giao dịch</h6>
+                    <h2 class="display-6 fw-bold mb-0">@Model.Count()</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+             <div class="card bg-success text-white shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h6 class="text-white-50 text-uppercase small fw-bold">Tổng Xu Đã Nạp</h6>
+                    <h2 class="display-6 fw-bold mb-0">@Model.Where(x => x.Status == "Completed").Sum(x => x.Amount).ToString("N0")</h2>
+                </div>
+            </div>
+        </div>
+         <div class="col-md-4">
+             <div class="card bg-info text-white shadow-sm border-0 h-100">
+                <div class="card-body">
+                     <h6 class="text-white-50 text-uppercase small fw-bold">Tổng Doanh Thu</h6>
+                    <h2 class="display-6 fw-bold mb-0">@Model.Where(x => x.Status == "Completed").Sum(x => x.AmountMoney)?.ToString("N0") <span class="fs-6">VND</span></h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card mb-4 shadow border-0">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-table me-1"></i> Danh sách giao dịch nạp xu</span>
+                <span class="badge bg-primary rounded-pill">Tổng: @Model.Count()</span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-muted small text-uppercase">
+                        <tr>
+                            <th class="ps-3 py-3">Mã GD / Thời gian</th>
+                            <th class="py-3">Khách hàng</th>
+                            <th class="py-3 text-end">Số Coin</th>
+                            <th class="py-3 text-end">Số tiền (VND)</th>
+                            <th class="py-3 text-center">Trạng thái</th>
+                            <th class="py-3">Nội dung</th>
+                            <th class="py-3 text-end pe-3">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-3">
+                                    <div class="fw-bold font-monospace text-primary">@item.TransactionCode</div>
+                                    <small class="text-muted">@item.CreatedDate?.ToString("dd/MM/yyyy HH:mm")</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">@item.Wallet?.Customer?.FullName</div>
+                                    <small class="text-muted">@item.Wallet?.Customer?.PhoneNumber</small>
+                                </td>
+                                <td class="text-end fw-bold text-success">+@item.Amount.ToString("N0")</td>
+                                <td class="text-end fw-bold text-primary">@item.AmountMoney?.ToString("N0")</td>
+                                <td class="text-center">
+                                    @if (item.Status == "Completed")
+                                    {
+                                        <span class="badge bg-success rounded-pill px-3">Hoàn thành</span>
+                                    }
+                                    else if (item.Status == "Pending")
+                                    {
+                                        <span class="badge bg-warning text-dark rounded-pill px-3">Chờ duyệt</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary rounded-pill px-3">@item.Status</span>
+                                    }
+                                </td>
+                                <td class="small text-truncate" style="max-width: 150px;" title="@item.Description">@item.Description</td>
+                                <td class="text-end pe-3">
+                                    @if (item.Status == "Pending")
+                                    {
+                                        <div class="btn-group btn-group-sm">
+                                            <form asp-action="Approve" asp-route-id="@item.TransactionId" method="post" onsubmit="return confirm('Xác nhận TIỀN ĐÃ VỀ và duyệt giao dịch này?');" class="d-inline">
+                                                <button type="submit" class="btn btn-success" title="Duyệt"><i class="bi bi-check-lg"></i></button>
+                                            </form>
+                                            <form asp-action="Reject" asp-route-id="@item.TransactionId" method="post" onsubmit="return confirm('Xác nhận HỦY giao dịch này?');" class="d-inline ms-1">
+                                                <button type="submit" class="btn btn-outline-danger" title="Hủy"><i class="bi bi-x-lg"></i></button>
+                                            </form>
+                                        </div>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">Không tìm thấy giao dịch nào</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

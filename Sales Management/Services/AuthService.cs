@@ -84,6 +84,20 @@ namespace Sales_Management.Services
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
+            // Auto-create Customer profile
+            var customer = new Customer
+            {
+                UserId = user.UserId,
+                FullName = user.FullName ?? user.Username,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                CreatedDate = DateTime.Now,
+                Type = "Personal",
+                CustomerLevel = "Regular"
+            };
+            _context.Customers.Add(customer);
+            await _context.SaveChangesAsync();
+
             return user;
         }
     }

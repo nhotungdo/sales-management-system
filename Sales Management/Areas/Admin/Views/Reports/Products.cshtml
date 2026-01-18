@@ -1,0 +1,148 @@
+@model Sales_Management.Areas.Admin.ViewModels.ProductReportViewModel
+@{
+    ViewData["Title"] = "Báo cáo Sản phẩm";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-dark mb-0">Báo cáo & Phân tích</h3>
+    <div>
+        <a asp-action="ExportProducts" class="btn btn-outline-success">
+            <i class="bi bi-file-earmark-excel me-2"></i>Xuất Excel
+        </a>
+    </div>
+</div>
+
+<partial name="_ReportTabs" />
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Tổng giá trị tồn kho</div>
+                <div class="h3 mb-0 fw-bold text-gray-800">@Model.TotalInventoryValue.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</div>
+                <div class="text-muted small mt-2">@Model.TotalItemsInStock sản phẩm</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+         <div class="card border-0 shadow-sm h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Vòng quay hàng tồn kho</div>
+                <div class="h3 mb-0 fw-bold text-gray-800">@Model.InventoryTurnoverRate.ToString("F1")</div>
+                 <div class="text-muted small mt-2">Lần / kỳ</div>
+            </div>
+        </div>
+    </div>
+     <div class="col-md-4">
+         <div class="card border-0 shadow-sm h-100 py-2">
+            <div class="card-body">
+                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Sản phẩm sắp hết hàng</div>
+                <div class="h3 mb-0 fw-bold text-danger">@Model.LowStockProducts.Count</div>
+                 <div class="text-muted small mt-2">Cần nhập thêm</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 fw-bold text-primary">Top 10 Sản phẩm bán chạy</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th class="text-center">Đã bán</th>
+                                <th class="text-end">Doanh thu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.TopSellingProducts)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">@item.ProductName</div>
+                                        <small class="text-muted">@item.ProductCode</small>
+                                    </td>
+                                    <td class="text-center">@item.UnitsSold</td>
+                                    <td class="text-end">@item.RevenueGenerated.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 fw-bold text-danger">Cảnh báo tồn kho (Dưới 10)</h6>
+            </div>
+             <div class="card-body">
+                 <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th class="text-center">Tồn kho</th>
+                                <th class="text-end">Giá trị</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.LowStockProducts.Take(10))
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">@item.Name</div>
+                                    </td>
+                                    <td class="text-center fw-bold text-danger">@item.StockQuantity</td>
+                                    <td class="text-end">@item.Value.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white py-3">
+        <h6 class="m-0 fw-bold text-warning">Sản phẩm tồn kho lâu (> 30 ngày không bán)</h6>
+    </div>
+    <div class="card-body">
+         <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th>Mã</th>
+                        <th class="text-center">Tồn kho</th>
+                        <th class="text-center">Số ngày tồn</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.LongInStockProducts.Take(10))
+                    {
+                        <tr>
+                            <td>@item.Name</td>
+                            <td>@item.Code</td>
+                            <td class="text-center">@item.StockQuantity</td>
+                            <td class="text-center text-warning fw-bold">@item.DaysInStock ngày</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+         </div>
+         @if(!Model.LongInStockProducts.Any())
+         {
+             <p class="text-center text-muted my-3">Không có sản phẩm tồn kho lâu.</p>
+         }
+    </div>
+</div>

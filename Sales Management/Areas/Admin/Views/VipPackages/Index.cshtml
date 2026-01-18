@@ -1,3 +1,5 @@
+@model IEnumerable<Sales_Management.Models.VipPackage>
+
 @{
     ViewData["Title"] = "Gói VIP";
 }
@@ -8,97 +10,67 @@
         <p class="text-muted mb-0">Thiết lập các cấp độ thành viên và ưu đãi</p>
     </div>
     <div>
-        <button class="btn btn-primary rounded-pill px-4 shadow-sm">
+        <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
             <i class="bi bi-plus-lg me-2"></i> Thêm gói mới
-        </button>
+        </a>
     </div>
 </div>
 
 <div class="row g-4">
-    <!-- VIP Silver -->
-    <div class="col-md-4">
-        <div class="card-modern h-100 position-relative border-top border-5 border-secondary">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                     <span class="badge bg-light text-secondary rounded-pill mb-2">Basic</span>
-                    <h4 class="fw-bold mb-0">Bạc (Silver)</h4>
-                </div>
-                <div class="stat-icon-wrapper bg-light-secondary">
-                    <i class="bi bi-star"></i>
-                </div>
-            </div>
-            <p class="text-muted small mb-4">Dành cho khách hàng mới tích lũy điểm thưởng cơ bản.</p>
-            
-            <div class="mb-4">
-                 <h2 class="fw-bold text-dark">0 VNĐ <span class="fs-6 text-muted fw-normal">/ năm</span></h2>
-            </div>
-            
-            <ul class="list-unstyled mb-4">
-                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Tích điểm 1%</li>
-                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Quà sinh nhật</li>
-                <li class="mb-2 text-muted"><i class="bi bi-dash-circle me-2"></i> Miễn phí vận chuyển</li>
-            </ul>
+    @if (Model != null && Model.Any())
+    {
+        @foreach (var item in Model)
+        {
+            var color = item.ColorCode ?? "secondary";
+            var features = item.Features?.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
 
-            <button class="btn btn-outline-secondary w-100 rounded-pill">Chỉnh sửa</button>
+            <div class="col-md-4">
+                <div class="card-modern h-100 position-relative border-top border-5 border-@color">
+                     @if (item.Status != "Active")
+                    {
+                        <div class="position-absolute top-0 end-0 m-3">
+                             <span class="badge bg-secondary text-white rounded-pill">Inactive</span>
+                        </div>
+                    }
+
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                             <span class="badge bg-light text-@color rounded-pill mb-2">@(item.Tag ?? "Package")</span>
+                            <h4 class="fw-bold mb-0">@item.Name</h4>
+                        </div>
+                        <div class="stat-icon-wrapper bg-light-@color">
+                            <i class="@item.Icon"></i>
+                        </div>
+                    </div>
+                    <p class="text-muted small mb-4">@item.Description</p>
+                    
+                    <div class="mb-4">
+                        @if (item.Price == 0)
+                        {
+                            <h2 class="fw-bold text-dark">0 VNĐ <span class="fs-6 text-muted fw-normal">/ @(item.DurationMonth == 12 ? "năm" : item.DurationMonth + " tháng")</span></h2>
+                        }
+                        else
+                        {
+                            <h2 class="fw-bold text-dark">@item.Price.ToString("#,##0") VNĐ <span class="fs-6 text-muted fw-normal">/ @(item.DurationMonth == 12 ? "năm" : item.DurationMonth + " tháng")</span></h2>
+                        }
+                    </div>
+                    
+                    <ul class="list-unstyled mb-4">
+                         @foreach (var feature in features)
+                        {
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> @feature</li>
+                        }
+                    </ul>
+
+                    <button class="btn btn-outline-@color w-100 rounded-pill">Chỉnh sửa</button>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12 text-center py-5">
+            <p class="text-muted">Chưa có gói VIP nào. Vui lòng thêm gói mới.</p>
         </div>
-    </div>
-
-    <!-- VIP Gold -->
-    <div class="col-md-4">
-        <div class="card-modern h-100 position-relative border-top border-5 border-warning">
-            <div class="position-absolute top-0 end-0 m-3">
-                 <span class="badge bg-warning text-dark rounded-pill">Phổ biến</span>
-            </div>
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                     <span class="badge bg-light text-warning rounded-pill mb-2">Premium</span>
-                    <h4 class="fw-bold mb-0">Vàng (Gold)</h4>
-                </div>
-                <div class="stat-icon-wrapper bg-light-warning">
-                    <i class="bi bi-trophy"></i>
-                </div>
-            </div>
-            <p class="text-muted small mb-4">Dành cho khách hàng thân thiết với nhiều ưu đãi hấp dẫn.</p>
-            
-            <div class="mb-4">
-                 <h2 class="fw-bold text-dark">500k <span class="fs-6 text-muted fw-normal">/ năm</span></h2>
-            </div>
-            
-            <ul class="list-unstyled mb-4">
-                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Tích điểm 3%</li>
-                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Quà sinh nhật cao cấp</li>
-                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Voucher giảm 50k</li>
-            </ul>
-
-            <button class="btn btn-warning w-100 rounded-pill text-dark fw-bold">Chỉnh sửa</button>
-        </div>
-    </div>
-
-     <!-- VIP Platinum -->
-    <div class="col-md-4">
-        <div class="card-modern h-100 position-relative border-top border-5 border-info">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                     <span class="badge bg-light text-info rounded-pill mb-2">Elite</span>
-                    <h4 class="fw-bold mb-0">Bạch kim (Diamond)</h4>
-                </div>
-                <div class="stat-icon-wrapper bg-light-info">
-                    <i class="bi bi-gem"></i>
-                </div>
-            </div>
-            <p class="text-muted small mb-4">Đẳng cấp cao nhất với đặc quyền không giới hạn.</p>
-            
-            <div class="mb-4">
-                 <h2 class="fw-bold text-dark">2tr <span class="fs-6 text-muted fw-normal">/ năm</span></h2>
-            </div>
-            
-            <ul class="list-unstyled mb-4">
-                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Tích điểm 5%</li>
-                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Hỗ trợ 24/7 riêng</li>
-                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i> Miễn phí vận chuyển</li>
-            </ul>
-
-            <button class="btn btn-outline-info w-100 rounded-pill">Chỉnh sửa</button>
-        </div>
-    </div>
+    }
 </div>
