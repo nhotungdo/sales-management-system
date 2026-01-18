@@ -1,137 +1,151 @@
-@model Sales_Management.Areas.Admin.ViewModels.ReportsViewModel
+@model Sales_Management.Areas.Admin.ViewModels.RevenueReportViewModel
 @{
-    ViewData["Title"] = "Báo cáo & Phân tích";
-    var currentTimeframe = ViewData["CurrentTimeframe"] as string ?? "month";
+    ViewData["Title"] = "Báo cáo Doanh thu";
 }
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-4">
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-dark mb-0">Báo cáo & Phân tích</h3>
     <div>
-        <h3 class="fw-bold text-dark">Báo cáo & Phân tích</h3>
-        <p class="text-muted mb-0">Hiệu suất kinh doanh theo thời gian thực</p>
+        <a asp-action="ExportRevenue" asp-route-timeframe="@Model.Timeframe" class="btn btn-outline-success">
+            <i class="bi bi-file-earmark-excel me-2"></i>Xuất Excel
+        </a>
     </div>
-    <div class="btn-group shadow-sm rounded-pill" role="group">
-        <a asp-action="Index" asp-route-timeframe="week" class="btn btn-white @(currentTimeframe == "week" ? "text-primary fw-bold active" : "text-secondary") px-4">Tuần này</a>
-        <a asp-action="Index" asp-route-timeframe="month" class="btn btn-white @(currentTimeframe == "month" ? "text-primary fw-bold active" : "text-secondary") px-4">Tháng này</a>
-        <a asp-action="Index" asp-route-timeframe="year" class="btn btn-white @(currentTimeframe == "year" ? "text-primary fw-bold active" : "text-secondary") px-4">Năm nay</a>
+</div>
+
+<partial name="_ReportTabs" />
+
+<!-- Filters -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-3">
+        <form method="get" class="row g-3 align-items-center">
+            <div class="col-auto">
+                <label class="col-form-label fw-bold">Thời gian:</label>
+            </div>
+            <div class="col-auto">
+                <select name="timeframe" class="form-select" onchange="this.form.submit()">
+                    <option value="week" selected="@(Model.Timeframe == "week")">Tuần này</option>
+                    <option value="month" selected="@(Model.Timeframe == "month")">Tháng này</option>
+                    <option value="year" selected="@(Model.Timeframe == "year")">Năm nay</option>
+                    <option value="all" selected="@(Model.Timeframe == "all")">Toàn bộ thời gian</option>
+                </select>
+            </div>
+             <!-- Future: Add Custom Date Pickers here -->
+        </form>
     </div>
 </div>
 
 <div class="row g-4 mb-4">
     <div class="col-md-3">
-        <div class="card-modern text-center p-4">
-            <h6 class="text-muted text-uppercase small fw-bold mb-3">Tổng đơn hàng</h6>
-            <h2 class="fw-bold text-dark mb-0">@Model.TotalOrders</h2>
-             <!-- TODO: Add growth comparison logic later -->
-            <span class="text-secondary small">Trong kỳ</span>
+        <div class="card border-0 shadow-sm h-100 py-2">
+            <div class="card-body text-center">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Doanh thu</div>
+                <div class="h3 mb-0 fw-bold text-gray-800">@Model.TotalRevenue.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</div>
+                <div class="mt-2 text-xs @(Model.RevenueGrowth >= 0 ? "text-success" : "text-danger")">
+                    <i class="bi @(Model.RevenueGrowth >= 0 ? "bi-arrow-up" : "bi-arrow-down")"></i> @Math.Abs(Model.RevenueGrowth)%
+                    <span class="text-muted"> so với kỳ trước</span>
+                </div>
+            </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card-modern text-center p-4">
-            <h6 class="text-muted text-uppercase small fw-bold mb-3">Tỷ lệ hoàn thành</h6>
-            <h2 class="fw-bold text-primary mb-0">@Model.CompletionRate%</h2>
-            <span class="text-success small"><i class="bi bi-check-circle"></i> Thành công</span>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card-modern text-center p-4">
-             <h6 class="text-muted text-uppercase small fw-bold mb-3">Giá trị đơn TB</h6>
-            <h2 class="fw-bold text-dark mb-0">@Model.AverageOrderValue.ToString("N0") <small>đ</small></h2>
-             <span class="text-info small">Doanh thu / Đơn</span>
+         <div class="card border-0 shadow-sm h-100 py-2">
+            <div class="card-body text-center">
+                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Số đơn hàng</div>
+                <div class="h3 mb-0 fw-bold text-gray-800">@Model.TotalOrders</div>
+                 <div class="mt-2 text-xs @(Model.OrdersGrowth >= 0 ? "text-success" : "text-danger")">
+                    <i class="bi @(Model.OrdersGrowth >= 0 ? "bi-arrow-up" : "bi-arrow-down")"></i> @Math.Abs(Model.OrdersGrowth)%
+                </div>
+            </div>
         </div>
     </div>
      <div class="col-md-3">
-        <div class="card-modern text-center p-4">
-             <h6 class="text-muted text-uppercase small fw-bold mb-3">Tỉ lệ hủy/trả</h6>
-            <h2 class="fw-bold text-danger mb-0">@Model.CancellationRate%</h2>
-            <span class="text-muted small">Cần tối ưu</span>
+         <div class="card border-0 shadow-sm h-100 py-2">
+            <div class="card-body text-center">
+                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Giá trị trung bình</div>
+                <div class="h3 mb-0 fw-bold text-gray-800">@Model.AverageOrderValue.ToString("C0", new System.Globalization.CultureInfo("vi-VN"))</div>
+            </div>
+        </div>
+    </div>
+     <div class="col-md-3">
+         <div class="card border-0 shadow-sm h-100 py-2">
+            <div class="card-body text-center">
+                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Tỷ lệ hoàn thành</div>
+                <div class="h3 mb-0 fw-bold text-gray-800">@Model.CompletionRate%</div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="row g-4">
-    <div class="col-lg-8">
-        <div class="card-modern">
-            <h5 class="mb-4 text-dark fw-bold">Biểu đồ doanh thu & Đơn hàng (@(currentTimeframe == "year" ? "hàng tháng" : "hàng ngày"))</h5>
-            <div class="chart-area" style="height: 350px;">
-                <canvas id="analysisChart"></canvas>
-            </div>
-        </div>
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white py-3">
+        <h6 class="m-0 fw-bold text-primary">Biểu đồ doanh thu</h6>
     </div>
-    <div class="col-lg-4">
-         <div class="card-modern">
-            <h5 class="mb-4 text-dark fw-bold">Top sản phẩm bán chạy</h5>
-            @if(Model.TopProducts.Any())
-            {
-                <ul class="list-group list-group-flush">
-                    @for (int i = 0; i < Model.TopProducts.Count; i++)
-                    {
-                        var product = Model.TopProducts[i];
-                        <li class="list-group-item border-0 px-0 d-flex justify-content-between align-items-center">
-                            <div class="d-flex align-items-center" style="max-width: 70%">
-                                <span class="badge @(i < 3 ? "bg-primary" : "bg-light text-dark") me-3 rounded-circle" style="width: 25px; height: 25px; display: flex; align-items: center; justify-content: center;">@(i+1)</span>
-                                <span class="text-truncate" title="@product.ProductName">@product.ProductName</span>
-                            </div>
-                            <div class="text-end">
-                                <span class="fw-bold d-block">@product.UnitsSold</span>
-                                <small class="text-muted">đã bán</small>
-                            </div>
-                        </li>
-                    }
-                </ul>
-            }
-            else
-            {
-                <p class="text-muted text-center py-4">Chưa có dữ liệu sản phẩm trong kỳ này.</p>
-            }
+    <div class="card-body">
+        <div class="chart-area" style="height: 400px;">
+            <canvas id="revenueChart"></canvas>
         </div>
     </div>
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Analysis Chart (Mixed Line/Bar)
-        var ctx = document.getElementById("analysisChart");
-        var myMixedChart = new Chart(ctx, {
-            type: 'bar', // Default type
+        var ctx = document.getElementById("revenueChart");
+        var myChart = new Chart(ctx, {
+            type: 'line',
             data: {
                 labels: @Html.Raw(Json.Serialize(Model.ChartLabels)),
                 datasets: [{
                     label: "Doanh thu",
-                    type: "line",
-                    borderColor: "#36b9cc",
-                    backgroundColor: "rgba(54, 185, 204, 0.05)",
                     data: @Html.Raw(Json.Serialize(Model.RevenueChartData)),
-                    yAxisID: 'y',
-                    tension: 0.4,
+                    backgroundColor: "rgba(78, 115, 223, 0.05)",
+                    borderColor: "rgba(78, 115, 223, 1)",
+                    pointRadius: 3,
+                    pointBackgroundColor: "rgba(78, 115, 223, 1)",
+                    pointBorderColor: "rgba(78, 115, 223, 1)",
+                    pointHoverRadius: 3,
+                    pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
+                    pointHoverBorderColor: "rgba(78, 115, 223, 1)",
+                    pointHitRadius: 10,
+                    pointBorderWidth: 2,
+                    tension: 0.3,
                     fill: true
-                }, {
+                },
+                {
                     label: "Đơn hàng",
-                    type: "bar",
-                    backgroundColor: "#4e73df",
                     data: @Html.Raw(Json.Serialize(Model.OrdersChartData)),
+                    type: 'bar',
+                    backgroundColor: "rgba(28, 200, 138, 0.5)",
+                    borderColor: "#1cc88a",
                     yAxisID: 'y1'
                 }]
             },
             options: {
                 maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
+                scales: {
+                    x: {
+                        grid: { display: false }
+                    },
+                    y: {
+                        ticks: {
+                            callback: function(value) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumSignificantDigits: 3 }).format(value); }
+                        },
+                        grid: { color: "rgb(234, 236, 244)", borderDash: [2], drawBorder: false, zeroLineColor: "rgb(234, 236, 244)" }
+                    },
+                    y1: {
+                        position: 'right',
+                        grid: { display: false }
+                    }
                 },
                 plugins: {
                     tooltip: {
-                         backgroundColor: '#232d3f',
-                         titleFont: { size: 13 },
-                         bodyFont: { size: 13 },
-                         padding: 10,
-                         cornerRadius: 8,
                          callbacks: {
                              label: function(context) {
                                 var label = context.dataset.label || '';
                                 if (label) {
                                     label += ': ';
                                 }
-                                if (context.dataset.type === 'line') { // Revenue
+                                if (context.dataset.type === 'line' || context.dataset.label === 'Doanh thu') {
                                      label += new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(context.parsed.y);
                                 } else {
                                      label += context.parsed.y;
@@ -139,27 +153,6 @@
                                 return label;
                             }
                          }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false }
-                    },
-                    y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        ticks: {
-                             callback: function(value) { return value.toLocaleString('vi-VN', {style: 'currency', currency: 'VND', maximumSignificantDigits: 3}); }
-                        }
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        grid: {
-                            drawOnChartArea: false, // only want the grid lines for one axis to show up
-                        }
                     }
                 }
             }
