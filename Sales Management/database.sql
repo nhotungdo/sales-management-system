@@ -276,7 +276,9 @@ GO
 
 -- 1. Users
 INSERT INTO Users (Username, PasswordHash, Email, FullName, Role, IsActive) VALUES 
-('admin', '123456', 'admin@salesmanager.com', N'System Administrator', 'Admin', 1);
+('admin', '123456', 'admin@salesmanager.com', N'System Administrator', 'Admin', 1); 
+INSERT INTO Users (Username, PasswordHash, Email, FullName, Role, IsActive) VALUES
+ ('sale', '123456', 'sale@salesmanager.com', N'Sales Staff', 'Sales', 1);
 
 -- 2. Categories
 INSERT INTO Categories (Name, Description) VALUES

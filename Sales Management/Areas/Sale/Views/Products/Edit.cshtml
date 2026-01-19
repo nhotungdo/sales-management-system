@@ -2,7 +2,7 @@
 
 <h2>Edit Product</h2>
 
-<form asp-action="Edit" method="post">
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
     <input type="hidden" asp-for="ProductId" />
 
     <div class="form-group">
@@ -33,6 +33,26 @@
                 asp-items="ViewBag.CategoryId"
                 class="form-control">
         </select>
+    </div>
+
+    <div class="form-group">
+        <label>Description</label>
+        <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+    </div>
+
+    @if (Model.ProductImages.Any())
+    {
+        <div class="form-group mt-3">
+            <label>Current Image</label><br />
+            <img src="@Model.ProductImages.First().ImageUrl"
+                 width="200"
+                 class="rounded shadow" />
+        </div>
+    }
+
+    <div class="form-group mt-3">
+        <label>Change Image</label>
+        <input type="file" name="imageFile" class="form-control" />
     </div>
 
     <br/>
