@@ -3,11 +3,13 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Sales_Management.Data;
 using Sales_Management.Services;
+using Sales_Management.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 
 builder.Services.AddDbContext<SalesManagementContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DBDefault")));
@@ -32,6 +34,9 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
+// Background Services
+builder.Services.AddHostedService<VoucherExpirationService>();
 
 var app = builder.Build();
 
@@ -59,6 +64,8 @@ app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}"
 );
+
+app.MapHub<SystemHub>("/systemHub");
 
 app.MapControllerRoute(
     name: "default",

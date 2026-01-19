@@ -121,24 +121,16 @@
             </button>
             <h4 class="m-0">@ViewData["Title"]</h4>
             
-            <div class="user-profile dropdown">
-                <div class="text-end d-none d-sm-block me-2">
-                    <small class="d-block text-secondary">Xin chào,</small>
-                    <span class="fw-bold">@User.Identity?.Name</span>
+            <div class="user-profile">
+                <div class="d-flex align-items-center">
+                    <div class="text-end d-none d-sm-block me-3">
+                        <small class="d-block text-secondary mb-0" style="font-size: 0.75rem;">Xin chào,</small>
+                        <span class="fw-bold text-dark">@User.Identity?.Name</span>
+                    </div>
+                    <div class="user-avatar">
+                        <i class="bi bi-person-fill fs-5"></i>
+                    </div>
                 </div>
-                <div class="user-avatar" role="button" data-bs-toggle="dropdown">
-                    <i class="bi bi-person"></i>
-                </div>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#">Hồ sơ</a></li>
-                    <li><a class="dropdown-item" href="#">Cài đặt</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                            <button type="submit" class="dropdown-item text-danger">Đăng xuất</button>
-                        </form>
-                    </li>
-                </ul>
             </div>
         </div>
 

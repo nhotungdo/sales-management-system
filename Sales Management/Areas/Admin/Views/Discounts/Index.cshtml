@@ -23,7 +23,17 @@
            <input type="text" class="form-control bg-light border-start-0 rounded-end-pill ps-0" placeholder="Tìm kiếm mã...">
         </div>
         <div class="d-flex gap-2">
-             <button class="btn btn-outline-secondary rounded-pill">Trạng thái <i class="bi bi-chevron-down ms-1"></i></button>
+             <div class="dropdown">
+                <button class="btn btn-outline-secondary rounded-pill dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Trạng thái: @(ViewData["StatusFilter"]?.ToString() ?? "Tất cả")
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" asp-action="Index" asp-route-statusFilter="">Tất cả</a></li>
+                    <li><a class="dropdown-item" asp-action="Index" asp-route-statusFilter="Active">Hoạt động</a></li>
+                    <li><a class="dropdown-item" asp-action="Index" asp-route-statusFilter="Disabled">Tạm ngưng</a></li>
+                    <li><a class="dropdown-item" asp-action="Index" asp-route-statusFilter="Expired">Hết hạn (Cũ)</a></li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -44,6 +54,7 @@
                 <tbody>
                     @foreach (var item in Model)
                     {
+                        var isAboutToExpire = item.Status == "Active" && item.EndDate.HasValue && (item.EndDate.Value - DateTime.Now).TotalDays <= 3 && (item.EndDate.Value - DateTime.Now).TotalDays > 0;
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
@@ -79,8 +90,12 @@
                             </td>
                             <td>
                                 <div class="small">
-                                    <div class="text-muted">Bắt đầu: <span class="text-dark">@item.StartDate?.ToString("dd/MM/yyyy")</span></div>
-                                    <div class="text-muted">Kết thúc: <span class="text-dark">@item.EndDate?.ToString("dd/MM/yyyy")</span></div>
+                                    <div class="text-muted">Bắt đầu: <span class="text-dark">@item.StartDate?.ToString("dd/MM/yyyy HH:mm")</span></div>
+                                    <div class="text-muted">Kết thúc: <span class="text-dark">@item.EndDate?.ToString("dd/MM/yyyy HH:mm")</span></div>
+                                    @if(isAboutToExpire)
+                                    {
+                                        <div class="text-danger fw-bold mt-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>Sắp hết hạn</div>
+                                    }
                                 </div>
                             </td>
                             <td>
@@ -92,14 +107,18 @@
                                 {
                                     <span class="badge bg-secondary-subtle text-secondary rounded-pill">Hết hạn</span>
                                 }
-                                else
+                                else if (item.Status == "Disabled")
                                 {
                                     <span class="badge bg-danger-subtle text-danger rounded-pill">Tạm ngưng</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-light text-dark rounded-pill">@item.Status</span>
                                 }
                             </td>
                             <td class="text-end">
                                 <a asp-action="Edit" asp-route-id="@item.PromotionId" class="btn btn-sm btn-icon btn-light rounded-circle"><i class="bi bi-pencil"></i></a>
-                                <button class="btn btn-sm btn-icon btn-light rounded-circle text-danger"><i class="bi bi-trash"></i></button>
+                                <a asp-action="Delete" asp-route-id="@item.PromotionId" class="btn btn-sm btn-icon btn-light rounded-circle text-danger"><i class="bi bi-trash"></i></a>
                             </td>
                         </tr>
                     }
