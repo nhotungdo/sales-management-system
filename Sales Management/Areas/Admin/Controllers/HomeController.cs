@@ -45,17 +45,21 @@ namespace Sales_Management.Areas.Admin.Controllers
                 .ToListAsync();
 
             // 3. Prepare Chart Data (Revenue per Month for current year)
-            var revenueData = new List<int>();
-            for (int i = 1; i <= 12; i++)
-            {
-                var monthlyRevenue = await _context.Orders
-                    .Where(o => o.OrderDate.HasValue && 
-                                o.OrderDate.Value.Year == currentYear && 
-                                o.OrderDate.Value.Month == i &&
-                                (o.Status == "Completed" || o.PaymentStatus == "Paid"))
-                    .SumAsync(o => o.TotalAmount) ?? 0;
-                revenueData.Add((int)monthlyRevenue);
-            }
+            var monthlyRevenues = await _context.Orders
+                .Where(o => o.OrderDate.HasValue && 
+                            o.OrderDate.Value.Year == currentYear && 
+                            (o.Status == "Completed" || o.PaymentStatus == "Paid"))
+                .GroupBy(o => o.OrderDate.Value.Month)
+                .Select(g => new { 
+                    Month = g.Key, 
+                    Total = g.Sum(o => o.TotalAmount) ?? 0 
+                })
+                .ToListAsync();
+
+            var revenueData = Enumerable.Range(1, 12).Select(month => {
+                var monthData = monthlyRevenues.FirstOrDefault(m => m.Month == month);
+                return monthData != null ? (int)monthData.Total : 0;
+            }).ToList();
 
             // 4. Prepare Chart Data (Sales by Category)
             // Need to join OrderDetail -> Product -> Category

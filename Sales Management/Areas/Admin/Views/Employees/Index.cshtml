@@ -107,3 +107,18 @@
         </table>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+    <script>
+        var connection = new signalR.HubConnectionBuilder().withUrl("/systemHub").build();
+        connection.on("ReceiveUpdate", function (message) {
+             if (message === "ReloadData" || message === "UserDeleted") {
+                location.reload();
+            }
+        });
+        connection.start().catch(function (err) {
+            return console.error(err.toString());
+        });
+    </script>
+}
