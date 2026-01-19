@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Sales_Management.Data;
 using Sales_Management.Models;
 
@@ -36,6 +37,12 @@ namespace Sales_Management.Areas.Sale.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Product product)
         {
+            bool exists = await _context.Products.AnyAsync(p => p.Code == product.Code);
+
+            if (exists)
+            {
+                ModelState.AddModelError("Code", "Product code already exists!");
+            }
             if (ModelState.IsValid)
             {
                 _context.Add(product);
@@ -57,7 +64,10 @@ namespace Sales_Management.Areas.Sale.Controllers
         {
             if (id == null) return NotFound();
 
-            var product = await _context.Products.FindAsync(id);
+            var product = await _context.Products
+                .Include(p => p.ProductImages)
+                .FirstOrDefaultAsync(p => p.ProductId == id);
+
             if (product == null) return NotFound();
 
             ViewBag.CategoryId = new SelectList(
@@ -66,41 +76,67 @@ namespace Sales_Management.Areas.Sale.Controllers
                 "Name",
                 product.CategoryId
             );
+
             return View(product);
         }
+
 
         // POST: Sale/Products/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Product product)
+        public async Task<IActionResult> Edit(
+        int id,
+        Product product,
+        IFormFile? imageFile)
         {
             if (id != product.ProductId) return NotFound();
 
-            if (ModelState.IsValid)
+            var dbProduct = await _context.Products
+                .Include(p => p.ProductImages)
+                .FirstOrDefaultAsync(p => p.ProductId == id);
+
+            if (dbProduct == null) return NotFound();
+
+            // update field
+            dbProduct.Code = product.Code;
+            dbProduct.Name = product.Name;
+            dbProduct.SellingPrice = product.SellingPrice;
+            dbProduct.StockQuantity = product.StockQuantity;
+            dbProduct.Description = product.Description;
+            dbProduct.CategoryId = product.CategoryId;
+
+            // xử lý ảnh
+            if (imageFile != null && imageFile.Length > 0)
             {
-                try
+                var uploadPath = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot/images"
+                );
+
+                if (!Directory.Exists(uploadPath))
+                    Directory.CreateDirectory(uploadPath);
+
+                var fileName = Guid.NewGuid() + Path.GetExtension(imageFile.FileName);
+                var filePath = Path.Combine(uploadPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    _context.Update(product);
-                    await _context.SaveChangesAsync();
+                    await imageFile.CopyToAsync(stream);
                 }
-                catch (DbUpdateConcurrencyException)
+
+                // xóa ảnh cũ
+                dbProduct.ProductImages.Clear();
+
+                dbProduct.ProductImages.Add(new ProductImage
                 {
-                    if (!_context.Products.Any(e => e.ProductId == id))
-                        return NotFound();
-                    else
-                        throw;
-                }
-                return RedirectToAction(nameof(Index));
+                    ImageUrl = "/images/" + fileName
+                });
             }
 
-            ViewBag.CategoryId = new SelectList(
-                _context.Categories,
-                "CategoryId",
-                "Name",
-                product.CategoryId
-            );
-            return View(product);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
+
 
         // GET: Sale/Products/Delete/5
         public async Task<IActionResult> Delete(int? id)
@@ -129,5 +165,20 @@ namespace Sales_Management.Areas.Sale.Controllers
             }
             return RedirectToAction(nameof(Index));
         }
+        // GET: Sale/Products/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var product = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.ProductImages)   // ảnh
+                .FirstOrDefaultAsync(p => p.ProductId == id);
+
+            if (product == null) return NotFound();
+
+            return View(product);
+        }
+
     }
 }
