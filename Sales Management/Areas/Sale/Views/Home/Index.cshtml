@@ -1,2 +1,37 @@
-﻿<h1>Sale AREA OK 🎉</h1>
+﻿@model List<Product>
 
+<h2 class="mb-4">Danh sách sản phẩm</h2>
+
+<div class="row">
+    @foreach (var item in Model)
+    {
+        <div class="col-md-3 mb-4">
+            <div class="card h-100">
+                @{
+                    var image = item.ProductImages
+                    .FirstOrDefault(i => i.IsPrimary == true)
+                    ?? item.ProductImages.FirstOrDefault();
+
+                    var imageUrl = image?.ImageUrl?.Trim();
+
+                    if (!string.IsNullOrEmpty(imageUrl) &&
+                    !imageUrl.StartsWith("http"))
+                    {
+                        imageUrl = Url.Content("~" + imageUrl);
+                    }
+                }
+
+                <img src="@(imageUrl ?? Url.Content("~/images/no-image.png"))"
+                     class="card-img-top"
+                     style="height:200px; object-fit:cover" />
+
+                <div class="card-body">
+                    <h5 class="card-title">@item.Name</h5>
+                    <p class="card-text">
+                        Giá: @item.SellingPrice.ToString("N0") đ
+                    </p>
+                </div>
+            </div>
+        </div>
+    }
+</div>

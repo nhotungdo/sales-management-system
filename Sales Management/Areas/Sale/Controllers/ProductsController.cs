@@ -35,29 +35,58 @@ namespace Sales_Management.Areas.Sale.Controllers
         // POST: Sale/Products/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Product product)
+        public async Task<IActionResult> Create(Product product, IFormFile? imageFile)
         {
             bool exists = await _context.Products.AnyAsync(p => p.Code == product.Code);
-
             if (exists)
             {
                 ModelState.AddModelError("Code", "Product code already exists!");
             }
+
             if (ModelState.IsValid)
             {
-                _context.Add(product);
+                _context.Products.Add(product);
                 await _context.SaveChangesAsync();
+
+                // xử lý ảnh
+                if (imageFile != null && imageFile.Length > 0)
+                {
+                    var uploadPath = Path.Combine(
+                        Directory.GetCurrentDirectory(),
+                        "wwwroot/images"
+                    );
+
+                    if (!Directory.Exists(uploadPath))
+                        Directory.CreateDirectory(uploadPath);
+
+                    var fileName = Guid.NewGuid() + Path.GetExtension(imageFile.FileName);
+                    var filePath = Path.Combine(uploadPath, fileName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await imageFile.CopyToAsync(stream);
+                    }
+
+                    var productImage = new ProductImage
+                    {
+                        ProductId = product.ProductId,   
+                        ImageUrl = "/images/" + fileName,
+                        IsPrimary = true,
+                        CreatedDate = DateTime.Now
+                    };
+
+                    _context.ProductImages.Add(productImage);
+                    await _context.SaveChangesAsync();
+                }
+
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewBag.CategoryId = new SelectList(
-                _context.Categories,
-                "CategoryId",
-                "Name",
-                product.CategoryId
-            );
+            ViewBag.CategoryId = new SelectList(_context.Categories, "CategoryId", "Name", product.CategoryId);
             return View(product);
         }
+
+
 
         // GET: Sale/Products/Edit/5
         public async Task<IActionResult> Edit(int? id)
@@ -125,11 +154,14 @@ namespace Sales_Management.Areas.Sale.Controllers
                 }
 
                 // xóa ảnh cũ
+                _context.ProductImages.RemoveRange(dbProduct.ProductImages);
                 dbProduct.ProductImages.Clear();
 
                 dbProduct.ProductImages.Add(new ProductImage
                 {
-                    ImageUrl = "/images/" + fileName
+                    ImageUrl = "/images/" + fileName,
+                    IsPrimary = true,
+                    CreatedDate = DateTime.Now
                 });
             }
 

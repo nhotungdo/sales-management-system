@@ -69,7 +69,7 @@ namespace Sales_Management.Controllers
             if (user.Role == "Admin")
                 return RedirectToAction("Index", "Home", new { area = "Admin" });
             else if (user.Role == "Sales")
-                return RedirectToAction("Index", "Products", new { area = "Sale" });
+                return RedirectToAction("Index", "Home", new { area = "Sale" });
             else
                 return RedirectToAction("Index", "Home");
         }
