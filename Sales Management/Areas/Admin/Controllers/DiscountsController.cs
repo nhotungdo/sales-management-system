@@ -23,7 +23,7 @@ namespace Sales_Management.Areas.Admin.Controllers
         }
 
         // GET: Admin/Discounts
-        public async Task<IActionResult> Index(string statusFilter)
+        public async Task<IActionResult> Index(string statusFilter, string searchString)
         {
             var query = _context.Promotions.AsQueryable();
 
@@ -32,8 +32,14 @@ namespace Sales_Management.Areas.Admin.Controllers
                 query = query.Where(p => p.Status == statusFilter);
             }
 
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(p => p.Code.Contains(searchString));
+            }
+
             var promotions = await query.OrderByDescending(p => p.StartDate).ToListAsync();
             ViewData["StatusFilter"] = statusFilter;
+            ViewData["CurrentFilter"] = searchString;
             return View(promotions);
         }
 

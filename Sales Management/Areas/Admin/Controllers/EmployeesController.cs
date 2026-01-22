@@ -26,7 +26,7 @@ namespace Sales_Management.Areas.Admin.Controllers
         }
 
         // GET: Admin/Employees
-        public async Task<IActionResult> Index(string searchString)
+        public async Task<IActionResult> Index(string searchString, string contractType)
         {
             var employees = _context.Employees.Include(e => e.User).Where(e => !e.IsDeleted);
 
@@ -37,7 +37,13 @@ namespace Sales_Management.Areas.Admin.Controllers
                     (e.Position != null && e.Position.Contains(searchString)));
             }
             
+            if (!string.IsNullOrEmpty(contractType))
+            {
+                employees = employees.Where(e => e.ContractType == contractType);
+            }
+
             ViewData["CurrentFilter"] = searchString;
+            ViewData["CurrentContractType"] = contractType;
             return View(await employees.ToListAsync());
         }
 

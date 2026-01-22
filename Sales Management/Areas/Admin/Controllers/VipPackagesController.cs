@@ -42,5 +42,91 @@ namespace Sales_Management.Areas.Admin.Controllers
             }
             return View(vipPackage);
         }
+
+        // GET: Admin/VipPackages/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var vipPackage = await _context.VipPackages.FindAsync(id);
+            if (vipPackage == null)
+            {
+                return NotFound();
+            }
+            return View(vipPackage);
+        }
+
+        // POST: Admin/VipPackages/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, VipPackage vipPackage)
+        {
+            if (id != vipPackage.VipPackageId)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(vipPackage);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!VipPackageExists(vipPackage.VipPackageId))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            return View(vipPackage);
+        }
+
+        // GET: Admin/VipPackages/Delete/5
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var vipPackage = await _context.VipPackages
+                .FirstOrDefaultAsync(m => m.VipPackageId == id);
+            if (vipPackage == null)
+            {
+                return NotFound();
+            }
+
+            return View(vipPackage);
+        }
+
+        // POST: Admin/VipPackages/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var vipPackage = await _context.VipPackages.FindAsync(id);
+            if (vipPackage != null)
+            {
+                _context.VipPackages.Remove(vipPackage);
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        private bool VipPackageExists(int id)
+        {
+            return _context.VipPackages.Any(e => e.VipPackageId == id);
+        }
     }
 }
