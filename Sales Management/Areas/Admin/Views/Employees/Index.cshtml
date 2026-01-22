@@ -17,17 +17,34 @@
 </div>
 
 <div class="card-modern">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <form asp-action="Index" method="get" class="d-flex">
-            <div class="input-group">
+    <div class="mb-4">
+        <form asp-action="Index" method="get" class="d-flex flex-wrap gap-2">
+            <div class="input-group" style="max-width: 350px;">
                 <span class="input-group-text bg-light border-end-0 rounded-start-pill"><i class="bi bi-search text-secondary"></i></span>
-                <input type="text" name="searchString" class="form-control bg-light border-start-0 rounded-end-pill ps-0" placeholder="Tìm kiếm nhân viên..." value="@ViewData["CurrentFilter"]" style="min-width: 250px;">
+                <input type="text" name="searchString" class="form-control bg-light border-start-0 rounded-end-pill ps-0" placeholder="Tìm kiếm tên, chức vụ..." value="@ViewData["CurrentFilter"]">
             </div>
+            
+            <select name="contractType" class="form-select rounded-pill" style="width: auto; min-width: 180px;">
+                <option value="">-- Loại hợp đồng --</option>
+                 @{
+                    var currentType = ViewData["CurrentContractType"] as string;
+                }
+                <option value="FullTime" selected="@(currentType == "FullTime")">Toàn thời gian</option>
+                <option value="PartTime" selected="@(currentType == "PartTime")">Bán thời gian</option>
+                <option value="Intern" selected="@(currentType == "Intern")">Thực tập</option>
+                <option value="Contract" selected="@(currentType == "Contract")">Hợp đồng</option>
+            </select>
+
+            <button type="submit" class="btn btn-outline-primary rounded-pill px-4">
+                <i class="bi bi-funnel me-2"></i>Lọc
+            </button>
+            @if(!string.IsNullOrEmpty(ViewData["CurrentFilter"]?.ToString()) || !string.IsNullOrEmpty(currentType))
+            {
+                 <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-3" title="Xóa bộ lọc">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            }
         </form>
-        <div class="d-flex gap-2">
-            <button class="btn btn-outline-secondary rounded-pill"><i class="bi bi-funnel"></i> Lọc</button>
-            <button class="btn btn-outline-secondary rounded-pill"><i class="bi bi-download"></i> Xuất</button>
-        </div>
     </div>
 
     <div class="table-responsive">
