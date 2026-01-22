@@ -1,0 +1,13 @@
+﻿public async Task<IActionResult>
+    Details(int id)
+    {
+    var order = await _context.Orders
+    .Include(o => o.Customer)
+    .Include(o => o.OrderDetails)
+    .ThenInclude(d => d.Product)
+    .FirstOrDefaultAsync(o => o.OrderId == id);
+
+    if (order == null) return NotFound();
+
+    return View(order);
+    }

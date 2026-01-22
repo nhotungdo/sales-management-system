@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sales_Management.Data;
+using Sales_Management.Models;
 
 namespace SaleManagement.Areas.Sale.Controllers
 {
@@ -14,14 +15,21 @@ namespace SaleManagement.Areas.Sale.Controllers
             _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var products = _context.Products
-            .Include(p => p.ProductImages)
-            .ToList();
+            var today = DateTime.Today;
+
+            ViewBag.TotalRevenue = await _context.Invoices
+                .SumAsync(i => i.Amount);
+
+            ViewBag.TodayInvoices = await _context.Invoices
+                .CountAsync(i => i.InvoiceDate >= today);
+
+            var products = await _context.Products
+                .Include(p => p.ProductImages)
+                .ToListAsync();
             return View(products);
-
-
         }
+
     }
 }

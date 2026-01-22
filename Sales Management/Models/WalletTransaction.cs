@@ -26,4 +26,9 @@ public partial class WalletTransaction
     public string? TransactionCode { get; set; }
 
     public decimal? AmountMoney { get; set; }
+
+    public int? InvoiceId { get; set; }
+
+    public virtual Invoice? Invoice { get; set; }
+
 }

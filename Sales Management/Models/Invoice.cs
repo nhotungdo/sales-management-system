@@ -16,4 +16,5 @@ public partial class Invoice
     public string? Status { get; set; }
 
     public virtual Order Order { get; set; } = null!;
+
 }
