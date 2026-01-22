@@ -149,6 +149,8 @@ h6 {
 .navbar.scrolled {
   background: var(--surface-glass);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: var(--glass-border);
   box-shadow: var(--shadow-sm);
   padding: 0.8rem 0;
 }
