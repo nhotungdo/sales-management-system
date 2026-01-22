@@ -14,6 +14,7 @@
     <div class="form-group">
         <label>Name</label>
         <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
     </div>
 
     <div class="form-group">
@@ -24,7 +25,8 @@
 
     <div class="form-group">
         <label>Quantity</label>
-        <input asp-for="StockQuantity" class="form-control" />
+        <input asp-for="StockQuantity" type="number" step="1" min="1" class="form-control" />
+        <span asp-validation-for="StockQuantity" class="text-danger"></span>
     </div>
 
     <div class="form-group">

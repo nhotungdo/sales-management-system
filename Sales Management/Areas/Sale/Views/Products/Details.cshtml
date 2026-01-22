@@ -5,7 +5,7 @@
 <div class="row">
     <!-- IMAGE -->
     <div class="col-md-5">
-        @if (Model.ProductImages.Any())
+        @if (Model.ProductImages != null && Model.ProductImages.Any())
         {
             <img src="@Model.ProductImages.First().ImageUrl"
                  class="img-fluid rounded shadow" />
@@ -21,10 +21,12 @@
     <div class="col-md-7">
         <h3>@Model.Name</h3>
 
-        <p class="text-muted">@Model.Category?.Name</p>
+        <p class="text-muted">
+            @(Model.Category?.Name ?? "Chưa phân loại")
+        </p>
 
         <h4 class="text-danger">
-            @Model.SellingPrice.ToString("N0") ₫
+            @(Model.SellingPrice.ToString("N0") ?? "0") ₫
         </h4>
 
         <p>
@@ -33,7 +35,9 @@
 
         <p>
             <strong>Description:</strong><br />
-            @Model.Description
+            @(string.IsNullOrWhiteSpace(Model.Description)
+                ? "Không có mô tả"
+                : Model.Description)
         </p>
 
         <!-- RATING -->
