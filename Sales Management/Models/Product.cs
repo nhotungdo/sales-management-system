@@ -20,11 +20,14 @@ public partial class Product
 
     public decimal? ImportPrice { get; set; }
 
-    [Required(ErrorMessage = "Giá bán là bắt buộc")]
+    [Required]
+    [Range(0.01, double.MaxValue, ErrorMessage = "Giá bán phải lớn hơn 0")]
     public decimal SellingPrice { get; set; }
 
     public decimal? Vatrate { get; set; }
 
+    [Required]
+    [Range(1, int.MaxValue, ErrorMessage = "Số lượng sản phẩm không được âm")]
     public int? StockQuantity { get; set; }
 
     public string? Status { get; set; }
