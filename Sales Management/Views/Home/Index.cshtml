@@ -1,8 +1,210 @@
-﻿@{
-    ViewData["Title"] = "Trang chủ";
+﻿@model Sales_Management.ViewModels.HomeProductViewModel
+@{
+    ViewData["Title"] = "Quản Lý Bán Hàng Hiện Đại";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Chào mừng</h1>
-    <p>Tìm hiểu về <a href="https://learn.microsoft.com/aspnet/core">xây dựng ứng dụng Web với ASP.NET Core</a>.</p>
-</div>
+<!-- Hero Section -->
+<section class="hero-section">
+    <!-- Blobs for background effect -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    
+    <div class="container hero-content">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <span class="badge badge-primary-modern mb-3 bg-white text-primary fw-bold px-3 py-2 rounded-pill shadow-sm">
+                    <i class="bi bi-stars"></i> Mới nhất 2026
+                </span>
+                <h1 class="hero-title">
+                    Khám Phá Sản Phẩm <br>
+                    <span class="text-gradient">Chất Lượng Hôm Nay</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Duyệt qua bộ sưu tập phong phú các mặt hàng cao cấp của chúng tôi. Từ công nghệ mới nhất đến nhu yếu phẩm hàng ngày, chúng tôi có tất cả những gì bạn cần.
+                </p>
+                <div class="hero-actions">
+                    <a href="#products" class="btn btn-primary-modern btn-lg">
+                        Mua Ngay <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 mt-5 mt-lg-0">
+                <div class="hero-image-wrapper">
+                    <img src="https://t3.ftcdn.net/jpg/02/41/43/18/360_F_241431868_8DFQpCcmpEPVG0UvopdztOAd4a6Rqsoo.jpg" 
+                         alt="Shopping Preview" class="hero-image bg-white p-2">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-5 border-top border-bottom bg-white">
+    <div class="container">
+        <div class="row text-center g-4">
+            <div class="col-md-3 col-6">
+                <h3 class="fw-bold text-primary mb-0">10k+</h3>
+                <span class="text-muted">Sản Phẩm</span>
+            </div>
+            <div class="col-md-3 col-6">
+                <h3 class="fw-bold text-primary mb-0">Hàng Ngày</h3>
+                <span class="text-muted">Cập Nhật Mới</span>
+            </div>
+            <div class="col-md-3 col-6">
+                <h3 class="fw-bold text-primary mb-0">Nhanh Chóng</h3>
+                <span class="text-muted">Vận Chuyển</span>
+            </div>
+            <div class="col-md-3 col-6">
+                <h3 class="fw-bold text-primary mb-0">24/7</h3>
+                <span class="text-muted">Hỗ Trợ</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Products Section -->
+<section id="products" class="py-5 bg-light">
+    <div class="container">
+        <div class="section-title mb-5">
+            <span class="text-primary fw-bold text-uppercase ls-1">Bộ Sưu Tập</span>
+            <h2>Khám Phá Sản Phẩm</h2>
+        </div>
+
+        <!-- Filter & Search -->
+        <div class="card card-modern mb-5">
+            <div class="card-body">
+                <form asp-action="Index" method="get" class="row g-3 align-items-center">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                            <input type="text" name="SearchString" value="@Model.SearchString" class="form-control border-start-0 ps-0" placeholder="Tìm kiếm sản phẩm...">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="sortOrder" class="form-select" onchange="this.form.submit()">
+                            <option value="">Sắp xếp: Mới nhất</option>
+                            <option value="name_desc" selected="@(Model.SortOrder == "name_desc")">Tên: Z đến A</option>
+                            <option value="Price" selected="@(Model.SortOrder == "Price")">Giá: Thấp đến Cao</option>
+                            <option value="price_desc" selected="@(Model.SortOrder == "price_desc")">Giá: Cao đến Thấp</option>
+                            <option value="Date" selected="@(Model.SortOrder == "Date")">Cũ nhất trước</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary-modern w-100">Lọc</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        @if (Model.Products.Any())
+        {
+            <div class="row g-4">
+                @foreach (var item in Model.Products)
+                {
+                    <div class="col-md-3 col-sm-6">
+                        <div class="card h-100 card-modern product-card">
+                            <div class="position-relative overflow-hidden">
+                                @if (item.ProductImages != null && item.ProductImages.Any())
+                                {
+                                     <img src="@item.ProductImages.First().ImageUrl" class="card-img-top product-img" alt="@item.Name">
+                                }
+                                else
+                                {
+                                     <div class="bg-light d-flex align-items-center justify-content-center text-muted card-img-top product-img">
+                                         <i class="bi bi-image fs-1"></i>
+                                     </div>
+                                }
+                                <div class="position-absolute top-0 end-0 p-2">
+                                    <span class="badge bg-white text-primary shadow-sm">@item.Category?.Name</span>
+                                </div>
+                                <div class="product-overlay">
+                                    <button class="btn btn-light rounded-circle shadow-sm"><i class="bi bi-eye"></i></button>
+                                    <button class="btn btn-primary rounded-circle shadow-sm ms-2"><i class="bi bi-cart"></i></button>
+                                </div>
+                            </div>
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title fw-bold text-truncate" title="@item.Name">@item.Name</h5>
+                                <p class="card-text text-muted small flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                    @item.Description
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center mt-3 border-top pt-3">
+                                    <span class="h5 mb-0 text-primary fw-bold">@item.SellingPrice.ToString("N0")<small>đ</small></span>
+                                    <small class="text-muted">@item.Status</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Pagination -->
+            <div class="mt-5 d-flex justify-content-center">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination pagination-modern">
+                        <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index"
+                               asp-route-page="@(Model.CurrentPage - 1)"
+                               asp-route-sortOrder="@Model.SortOrder"
+                               asp-route-currentFilter="@Model.SearchString"><i class="bi bi-chevron-left"></i></a>
+                        </li>
+                        
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(Model.CurrentPage == i ? "active" : "")">
+                                <a class="page-link" asp-action="Index"
+                                   asp-route-page="@i"
+                                   asp-route-sortOrder="@Model.SortOrder"
+                                   asp-route-currentFilter="@Model.SearchString">@i</a>
+                            </li>
+                        }
+                        
+                        <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index"
+                               asp-route-page="@(Model.CurrentPage + 1)"
+                               asp-route-sortOrder="@Model.SortOrder"
+                               asp-route-currentFilter="@Model.SearchString"><i class="bi bi-chevron-right"></i></a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <div class="mb-3">
+                    <i class="bi bi-search fs-1 text-muted"></i>
+                </div>
+                <h3>Không tìm thấy sản phẩm nào</h3>
+                <p class="text-muted">Hãy thử điều chỉnh tiêu chí tìm kiếm của bạn.</p>
+                <a asp-action="Index" class="btn btn-primary-modern mt-3">Xóa bộ lọc</a>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);">
+    <div class="container text-center text-white py-5">
+        <h2 class="fw-bold mb-3 display-5">Bạn đã tìm thấy món đồ ưng ý?</h2>
+        <p class="lead mb-4 op-8">Đăng ký ngay để bắt đầu mua sắm và nhận những ưu đãi độc quyền.</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a asp-controller="Account" asp-action="Register" class="btn btn-light btn-lg rounded-pill fw-bold text-primary px-5">
+                Tạo Tài Khoản
+            </a>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Navbar Scroll Effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+    </script>
+}
