@@ -87,12 +87,12 @@
                                     <span>@item.Value.ToString("0")%</span>
                                     if(item.MaxDiscountAmount.HasValue)
                                     {
-                                        <small class="text-muted d-block fw-normal" style="font-size: 0.75rem">Tối đa @item.MaxDiscountAmount?.ToString("N0")</small>
+                                        <small class="text-muted d-block fw-normal" style="font-size: 0.75rem">Tối đa @item.MaxDiscountAmount?.ToString("F2") cents</small>
                                     }
                                 }
                                 else
                                 {
-                                    <span>@item.Value.ToString("N0") đ</span>
+                                    <span>@item.Value.ToString("F2") cents</span>
                                 }
                             </td>
                             <td>

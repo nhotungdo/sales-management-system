@@ -47,11 +47,11 @@
                     <div class="mb-4">
                         @if (item.Price == 0)
                         {
-                            <h2 class="fw-bold text-dark">0 VNĐ <span class="fs-6 text-muted fw-normal">/ @(item.DurationMonth == 12 ? "năm" : item.DurationMonth + " tháng")</span></h2>
+                            <h2 class="fw-bold text-dark">0 xu <span class="fs-6 text-muted fw-normal">/ @(item.DurationMonth == 12 ? "năm" : item.DurationMonth + " tháng")</span></h2>
                         }
                         else
                         {
-                            <h2 class="fw-bold text-dark">@item.Price.ToString("#,##0") VNĐ <span class="fs-6 text-muted fw-normal">/ @(item.DurationMonth == 12 ? "năm" : item.DurationMonth + " tháng")</span></h2>
+                            <h2 class="fw-bold text-dark">@((item.Price / 10).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu <span class="fs-6 text-muted fw-normal">/ @(item.DurationMonth == 12 ? "năm" : item.DurationMonth + " tháng")</span></h2>
                         }
                     </div>
                     

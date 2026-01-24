@@ -37,8 +37,8 @@
                     <small class="text-muted text-uppercase">Ngày làm</small>
                 </div>
                 <div class="col-6">
-                    <h5 class="fw-bold mb-0">@(Model.BasicSalary.HasValue ? (Model.BasicSalary.Value / 1000000).ToString("0.#") + "M" : "-")</h5>
-                    <small class="text-muted text-uppercase">Lương</small>
+                    <h5 class="fw-bold mb-0">@(Model.BasicSalary.HasValue ? Model.BasicSalary.Value.ToString("N0") : "-")</h5>
+                    <small class="text-muted text-uppercase">Lương (cents)</small>
                 </div>
             </div>
 

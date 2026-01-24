@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Sales_Management.Data;
 using Sales_Management.Models;
+using Sales_Management.Services;
 
 namespace Sales_Management.Areas.Sale.Controllers
 {
@@ -10,17 +11,20 @@ namespace Sales_Management.Areas.Sale.Controllers
     public class ProductsController : Controller
     {
         private readonly SalesManagementContext _context;
+        private readonly ICoinService _coinService;
 
-        public ProductsController(SalesManagementContext context)
+        public ProductsController(SalesManagementContext context, ICoinService coinService)
         {
             _context = context;
+            _coinService = coinService;
         }
 
         // GET: Sale/Products
         public async Task<IActionResult> Index()
         {
             var products = _context.Products
-                                   .Include(p => p.Category);
+                                   .Include(p => p.Category)
+                                   .Where(p => p.Status != "Deleted");
             return View(await products.ToListAsync());
         }
 
@@ -59,6 +63,9 @@ namespace Sales_Management.Areas.Sale.Controllers
             }
             if (ModelState.IsValid)
             {
+                // Calculate Coin Price
+                product.CoinPrice = _coinService.CalculateCoin(product.SellingPrice);
+
                 _context.Products.Add(product);
                 await _context.SaveChangesAsync();
 
@@ -176,6 +183,9 @@ namespace Sales_Management.Areas.Sale.Controllers
             dbProduct.Description = product.Description;
             dbProduct.CategoryId = product.CategoryId;
 
+            // Recalculate Coin Price
+            dbProduct.CoinPrice = _coinService.CalculateCoin(product.SellingPrice);
+
             // xử lý ảnh
             if (imageFile != null && imageFile.Length > 0)
             {
@@ -230,29 +240,12 @@ namespace Sales_Management.Areas.Sale.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var product = await _context.Products
-            .Include(p => p.ProductImages)
-            .FirstOrDefaultAsync(p => p.ProductId == id);
-
+            var product = await _context.Products.FindAsync(id);
             if (product != null)
             {
-                // xóa file ảnh vật lý
-                foreach (var img in product.ProductImages)
-                {
-                    if (!string.IsNullOrEmpty(img.ImageUrl))
-                    {
-                        var path = Path.Combine(
-                            Directory.GetCurrentDirectory(),
-                            "wwwroot",
-                            img.ImageUrl.TrimStart('/')
-                        );
-                        if (System.IO.File.Exists(path))
-                        {
-                            System.IO.File.Delete(path);
-                        }
-                    }
-                }
-                _context.Products.Remove(product);
+                product.Status = "Deleted";
+                product.UpdatedDate = DateTime.Now;
+                _context.Update(product);
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction(nameof(Index));
@@ -267,7 +260,7 @@ namespace Sales_Management.Areas.Sale.Controllers
                 .Include(p => p.ProductImages)   // ảnh
                 .FirstOrDefaultAsync(p => p.ProductId == id);
 
-            if (product == null) return NotFound();
+            if (product == null || product.Status == "Deleted") return NotFound();
 
             return View(product);
         }

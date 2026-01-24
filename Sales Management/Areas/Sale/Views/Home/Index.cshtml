@@ -28,7 +28,7 @@
                 <div class="card-body">
                     <h5 class="card-title">@item.Name</h5>
                     <p class="card-text">
-                        Giá: @item.SellingPrice.ToString("N0") đ
+                        Giá: @((item.SellingPrice / 10).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu
                     </p>
                 </div>
             </div>

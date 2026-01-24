@@ -35,6 +35,12 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "AdminProducts" ? "active" : "")" 
+                   asp-area="Admin" asp-controller="AdminProducts" asp-action="Index">
+                    <i class="bi bi-box-seam-fill"></i> Sản phẩm
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Categories" ? "active" : "")" 
                    asp-area="Admin" asp-controller="Categories" asp-action="Index">
                     <i class="bi bi-grid-fill"></i> Danh mục

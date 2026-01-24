@@ -1,4 +1,5 @@
-﻿@{
+﻿@model IEnumerable<Sales_Management.Models.Product>
+@{
     ViewData["Title"] = "Products";
 }
 
@@ -30,7 +31,12 @@
                     <tr>
                         <td>@item.ProductId</td>
                         <td class="fw-semibold">@item.Name</td>
-                        <td>@item.SellingPrice.ToString("N0") đ</td>
+                        <td>
+                            <div>@item.SellingPrice.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) VNĐ</div>
+                            @if(item.CoinPrice.HasValue) {
+                                <div class="text-warning small">@item.CoinPrice.Value.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) Coins</div>
+                            }
+                        </td>
                         <td>@item.StockQuantity</td>
                         <td>
                             <span class="badge bg-info">

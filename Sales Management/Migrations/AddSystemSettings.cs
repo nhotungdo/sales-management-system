@@ -10,6 +10,7 @@ namespace Sales_Management.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            /*
             migrationBuilder.CreateTable(
                 name: "SystemSettings",
                 columns: table => new
@@ -23,13 +24,16 @@ namespace Sales_Management.Migrations
                 {
                     table.PrimaryKey("PK_SystemSettings", x => x.SettingKey);
                 });
+            */
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            /*
             migrationBuilder.DropTable(
                 name: "SystemSettings");
+            */
         }
     }
 }

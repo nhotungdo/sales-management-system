@@ -92,6 +92,26 @@ namespace Sales_Management.Controllers
             return View(viewModel);
         }
 
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var product = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.ProductImages)
+                .FirstOrDefaultAsync(m => m.ProductId == id);
+
+            if (product == null || product.Status == "Deleted")
+            {
+                return NotFound();
+            }
+
+            return View(product);
+        }
+
         public IActionResult Privacy()
         {
             return View();
