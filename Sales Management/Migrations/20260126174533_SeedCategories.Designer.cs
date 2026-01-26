@@ -12,8 +12,8 @@ using Sales_Management.Data;
 namespace Sales_Management.Migrations
 {
     [DbContext(typeof(SalesManagementContext))]
-    [Migration("20260122070907_AddPaymentTable")]
-    partial class AddPaymentTable
+    [Migration("20260126174533_SeedCategories")]
+    partial class SeedCategories
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -78,6 +78,57 @@ namespace Sales_Management.Migrations
                     b.HasIndex("ParentId");
 
                     b.ToTable("Categories");
+
+                    b.HasData(
+                        new
+                        {
+                            CategoryId = 1,
+                            IsDeleted = false,
+                            Name = "Đồ uống",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            CategoryId = 2,
+                            IsDeleted = false,
+                            Name = "Đồ ăn vặt",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            CategoryId = 3,
+                            IsDeleted = false,
+                            Name = "Thực phẩm",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            CategoryId = 4,
+                            IsDeleted = false,
+                            Name = "Điện tử",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            CategoryId = 5,
+                            IsDeleted = false,
+                            Name = "Thời trang",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            CategoryId = 6,
+                            IsDeleted = false,
+                            Name = "Đồ gia dụng",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            CategoryId = 7,
+                            IsDeleted = false,
+                            Name = "Sách",
+                            Status = "Active"
+                        });
                 });
 
             modelBuilder.Entity("Sales_Management.Models.Customer", b =>
@@ -402,39 +453,6 @@ namespace Sales_Management.Migrations
                     b.ToTable("OrderPromotions");
                 });
 
-            modelBuilder.Entity("Sales_Management.Models.Payment", b =>
-                {
-                    b.Property<int>("PaymentId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PaymentId"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("InvoiceId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Method")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("PaymentDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("PaymentId");
-
-                    b.HasIndex("InvoiceId")
-                        .IsUnique();
-
-                    b.ToTable("Payments");
-                });
-
             modelBuilder.Entity("Sales_Management.Models.Payroll", b =>
                 {
                     b.Property<int>("PayrollId")
@@ -496,6 +514,9 @@ namespace Sales_Management.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal?>("CoinPrice")
+                        .HasColumnType("decimal(15, 2)");
 
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
@@ -777,6 +798,32 @@ namespace Sales_Management.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = 1,
+                            CreatedDate = new DateTime(2026, 1, 27, 0, 45, 32, 573, DateTimeKind.Local).AddTicks(5684),
+                            Email = "admin@gmail.com",
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$415nmOGi2bULzpMmqH03M.Ts2OyT2SL/pAH8tch4J3wtgcezXbybG",
+                            Role = "Admin",
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Username = "admin"
+                        },
+                        new
+                        {
+                            UserId = 2,
+                            CreatedDate = new DateTime(2026, 1, 27, 0, 45, 32, 758, DateTimeKind.Local).AddTicks(77),
+                            Email = "sale@gmail.com",
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$7FmMeAQEAGDD9N81v5Wg0O8BK89oMWr4dnTVp7jaNVRNLi48hze3G",
+                            Role = "Sale",
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Username = "sale"
+                        });
                 });
 
             modelBuilder.Entity("Sales_Management.Models.VipPackage", b =>
@@ -892,6 +939,9 @@ namespace Sales_Management.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<int?>("InvoiceId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Method")
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
@@ -918,6 +968,8 @@ namespace Sales_Management.Migrations
 
                     b.HasKey("TransactionId")
                         .HasName("PK__WalletTr__55433A6B21E47F13");
+
+                    b.HasIndex("InvoiceId");
 
                     b.HasIndex("WalletId");
 
@@ -1044,17 +1096,6 @@ namespace Sales_Management.Migrations
                     b.Navigation("Promotion");
                 });
 
-            modelBuilder.Entity("Sales_Management.Models.Payment", b =>
-                {
-                    b.HasOne("Sales_Management.Models.Invoice", "Invoice")
-                        .WithOne("Payment")
-                        .HasForeignKey("Sales_Management.Models.Payment", "InvoiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Invoice");
-                });
-
             modelBuilder.Entity("Sales_Management.Models.Payroll", b =>
                 {
                     b.HasOne("Sales_Management.Models.Employee", "Employee")
@@ -1120,11 +1161,17 @@ namespace Sales_Management.Migrations
 
             modelBuilder.Entity("Sales_Management.Models.WalletTransaction", b =>
                 {
+                    b.HasOne("Sales_Management.Models.Invoice", "Invoice")
+                        .WithMany()
+                        .HasForeignKey("InvoiceId");
+
                     b.HasOne("Sales_Management.Models.Wallet", "Wallet")
                         .WithMany("WalletTransactions")
                         .HasForeignKey("WalletId")
                         .IsRequired()
                         .HasConstraintName("FK__WalletTra__Walle__5CD6CB2B");
+
+                    b.Navigation("Invoice");
 
                     b.Navigation("Wallet");
                 });
@@ -1148,11 +1195,6 @@ namespace Sales_Management.Migrations
                     b.Navigation("Payrolls");
 
                     b.Navigation("TimeAttendances");
-                });
-
-            modelBuilder.Entity("Sales_Management.Models.Invoice", b =>
-                {
-                    b.Navigation("Payment");
                 });
 
             modelBuilder.Entity("Sales_Management.Models.Order", b =>

@@ -1,5 +1,4 @@
 ﻿@model List<Product>
-
 <div class="row">
 
     <!-- ===== LEFT: PRODUCTS ===== -->
@@ -35,7 +34,7 @@
                     <div class="card h-100 shadow-sm">
                         @{
                             var image = item.ProductImages
-                                .FirstOrDefault(i => i.IsPrimary)
+                                .FirstOrDefault(i => i.IsPrimary == true)
                                 ?? item.ProductImages.FirstOrDefault();
 
                             var imageUrl = image?.ImageUrl;

@@ -12,8 +12,8 @@ using Sales_Management.Data;
 namespace Sales_Management.Migrations
 {
     [DbContext(typeof(SalesManagementContext))]
-    [Migration("AddCoinPriceToProduct")]
-    partial class AddCoinPriceToProduct
+    [Migration("20260126171316_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -464,8 +464,8 @@ namespace Sales_Management.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int?>("CoinPrice")
-                        .HasColumnType("int");
+                    b.Property<decimal?>("CoinPrice")
+                        .HasColumnType("decimal(15, 2)");
 
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
@@ -862,6 +862,9 @@ namespace Sales_Management.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<int?>("InvoiceId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Method")
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
@@ -888,6 +891,8 @@ namespace Sales_Management.Migrations
 
                     b.HasKey("TransactionId")
                         .HasName("PK__WalletTr__55433A6B21E47F13");
+
+                    b.HasIndex("InvoiceId");
 
                     b.HasIndex("WalletId");
 
@@ -1079,11 +1084,17 @@ namespace Sales_Management.Migrations
 
             modelBuilder.Entity("Sales_Management.Models.WalletTransaction", b =>
                 {
+                    b.HasOne("Sales_Management.Models.Invoice", "Invoice")
+                        .WithMany()
+                        .HasForeignKey("InvoiceId");
+
                     b.HasOne("Sales_Management.Models.Wallet", "Wallet")
                         .WithMany("WalletTransactions")
                         .HasForeignKey("WalletId")
                         .IsRequired()
                         .HasConstraintName("FK__WalletTra__Walle__5CD6CB2B");
+
+                    b.Navigation("Invoice");
 
                     b.Navigation("Wallet");
                 });

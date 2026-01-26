@@ -48,7 +48,7 @@ namespace Sales_Management.Areas.Sale.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Product product, IFormFile? imageFile)
         {
-            bool exists = await _context.Products.AnyAsync(p => p.Code == product.Code);
+            bool exists = await _context.Products.AnyAsync(p => p.Code == product.Code && p.Status != "Deleted");
             if (exists)
             {
                 ModelState.AddModelError("Code", "Mã sản phẩm đã tồn tại!");

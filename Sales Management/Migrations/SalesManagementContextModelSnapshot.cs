@@ -75,6 +75,57 @@ namespace Sales_Management.Migrations
                     b.HasIndex("ParentId");
 
                     b.ToTable("Categories");
+
+                    b.HasData(
+                        new
+                        {
+                            CategoryId = 1,
+                            IsDeleted = false,
+                            Name = "Đồ uống",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            CategoryId = 2,
+                            IsDeleted = false,
+                            Name = "Đồ ăn vặt",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            CategoryId = 3,
+                            IsDeleted = false,
+                            Name = "Thực phẩm",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            CategoryId = 4,
+                            IsDeleted = false,
+                            Name = "Điện tử",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            CategoryId = 5,
+                            IsDeleted = false,
+                            Name = "Thời trang",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            CategoryId = 6,
+                            IsDeleted = false,
+                            Name = "Đồ gia dụng",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            CategoryId = 7,
+                            IsDeleted = false,
+                            Name = "Sách",
+                            Status = "Active"
+                        });
                 });
 
             modelBuilder.Entity("Sales_Management.Models.Customer", b =>
@@ -461,8 +512,8 @@ namespace Sales_Management.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int?>("CoinPrice")
-                        .HasColumnType("int");
+                    b.Property<decimal?>("CoinPrice")
+                        .HasColumnType("decimal(15, 2)");
 
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
@@ -744,6 +795,32 @@ namespace Sales_Management.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = 1,
+                            CreatedDate = new DateTime(2026, 1, 27, 0, 45, 32, 573, DateTimeKind.Local).AddTicks(5684),
+                            Email = "admin@gmail.com",
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$415nmOGi2bULzpMmqH03M.Ts2OyT2SL/pAH8tch4J3wtgcezXbybG",
+                            Role = "Admin",
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Username = "admin"
+                        },
+                        new
+                        {
+                            UserId = 2,
+                            CreatedDate = new DateTime(2026, 1, 27, 0, 45, 32, 758, DateTimeKind.Local).AddTicks(77),
+                            Email = "sale@gmail.com",
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$7FmMeAQEAGDD9N81v5Wg0O8BK89oMWr4dnTVp7jaNVRNLi48hze3G",
+                            Role = "Sale",
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Username = "sale"
+                        });
                 });
 
             modelBuilder.Entity("Sales_Management.Models.VipPackage", b =>

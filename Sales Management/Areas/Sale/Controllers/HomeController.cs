@@ -26,6 +26,7 @@ namespace SaleManagement.Areas.Sale.Controllers
                 .CountAsync(i => i.InvoiceDate >= today);
 
             var products = await _context.Products
+                .Where(p => p.Status != "Deleted")
                 .Include(p => p.ProductImages)
                 .ToListAsync();
             return View(products);

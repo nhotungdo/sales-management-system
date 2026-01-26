@@ -251,6 +251,8 @@ public partial class SalesManagementContext : DbContext
             entity.Property(e => e.UpdatedDate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
+            entity.Property(e => e.CoinPrice)
+                .HasColumnType("decimal(15, 2)");
             entity.Property(e => e.Vatrate)
                 .HasDefaultValue(0m)
                 .HasColumnType("decimal(5, 2)")
@@ -401,6 +403,40 @@ public partial class SalesManagementContext : DbContext
         });
 
         OnModelCreatingPartial(modelBuilder);
+        modelBuilder.Entity<User>().HasData(
+    new User
+    {
+        UserId = 1,
+        Username = "admin",
+        PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+        Email = "admin@gmail.com",
+        Role = "Admin",
+        IsActive = true,
+        CreatedDate = DateTime.Now
+    },
+    new User
+    {
+        UserId = 2,
+        Username = "sale",
+        PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
+        Email = "sale@gmail.com",
+        Role = "Sale",
+        IsActive = true,
+        CreatedDate = DateTime.Now
+    }
+
+); 
+        modelBuilder.Entity<Category>().HasData(
+    new Category { CategoryId = 1, Name = "Đồ uống", Status = "Active", IsDeleted = false },
+    new Category { CategoryId = 2, Name = "Đồ ăn vặt", Status = "Active", IsDeleted = false },
+    new Category { CategoryId = 3, Name = "Thực phẩm", Status = "Active", IsDeleted = false },
+    new Category { CategoryId = 4, Name = "Điện tử", Status = "Active", IsDeleted = false },
+    new Category { CategoryId = 5, Name = "Thời trang", Status = "Active", IsDeleted = false },
+    new Category { CategoryId = 6, Name = "Đồ gia dụng", Status = "Active", IsDeleted = false },
+    new Category { CategoryId = 7, Name = "Sách", Status = "Active", IsDeleted = false }
+);
+
+
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
