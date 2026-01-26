@@ -63,10 +63,12 @@
                                 </dd>
 
                                 <dt class = "col-sm-4 text-muted">Giá nhập</dt>
-                                <dd class = "col-sm-8">@(Model.ImportPrice.HasValue ? Model.ImportPrice.Value.ToString("C") : "")</dd>
+                                <dt class = "col-sm-4 text-muted">Giá nhập</dt>
+                                <dd class = "col-sm-8">@(Model.ImportPrice.HasValue ? (Model.ImportPrice.Value / 10).ToString("N0", new System.Globalization.CultureInfo("vi-VN")) + " xu" : "")</dd>
 
                                 <dt class = "col-sm-4 text-muted">Giá bán</dt>
-                                <dd class = "col-sm-8 text-primary fw-bold fs-5">@Model.SellingPrice.ToString("C")</dd>
+                                <dt class = "col-sm-4 text-muted">Giá bán</dt>
+                                <dd class = "col-sm-8 text-primary fw-bold fs-5">@((Model.SellingPrice / 10).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu</dd>
                                 
                                 <dt class = "col-sm-4 text-muted">Thuế VAT</dt>
                                 <dd class = "col-sm-8">@Model.Vatrate%</dd>

@@ -8,6 +8,11 @@
         <h3 class="fw-bold text-dark">Quản lý người dùng</h3>
         <p class="text-muted mb-0">Theo dõi và quản lý tài khoản khách hàng</p>
     </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
+            <i class="bi bi-plus-lg me-2"></i> Thêm người dùng
+        </a>
+    </div>
 </div>
 
 <div class="card-modern">
@@ -89,10 +94,10 @@
                                 }
                             </td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-icon btn-light rounded-circle" title="Sửa"><i class="bi bi-pencil"></i></button>
+                                <a asp-action="Edit" asp-route-id="@item.UserId" class="btn btn-sm btn-icon btn-light rounded-circle" title="Sửa"><i class="bi bi-pencil"></i></a>
                                 @if (item.Role != "Admin") // Prevent deleting admins mostly
                                 {
-                                    <button class="btn btn-sm btn-icon btn-light rounded-circle text-danger" title="Xóa"><i class="bi bi-trash"></i></button>
+                                    <a asp-action="Delete" asp-route-id="@item.UserId" class="btn btn-sm btn-icon btn-light rounded-circle text-danger" title="Xóa"><i class="bi bi-trash"></i></a>
                                 }
                             </td>
                         </tr>
@@ -113,3 +118,18 @@
         Hiển thị @Model.Count() kết quả
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+    <script>
+        var connection = new signalR.HubConnectionBuilder().withUrl("/systemHub").build();
+        connection.on("ReceiveUpdate", function (message) {
+            if (message === "ReloadData" || message === "UserDeleted") {
+                location.reload();
+            }
+        });
+        connection.start().catch(function (err) {
+            return console.error(err.toString());
+        });
+    </script>
+}

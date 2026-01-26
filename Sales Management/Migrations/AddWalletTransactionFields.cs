@@ -10,6 +10,7 @@ namespace Sales_Management.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            /*
             migrationBuilder.AddColumn<decimal>(
                 name: "AmountMoney",
                 table: "WalletTransactions",
@@ -22,11 +23,13 @@ namespace Sales_Management.Migrations
                 type: "nvarchar(50)",
                 maxLength: 50,
                 nullable: true);
+            */
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            /*
             migrationBuilder.DropColumn(
                 name: "AmountMoney",
                 table: "WalletTransactions");
@@ -34,6 +37,7 @@ namespace Sales_Management.Migrations
             migrationBuilder.DropColumn(
                 name: "TransactionCode",
                 table: "WalletTransactions");
+            */
         }
     }
 }

@@ -11,6 +11,7 @@ namespace Sales_Management.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            /*
             migrationBuilder.AddColumn<DateTime>(
                 name: "CreatedDate",
                 table: "Categories",
@@ -52,11 +53,13 @@ namespace Sales_Management.Migrations
                 type: "datetime",
                 nullable: true,
                 defaultValueSql: "(getdate())");
+            */
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            /*
             migrationBuilder.DropColumn(
                 name: "CreatedDate",
                 table: "Categories");
@@ -80,6 +83,7 @@ namespace Sales_Management.Migrations
             migrationBuilder.DropColumn(
                 name: "UpdatedDate",
                 table: "Categories");
+            */
         }
     }
 }

@@ -134,8 +134,8 @@ namespace Sales_Management.Areas.Admin.Controllers
                 .OrderByDescending(p => p.DaysInStock)
                 .ToList();
 
-            model.TotalItemsInStock = allProducts.Sum(p => p.StockQuantity ?? 0);
-            model.TotalInventoryValue = allProducts.Sum(p => (decimal)(p.StockQuantity ?? 0) * (p.ImportPrice ?? 0));
+            model.TotalItemsInStock = allProducts.Count;
+            model.TotalInventoryValue = allProducts.Sum(p => (decimal)(p.StockQuantity ?? 0) * p.SellingPrice);
             
             decimal salesRevenue = model.TopSellingProducts.Sum(x => x.RevenueGenerated);
             model.InventoryTurnoverRate = model.TotalInventoryValue > 0 ? salesRevenue / model.TotalInventoryValue : 0;

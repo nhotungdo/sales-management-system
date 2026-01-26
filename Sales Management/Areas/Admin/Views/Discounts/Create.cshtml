@@ -40,7 +40,7 @@
                             <label asp-for="DiscountType" class="form-label fw-semibold">Loại giảm giá</label>
                             <select asp-for="DiscountType" class="form-select rounded-3">
                                 <option value="Percent">Phần trăm (%)</option>
-                                <option value="Amount">Số tiền cố định (VND)</option>
+                                <option value="Amount">Số tiền cố định (cents)</option>
                             </select>
                             <span asp-validation-for="DiscountType" class="text-danger"></span>
                         </div>

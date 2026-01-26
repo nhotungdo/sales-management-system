@@ -44,7 +44,7 @@ namespace Sales_Management.Controllers
 
             ViewData["CurrentFilter"] = searchString;
 
-            var products = _context.Products.Include(p => p.Category).Include(p => p.ProductImages).AsQueryable();
+            var products = _context.Products.Include(p => p.Category).Include(p => p.ProductImages).Where(p => p.Status != "Deleted").AsQueryable();
 
             if (!String.IsNullOrEmpty(searchString))
             {
@@ -82,7 +82,7 @@ namespace Sales_Management.Controllers
                 .Include(p => p.Category)
                 .Include(p => p.ProductImages)
                 .FirstOrDefaultAsync(m => m.ProductId == id);
-            if (product == null)
+            if (product == null || product.Status == "Deleted")
             {
                 return NotFound();
             }

@@ -47,11 +47,11 @@
                     <div class="mb-4">
                         @if (item.Price == 0)
                         {
-                            <h2 class="fw-bold text-dark">0 VNĐ <span class="fs-6 text-muted fw-normal">/ @(item.DurationMonth == 12 ? "năm" : item.DurationMonth + " tháng")</span></h2>
+                            <h2 class="fw-bold text-dark">0 xu <span class="fs-6 text-muted fw-normal">/ @(item.DurationMonth == 12 ? "năm" : item.DurationMonth + " tháng")</span></h2>
                         }
                         else
                         {
-                            <h2 class="fw-bold text-dark">@item.Price.ToString("#,##0") VNĐ <span class="fs-6 text-muted fw-normal">/ @(item.DurationMonth == 12 ? "năm" : item.DurationMonth + " tháng")</span></h2>
+                            <h2 class="fw-bold text-dark">@((item.Price / 10).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu <span class="fs-6 text-muted fw-normal">/ @(item.DurationMonth == 12 ? "năm" : item.DurationMonth + " tháng")</span></h2>
                         }
                     </div>
                     
@@ -62,7 +62,10 @@
                         }
                     </ul>
 
-                    <button class="btn btn-outline-@color w-100 rounded-pill">Chỉnh sửa</button>
+                    <div class="d-flex gap-2">
+                        <a asp-action="Edit" asp-route-id="@item.VipPackageId" class="btn btn-outline-@color flex-grow-1 rounded-pill">Chỉnh sửa</a>
+                        <a asp-action="Delete" asp-route-id="@item.VipPackageId" class="btn btn-outline-danger rounded-pill" title="Xóa"><i class="bi bi-trash"></i></a>
+                    </div>
                 </div>
             </div>
         }

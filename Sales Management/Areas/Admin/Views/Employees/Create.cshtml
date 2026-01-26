@@ -26,11 +26,12 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold small text-muted">Họ và tên <span class="text-danger">*</span></label>
-                        <input name="FullName" class="form-control" required placeholder="Nhập họ tên đầy đủ" />
+                        <input name="FullName" class="form-control" required placeholder="Nhập họ tên đầy đủ" value="@ViewBag.FullName" />
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-bold small text-muted">Email (Tên đăng nhập) <span class="text-danger">*</span></label>
-                        <input name="Email" type="email" class="form-control" required placeholder="example@company.com" />
+                        <input name="Email" type="email" class="form-control" required placeholder="example@company.com" value="@ViewBag.Email" />
+                        @Html.ValidationMessage("Email", new { @class = "text-danger small" })
                     </div>
                 </div>
                 <div class="row">
@@ -82,7 +83,7 @@
                         <label asp-for="BasicSalary" class="form-label fw-bold small text-muted">Lương cơ bản</label>
                         <div class="input-group">
                             <input asp-for="BasicSalary" class="form-control" type="number" step="1000" />
-                            <span class="input-group-text">VNĐ</span>
+                            <span class="input-group-text">cents</span>
                         </div>
                         <span asp-validation-for="BasicSalary" class="text-danger"></span>
                     </div>

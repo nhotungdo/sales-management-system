@@ -4,6 +4,10 @@ using Microsoft.EntityFrameworkCore;
 using Sales_Management.Data;
 using Sales_Management.Models;
 
+using Sales_Management.Hubs;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
+
 namespace Sales_Management.Areas.Admin.Controllers
 {
     [Area("Admin")]
@@ -11,14 +15,18 @@ namespace Sales_Management.Areas.Admin.Controllers
     public class EmployeesController : Controller
     {
         private readonly SalesManagementContext _context;
+        private readonly IHubContext<SystemHub> _hubContext;
+        private readonly ILogger<EmployeesController> _logger;
 
-        public EmployeesController(SalesManagementContext context)
+        public EmployeesController(SalesManagementContext context, IHubContext<SystemHub> hubContext, ILogger<EmployeesController> logger)
         {
             _context = context;
+            _hubContext = hubContext;
+            _logger = logger;
         }
 
         // GET: Admin/Employees
-        public async Task<IActionResult> Index(string searchString)
+        public async Task<IActionResult> Index(string searchString, string contractType)
         {
             var employees = _context.Employees.Include(e => e.User).Where(e => !e.IsDeleted);
 
@@ -29,7 +37,13 @@ namespace Sales_Management.Areas.Admin.Controllers
                     (e.Position != null && e.Position.Contains(searchString)));
             }
             
+            if (!string.IsNullOrEmpty(contractType))
+            {
+                employees = employees.Where(e => e.ContractType == contractType);
+            }
+
             ViewData["CurrentFilter"] = searchString;
+            ViewData["CurrentContractType"] = contractType;
             return View(await employees.ToListAsync());
         }
 
@@ -59,29 +73,60 @@ namespace Sales_Management.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Position,BasicSalary,StartWorkingDate,Department,ContractType")] Employee employee, string FullName, string Email, string Password, string Role)
         {
-             // Note: simplistic user creation for demo. Needs proper validation & hashing in production.
+            // Remove User navigation property validation as it's not bound yet
+            ModelState.Remove("User");
+            ModelState.Remove("UserId");
+
             if (ModelState.IsValid)
             {
-                 var user = new User
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                try 
                 {
-                    FullName = FullName,
-                    Email = Email,
-                    Username = Email, 
-                    PasswordHash = Password, // TODO: Hash password
-                    Role = Role,
-                    CreatedDate = DateTime.Now,
-                    IsActive = true
-                };
+                    // Check if user exists
+                    if (await _context.Users.AnyAsync(u => u.Email == Email || u.Username == Email))
+                    {
+                        ModelState.AddModelError("Email", "Email/Username đã tồn tại trong hệ thống.");
+                        ViewBag.FullName = FullName;
+                        ViewBag.Email = Email;
+                        ViewBag.Role = Role;
+                        return View(employee);
+                    }
 
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
+                    var user = new User
+                    {
+                        FullName = FullName,
+                        Email = Email,
+                        Username = Email, 
+                        PasswordHash = BCrypt.Net.BCrypt.HashPassword(Password),
+                        Role = Role,
+                        CreatedDate = DateTime.Now,
+                        UpdatedDate = DateTime.Now, // Critical for SQL Server
+                        IsActive = true
+                    };
 
-                employee.UserId = user.UserId;
-                _context.Employees.Add(employee);
-                await _context.SaveChangesAsync();
+                    _context.Users.Add(user);
+                    await _context.SaveChangesAsync();
 
-                return RedirectToAction(nameof(Index));
+                    employee.UserId = user.UserId;
+                    _context.Employees.Add(employee);
+                    await _context.SaveChangesAsync();
+                    
+                    await transaction.CommitAsync();
+                    
+                    await _hubContext.Clients.All.SendAsync("ReceiveUpdate", "ReloadData");
+                    
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    _logger.LogError(ex, "Error creating employee.");
+                    ModelState.AddModelError("", "Error creating employee: " + ex.Message);
+                }
             }
+            ViewBag.FullName = FullName;
+            ViewBag.Email = Email;
+            ViewBag.Role = Role;
             return View(employee);
         }
 

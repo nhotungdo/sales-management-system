@@ -11,6 +11,7 @@ namespace Sales_Management.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            /*
             migrationBuilder.AddColumn<string>(
                 name: "Department",
                 table: "Employees",
@@ -44,16 +45,19 @@ namespace Sales_Management.Migrations
                  
             // Assumes Payrolls and TimeAttendances might exist or will be handled if error arises.
             // Keeping them out of this migration prevents 'Table already exists' crash.
+            */
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+             /*
              migrationBuilder.DropColumn(name: "Department", table: "Employees");
              migrationBuilder.DropColumn(name: "ContractType", table: "Employees");
              migrationBuilder.DropColumn(name: "ContractFile", table: "Employees");
              migrationBuilder.DropColumn(name: "IsDeleted", table: "Employees");
              migrationBuilder.DropColumn(name: "ChangeHistory", table: "Employees");
+             */
         }
     }
 }

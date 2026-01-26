@@ -11,6 +11,7 @@ namespace Sales_Management.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            /*
             migrationBuilder.CreateTable(
                 name: "VipPackages",
                 columns: table => new
@@ -33,13 +34,16 @@ namespace Sales_Management.Migrations
                 {
                     table.PrimaryKey("PK_VipPackages", x => x.VipPackageId);
                 });
+            */
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            /*
             migrationBuilder.DropTable(
                 name: "VipPackages");
+            */
         }
     }
 }
