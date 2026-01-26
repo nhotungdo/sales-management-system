@@ -1,0 +1,34 @@
+﻿public IActionResult AddProduct(int orderId)
+{
+    ViewBag.Products = _context.Products.ToList();
+    ViewBag.OrderId = orderId;
+    return View();
+}
+
+[HttpPost]
+public async Task<IActionResult>
+    AddProduct(int orderId, int productId, int quantity)
+    {
+    if (quantity <= 0)
+    {
+    ModelState.AddModelError("", "Quantity must be greater than 0");
+    }
+
+    var product = await _context.Products.FindAsync(productId);
+    if (product == null) return NotFound();
+
+    var detail = new OrderDetail
+    {
+    OrderId = orderId,
+    ProductId = productId,
+    Quantity = quantity,
+    UnitPrice = product.SellingPrice
+    };
+
+    _context.OrderDetails.Add(detail);
+    await _context.SaveChangesAsync();
+
+    await UpdateOrderTotal(orderId);
+
+    return RedirectToAction("Details", new { id = orderId });
+    }

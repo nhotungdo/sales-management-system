@@ -1,0 +1,67 @@
+﻿@model IEnumerable<Sales_Management.Models.WalletTransaction>
+@{
+    var invoice = ViewBag.Invoice as Sales_Management.Models.Invoice;
+}
+
+<h2>Payment History</h2>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <p><strong>Invoice:</strong> #@invoice.InvoiceId</p>
+        <p><strong>Customer:</strong> @invoice.Order.Customer.FullName</p>
+        <p>
+            <strong>Total:</strong>
+            <span class="text-danger fw-bold">
+                @invoice.Amount.ToString("N0") ₫
+            </span>
+        </p>
+        <p><strong>Status:</strong> @invoice.Status</p>
+    </div>
+</div>
+
+<table class="table table-bordered">
+    <thead class="table-dark">
+        <tr>
+            <th>Date</th>
+            <th>Customer</th>
+            <th>Method</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="6" class="text-center text-muted">
+                    No payment history
+                </td>
+            </tr>
+        }
+        else
+        {
+            foreach (var t in Model)
+            {
+                <tr>
+                    <td>@t.CreatedDate?.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@t.Wallet.Customer.FullName</td>
+                    <td>@t.Method</td>
+                    <td class="text-success fw-bold">
+                        @t.Amount.ToString("N0") ₫
+                    </td>
+                    <td>@t.Status</td>
+                    <td>@t.Description</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<a asp-area="Sale"
+   asp-controller="Invoices"
+   asp-action="Details"
+   asp-route-id="@invoice.InvoiceId"
+   class="btn btn-secondary">
+    Back
+</a>

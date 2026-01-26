@@ -1,37 +1,103 @@
 ﻿@model List<Product>
-
-<h2 class="mb-4">Danh sách sản phẩm</h2>
-
 <div class="row">
-    @foreach (var item in Model)
-    {
-        <div class="col-md-3 mb-4">
-            <div class="card h-100">
-                @{
-                    var image = item.ProductImages
-                    .FirstOrDefault(i => i.IsPrimary == true)
-                    ?? item.ProductImages.FirstOrDefault();
 
-                    var imageUrl = image?.ImageUrl?.Trim();
+    <!-- ===== LEFT: PRODUCTS ===== -->
+    <div class="col-md-9">
+        <h4 class="mb-4 fw-bold">List Products</h4>
 
-                    if (!string.IsNullOrEmpty(imageUrl) &&
-                    !imageUrl.StartsWith("http"))
-                    {
-                        imageUrl = Url.Content("~" + imageUrl);
-                    }
-                }
+        <!-- ===== DASHBOARD ===== -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card text-center p-4">
+                    <i class="bi bi-cash-coin fs-1 text-success"></i>
+                    <h5 class="mt-2">Total Revenue</h5>
+                    <h3 class="text-danger">
+                        @ViewBag.TotalRevenue.ToString("N0") đ
+                    </h3>
+                </div>
+            </div>
 
-                <img src="@(imageUrl ?? Url.Content("~/images/no-image.png"))"
-                     class="card-img-top"
-                     style="height:200px; object-fit:cover" />
-
-                <div class="card-body">
-                    <h5 class="card-title">@item.Name</h5>
-                    <p class="card-text">
-                        Giá: @((item.SellingPrice / 10).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu
-                    </p>
+            <div class="col-md-6">
+                <div class="card text-center p-4">
+                    <i class="bi bi-receipt fs-1 text-primary"></i>
+                    <h5 class="mt-2">Invoices Today</h5>
+                    <h3>@ViewBag.TodayInvoices</h3>
                 </div>
             </div>
         </div>
-    }
+
+        <!-- ===== PRODUCT LIST ===== -->
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        @{
+                            var image = item.ProductImages
+                                .FirstOrDefault(i => i.IsPrimary == true)
+                                ?? item.ProductImages.FirstOrDefault();
+
+                            var imageUrl = image?.ImageUrl;
+                            if (!string.IsNullOrEmpty(imageUrl) && !imageUrl.StartsWith("http"))
+                            {
+                                imageUrl = Url.Content("~" + imageUrl);
+                            }
+
+                            var coinPrice = item.SellingPrice / 10;
+                        }
+
+                        <img src="@(imageUrl ?? Url.Content("~/images/no-image.png"))"
+                             class="card-img-top"
+                             style="height:200px; object-fit:cover" />
+
+                        <div class="card-body text-center">
+                            <h6 class="fw-semibold">@item.Name</h6>
+
+                            <p class="text-danger fw-bold mb-0">
+                                @item.SellingPrice.ToString("N0") đ
+                            </p>
+
+                            <small class="text-muted">
+                                (@coinPrice.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) xu)
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- ===== RIGHT: NAVIGATION ===== -->
+    <div class="col-md-3">
+        <div class="sticky-top" style="top: 90px">
+
+            <div class="card mb-4 text-center p-4">
+                <i class="bi bi-box-seam fs-1 text-primary"></i>
+                <h6 class="mt-3 fw-bold">Products</h6>
+                <p class="text-muted">Manage product list</p>
+
+                <a asp-area="Sale"
+                   asp-controller="Products"
+                   asp-action="Index"
+                   class="btn btn-primary w-100">
+                    Go to Products
+                </a>
+            </div>
+
+            <div class="card text-center p-4">
+                <i class="bi bi-receipt fs-1 text-success"></i>
+                <h6 class="mt-3 fw-bold">Invoices</h6>
+                <p class="text-muted">View customer invoices</p>
+
+                <a asp-area="Sale"
+                   asp-controller="Invoices"
+                   asp-action="Index"
+                   class="btn btn-success w-100">
+                    Go to Invoices
+                </a>
+            </div>
+
+        </div>
+    </div>
+
 </div>

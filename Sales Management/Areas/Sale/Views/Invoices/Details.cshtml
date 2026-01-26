@@ -1,0 +1,100 @@
+﻿@model Sales_Management.Models.Invoice
+@{
+    ViewData["Title"] = "Invoice Details";
+    var payments = ViewBag.Payments as List<Sales_Management.Models.WalletTransaction>;
+}
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h4 class="fw-bold">
+            <i class="bi bi-receipt"></i> Invoice #@Model.InvoiceId
+        </h4>
+    </div>
+
+    <div class="card-body">
+        <p><strong>Customer:</strong> @Model.Order.Customer.FullName</p>
+        <p><strong>Date:</strong> @Model.InvoiceDate?.ToString("dd/MM/yyyy")</p>
+        <p><strong>Status:</strong> @Model.Status</p>
+    </div>
+</div>
+
+<!-- PRODUCTS -->
+<div class="card mb-4">
+    <div class="card-header fw-bold">
+        Products
+    </div>
+
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Order.OrderDetails)
+                {
+                    <tr>
+                        <td>@item.Product.Name</td>
+                        <td>@item.Quantity</td>
+                        <td>@item.UnitPrice.ToString("N0") đ</td>
+                        <td>@(item.Quantity * item.UnitPrice).ToString("N0") đ</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <h5 class="text-end text-danger fw-bold">
+            Total: @Model.Amount.ToString("N0") đ
+        </h5>
+    </div>
+</div>
+
+<!-- PAYMENT HISTORY -->
+<div class="card">
+    <div class="card-header fw-bold">
+        Payment History
+    </div>
+
+    <div class="card-body">
+        @if (payments == null || !payments.Any())
+        {
+            <p class="text-muted">No payment record.</p>
+        }
+        else
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Method</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in payments)
+                    {
+                        <tr>
+                            <td>@p.CreatedDate?.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@p.Method</td>
+                            <td>@p.Amount.ToString("N0") đ</td>
+                            <td>
+                                <span class="badge bg-info">
+                                    @p.Status
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        <a asp-action="Index" class="btn btn-secondary mt-3">
+            Back
+        </a>
+    </div>
+</div>

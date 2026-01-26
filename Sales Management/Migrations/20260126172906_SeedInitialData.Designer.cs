@@ -12,8 +12,8 @@ using Sales_Management.Data;
 namespace Sales_Management.Migrations
 {
     [DbContext(typeof(SalesManagementContext))]
-    [Migration("ConvertToCents")]
-    partial class ConvertToCents
+    [Migration("20260126172906_SeedInitialData")]
+    partial class SeedInitialData
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -464,8 +464,8 @@ namespace Sales_Management.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int?>("CoinPrice")
-                        .HasColumnType("int");
+                    b.Property<decimal?>("CoinPrice")
+                        .HasColumnType("decimal(15, 2)");
 
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
@@ -747,6 +747,32 @@ namespace Sales_Management.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = 1,
+                            CreatedDate = new DateTime(2026, 1, 27, 0, 29, 5, 892, DateTimeKind.Local).AddTicks(4865),
+                            Email = "admin@gmail.com",
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$4FuKu30gs49yGpxm.TC/J.75gR2W2BIHGadb7rW2uAhhClbwZyfqa",
+                            Role = "Admin",
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Username = "admin"
+                        },
+                        new
+                        {
+                            UserId = 2,
+                            CreatedDate = new DateTime(2026, 1, 27, 0, 29, 6, 66, DateTimeKind.Local).AddTicks(8678),
+                            Email = "sale@gmail.com",
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$V43Pg7/Dri0aWZ4c91JiCOGql4ASd39NVPQPW1CL9HLIk0T3D67.2",
+                            Role = "Sale",
+                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Username = "sale"
+                        });
                 });
 
             modelBuilder.Entity("Sales_Management.Models.VipPackage", b =>
@@ -862,6 +888,9 @@ namespace Sales_Management.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<int?>("InvoiceId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Method")
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
@@ -888,6 +917,8 @@ namespace Sales_Management.Migrations
 
                     b.HasKey("TransactionId")
                         .HasName("PK__WalletTr__55433A6B21E47F13");
+
+                    b.HasIndex("InvoiceId");
 
                     b.HasIndex("WalletId");
 
@@ -1079,11 +1110,17 @@ namespace Sales_Management.Migrations
 
             modelBuilder.Entity("Sales_Management.Models.WalletTransaction", b =>
                 {
+                    b.HasOne("Sales_Management.Models.Invoice", "Invoice")
+                        .WithMany()
+                        .HasForeignKey("InvoiceId");
+
                     b.HasOne("Sales_Management.Models.Wallet", "Wallet")
                         .WithMany("WalletTransactions")
                         .HasForeignKey("WalletId")
                         .IsRequired()
                         .HasConstraintName("FK__WalletTra__Walle__5CD6CB2B");
+
+                    b.Navigation("Invoice");
 
                     b.Navigation("Wallet");
                 });

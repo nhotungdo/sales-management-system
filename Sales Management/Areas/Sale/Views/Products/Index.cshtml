@@ -1,8 +1,12 @@
-﻿@model IEnumerable<Sales_Management.Models.Product>
-@{
+﻿@{
     ViewData["Title"] = "Products";
 }
-
+<a asp-area="Sale"
+   asp-controller="Home"
+   asp-action="Index"
+   class="btn btn-secondary mb-3">
+    ← Quay về Trang chủ
+</a>
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h4 class="mb-0 fw-bold">📦 Products</h4>
@@ -31,12 +35,7 @@
                     <tr>
                         <td>@item.ProductId</td>
                         <td class="fw-semibold">@item.Name</td>
-                        <td>
-                            <div>@item.SellingPrice.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) VNĐ</div>
-                            @if(item.CoinPrice.HasValue) {
-                                <div class="text-warning small">@item.CoinPrice.Value.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) Coins</div>
-                            }
-                        </td>
+                        <td>@item.SellingPrice.ToString("N0") đ</td>
                         <td>@item.StockQuantity</td>
                         <td>
                             <span class="badge bg-info">

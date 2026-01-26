@@ -1,0 +1,69 @@
+﻿@model List<Sales_Management.Models.Invoice>
+
+@{
+    ViewData["Title"] = "Invoices";
+}
+<a asp-area="Sale"
+   asp-controller="Home"
+   asp-action="Index"
+   class="btn btn-secondary mb-3">
+    ← Quay về Trang chủ
+</a>
+
+<div class="card">
+    <div class="card-header">
+        <h4 class="fw-bold mb-0">
+            <i class="bi bi-receipt"></i> Invoices
+        </h4>
+    </div>
+
+    <div class="card-body">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th class="text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.InvoiceId</td>
+                        <td>@item.Order.Customer.FullName</td>
+                        <td>@item.InvoiceDate?.ToString("dd/MM/yyyy")</td>
+                        <td class="text-danger fw-bold">
+                            @item.Amount.ToString("N0") đ
+                        </td>
+                        <td>
+                            <span class="badge bg-info">
+                                @item.Status
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <a asp-area="Sale"
+                               asp-controller="Invoices"
+                               asp-action="Details"
+                               asp-route-id="@item.InvoiceId"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+
+                            <a asp-area="Sale"
+                               asp-controller="InvoicePdf"
+                               asp-action="Export"
+                               asp-route-invoiceId="@item.InvoiceId"
+                               class="btn btn-sm btn-danger ms-1">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
