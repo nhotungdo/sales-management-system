@@ -1,49 +1,60 @@
 ﻿<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <title>@ViewData["Title"] - Sale Management</title>
 
+    <!-- Bootstrap -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
 
-    <style>
-        body {
-            background-color: #f4f6f9;
-        }
-
-        .card {
-            border-radius: 12px;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.08);
-        }
-
-        .btn {
-            border-radius: 8px;
-        }
-    </style>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="~/css/sale-ui.css" />
 </head>
-<body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
-        <a class="navbar-brand fw-bold" asp-area="Sale" asp-controller="Products" asp-action="Index">
-            <i class="bi bi-box-seam"></i> SALE PANEL
-        </a>
+<body data-theme="blue">
+
+    <!-- ===== MODERN NAVBAR ===== -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-gradient shadow-sm sticky-top">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2"
+               asp-area="Sale"
+               asp-controller=""
+               asp-action="Index">
+                <div class="logo-box">
+                    <i class="bi bi-box-seam text-white fs-4"></i>
+                </div>
+                Sale Panel
+            </a>
+
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <button class="btn btn-link text-white">
+                    <i class="bi bi-people fs-5"></i>
+                </button>
+
+                <div class="user-chip">
+                    <div class="avatar">D</div>
+                    <span>Duy</span>
+                </div>
+            </div>
+        </div>
     </nav>
 
-    <div class="container mt-4">
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="container-fluid mt-4 px-4">
         @RenderBody()
-    </div>
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="bg-dark text-white text-center py-4 mt-5">
+        © 2026 - SaleManagement | Role: Sale | Designed by Duy
+    </footer>
+
+    <!-- Scripts -->
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-
 </body>
-
-<footer class="bg-dark text-white mt-5 p-4 text-center">
-    <div>
-        © 2026 - SaleManagement |
-        Role: Sale |
-        Designed by Duy
-    </div>
-</footer>
-
 </html>

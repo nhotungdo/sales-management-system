@@ -420,7 +420,7 @@ public partial class SalesManagementContext : DbContext
         Username = "sale",
         PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
         Email = "sale@gmail.com",
-        Role = "Sale",
+        Role = "Sales",
         IsActive = true,
         CreatedDate = DateTime.Now
     }

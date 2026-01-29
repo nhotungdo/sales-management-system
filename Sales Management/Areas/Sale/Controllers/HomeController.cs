@@ -27,6 +27,7 @@ namespace SaleManagement.Areas.Sale.Controllers
 
             var products = await _context.Products
                 .Where(p => p.Status != "Deleted")
+                .Include(p => p.Category)
                 .Include(p => p.ProductImages)
                 .ToListAsync();
             return View(products);
