@@ -1,37 +1,39 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Sales_Management.Data;
 using Sales_Management.Services;
 using Sales_Management.ViewModels;
-using System.Security.Claims;
 
 namespace Sales_Management.Controllers
 {
     public class AccountController : Controller
     {
         private readonly IAuthService _authService;
+        private readonly SalesManagementContext _context;
 
-        public AccountController(IAuthService authService)
+        public AccountController(IAuthService authService, SalesManagementContext context)
         {
             _authService = authService;
+            _context = context;
         }
 
-        // GET: /Account/Login
         [HttpGet]
         public IActionResult Login(string? returnUrl = null)
         {
+            if (User.Identity.IsAuthenticated) return RedirectToAction("Index", "Home");
             ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
-        // POST: /Account/Login
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
-            if (!ModelState.IsValid)
-                return View(model);
+            if (!ModelState.IsValid) return View(model);
 
             var user = await _authService.ValidateUser(model.Username, model.Password);
 
@@ -41,7 +43,6 @@ namespace Sales_Management.Controllers
                 return View(model);
             }
 
-            // Tạo claims
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
@@ -60,12 +61,14 @@ namespace Sales_Management.Controllers
                 new AuthenticationProperties
                 {
                     IsPersistent = model.RememberMe,
-                    ExpiresUtc = model.RememberMe 
-                        ? DateTimeOffset.UtcNow.AddDays(30) 
+                    ExpiresUtc = model.RememberMe
+                        ? DateTimeOffset.UtcNow.AddDays(30)
                         : DateTimeOffset.UtcNow.AddHours(1)
                 });
 
-            // Redirect theo role
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return Redirect(returnUrl);
+
             if (user.Role == "Admin")
                 return RedirectToAction("Index", "Home", new { area = "Admin" });
             else if (user.Role == "Sales")
@@ -74,20 +77,17 @@ namespace Sales_Management.Controllers
                 return RedirectToAction("Index", "Home");
         }
 
-        // GET: /Account/Register
         [HttpGet]
         public IActionResult Register()
         {
             return View();
         }
 
-        // POST: /Account/Register
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
-            if (!ModelState.IsValid)
-                return View(model);
+            if (!ModelState.IsValid) return View(model);
 
             var user = await _authService.RegisterUser(
                 model.Username,
@@ -107,7 +107,6 @@ namespace Sales_Management.Controllers
             return RedirectToAction(nameof(Login));
         }
 
-        // POST: /Account/Logout
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
@@ -115,6 +114,48 @@ namespace Sales_Management.Controllers
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> Profile()
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return RedirectToAction(nameof(Login));
+
+            var profile = await (from u in _context.Users
+                                 join c in _context.Customers on u.UserId equals c.UserId
+                                 join w in _context.Wallets on c.CustomerId equals w.CustomerId
+                                 where u.UserId == userId
+                                 select new CustomerProfileViewModel
+                                 {
+                                     FullName = u.FullName,
+                                     Email = u.Email,
+                                     PhoneNumber = u.PhoneNumber,
+                                     Address = c.Address,
+                                     Avatar = u.Avatar,
+                                     CreatedDate = u.CreatedDate,
+                                     CustomerLevel = c.CustomerLevel,
+                                     WalletBalance = w.Balance ?? 0,
+                                     WalletStatus = w.Status,
+                                     WalletUpdatedDate = w.UpdatedDate,
+                                     Transactions = _context.WalletTransactions
+                                        .Where(t => t.WalletId == w.WalletId)
+                                        .OrderByDescending(t => t.CreatedDate)
+                                        .Select(t => new WalletTransactionViewModel
+                                        {
+                                            TransactionCode = t.TransactionCode,
+                                            Amount = t.Amount,
+                                            Type = t.TransactionType,
+                                            Status = t.Status,
+                                            CreatedDate = t.CreatedDate ?? DateTime.Now,
+                                            Description = t.Description
+                                        }).Take(10).ToList()
+                                 }).FirstOrDefaultAsync();
+
+            if (profile == null) return NotFound();
+
+            return View(profile);
         }
     }
 }

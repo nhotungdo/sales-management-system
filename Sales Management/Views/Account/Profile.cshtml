@@ -1,0 +1,192 @@
+﻿@model Sales_Management.ViewModels.CustomerProfileViewModel
+
+@{
+    ViewData["Title"] = "Thông tin tài khoản";
+}
+
+<div class="container py-4">
+    <div class="mb-4">
+        <h2 class="fw-bold mb-1">Thông tin tài khoản</h2>
+        <p class="text-muted">Quản lý thông tin cá nhân, ví tiền và lịch sử giao dịch của bạn</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start justify-content-between mb-4">
+                        <div class="d-flex align-items-center">
+                            <div class="position-relative">
+                                <img src="@(string.IsNullOrEmpty(Model.Avatar) ? "/img/default-avatar.png" : Model.Avatar)"
+                                     class="rounded-circle border" width="100" height="100" style="object-fit: cover;">
+                            </div>
+                            <div class="ms-4">
+                                <h4 class="mb-1 fw-bold">@Model.FullName</h4>
+                                <div class="d-flex gap-2">
+                                    <span class="badge bg-warning text-dark rounded-pill px-3">@Model.CustomerLevel</span>
+                                    <span class="badge bg-light text-muted border rounded-pill px-3">Personal</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-outline-secondary btn-sm rounded-3 px-3">
+                            <i class="bi bi-pencil-square me-1"></i>Chỉnh sửa
+                        </button>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center text-muted small mb-1">
+                                <i class="bi bi-envelope me-2"></i> Email
+                            </div>
+                            <span class="fw-medium">@Model.Email</span>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center text-muted small mb-1">
+                                <i class="bi bi-telephone me-2"></i> Số điện thoại
+                            </div>
+                            <span class="fw-medium">@Model.PhoneNumber</span>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex align-items-center text-muted small mb-1">
+                                <i class="bi bi-geo-alt me-2"></i> Địa chỉ
+                            </div>
+                            <span class="fw-medium">@Model.Address</span>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center text-muted small mb-1">
+                                <i class="bi bi-calendar-check me-2"></i> Ngày tạo tài khoản
+                            </div>
+                            <span class="fw-medium">@Model.CreatedDate.ToString("dd/MM/yyyy")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mb-3 p-1 bg-light rounded-3 d-inline-flex">
+                <button class="btn btn-white shadow-sm border-0 rounded-3 px-4 py-2 fw-medium">
+                    <i class="bi bi-cart3 me-2"></i>Đơn hàng
+                </button>
+                <button class="btn btn-light border-0 rounded-3 px-4 py-2 fw-medium active">
+                    <i class="bi bi-wallet2 me-2"></i>Giao dịch
+                </button>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-1"><i class="bi bi-archive me-2"></i>Lịch sử giao dịch</h5>
+                    <p class="text-muted small mb-4">Chi tiết các giao dịch trong ví của bạn</p>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr class="small text-muted text-uppercase">
+                                    <th>Mã GD</th>
+                                    <th>Loại</th>
+                                    <th>Số tiền</th>
+                                    <th>Trạng thái</th>
+                                    <th>Mô tả</th>
+                                    <th>Ngày GD</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Transactions != null && Model.Transactions.Any())
+                                {
+                                    foreach (var item in Model.Transactions)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold small text-secondary">@item.TransactionCode</td>
+                                            <td>
+                                                @if (item.Amount >= 0)
+                                                {
+                                                    <span class="text-success small"><i class="bi bi-arrow-down-left me-1"></i>Nạp tiền</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-danger small"><i class="bi bi-arrow-up-right me-1"></i>Thanh toán</span>
+                                                }
+                                            </td>
+                                            <td class="@(item.Amount >= 0 ? "text-success" : "text-danger") fw-bold">
+                                                @(item.Amount >= 0 ? "+" : "")@item.Amount.ToString("N0") <span class="text-decoration-underline">đ</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge rounded-pill @(item.Status == "Success" ? "bg-success-subtle text-success" : "bg-warning-subtle text-warning") px-3">
+                                                    @(item.Status == "Success" ? "Thành công" : "Đang xử lý")
+                                                </span>
+                                            </td>
+                                            <td class="text-muted small">@item.Description</td>
+                                            <td class="text-muted small">@item.CreatedDate.ToString("HH:mm:ss dd/MM/yyyy")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted small">Chưa có giao dịch nào</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0"><i class="bi bi-wallet2 me-2"></i>Ví tiền</h6>
+                        <span class="badge bg-dark rounded-pill small px-3">Hoạt động</span>
+                    </div>
+
+                    <p class="text-muted small mb-4">
+                        Cập nhật lần cuối: <br />
+                        <span class="fw-medium">@(Model.WalletUpdatedDate?.ToString("HH:mm:ss dd/MM/yyyy") ?? "N/A")</span>
+                    </p>
+
+                    <div class="bg-light rounded-4 p-4 text-center mb-4">
+                        <span class="text-muted small d-block mb-2">Số dư hiện tại</span>
+                        <h2 class="fw-bold mb-0 text-dark">
+                            @Model.WalletBalance.ToString("N0") <span class="text-decoration-underline">đ</span>
+                        </h2>
+                    </div>
+
+                    <button class="btn btn-dark w-100 rounded-3 py-2 fw-bold shadow-sm mb-3">
+                        <i class="bi bi-arrow-down-left me-2"></i>Nạp tiền
+                    </button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .card {
+        transition: transform 0.2s ease;
+    }
+
+    .bg-success-subtle {
+        background-color: #d1e7dd !important;
+    }
+
+    .bg-warning-subtle {
+        background-color: #fff3cd !important;
+    }
+
+    .btn-white {
+        background: #fff;
+        border: 1px solid #dee2e6;
+    }
+
+    .table thead th {
+        font-weight: 600;
+        font-size: 0.75rem;
+        border-bottom-width: 1px;
+    }
+</style>

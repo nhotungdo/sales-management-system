@@ -56,7 +56,7 @@
                                     <li><h6 class="dropdown-header">@User.FindFirst("FullName")?.Value</h6></li>
                                     <li><span class="dropdown-item-text small text-muted">@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</span></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i> Hồ sơ</a></li>
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Account" asp-action="Profile"><i class="bi bi-person me-2"></i> Hồ sơ</a></li>
                                     @if (User.IsInRole("Admin"))
                                     {
                                         <li><a class="dropdown-item" asp-area="Admin" asp-controller="Home" asp-action="Index"><i class="bi bi-speedometer2 me-2"></i> Quản trị</a></li>

@@ -1,7 +1,6 @@
-
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
-using Sales_Management.Data;
+using Sales_Management.Data; // Đảm bảo namespace này chứa SalesManagementContext
 using Sales_Management.Services;
 using Sales_Management.Hubs;
 
@@ -11,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 
+// Giữ nguyên chuỗi kết nối DBDefault của bạn
 builder.Services.AddDbContext<SalesManagementContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DBDefault")));
 
@@ -24,9 +24,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
     });
 
-// Register AuthService
+// Register AuthService & các dịch vụ khác
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICoinService, CoinService>();
+// Nếu bạn có thêm CustomerService thì đăng ký tại đây
 
 // Add Session
 builder.Services.AddSession(options =>
@@ -45,7 +46,6 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -54,11 +54,11 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// Authentication & Authorization (THỨ TỰ QUAN TRỌNG!)
+// Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Session
+// Session - Đặt sau Authorization để đảm bảo an toàn
 app.UseSession();
 
 app.MapControllerRoute(
