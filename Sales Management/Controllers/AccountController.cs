@@ -157,5 +157,57 @@ namespace Sales_Management.Controllers
 
             return View(profile);
         }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile(string FullName, string Email, string PhoneNumber, string Address, IFormFile AvatarFile)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return RedirectToAction(nameof(Login));
+
+            var user = await _context.Users.FindAsync(userId);
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (user == null || customer == null) return NotFound();
+
+            if (user.Email != Email)
+            {
+                bool emailExists = await _context.Users.AnyAsync(u => u.Email == Email && u.UserId != userId);
+                if (emailExists)
+                {
+                    TempData["Error"] = "Email này đã được sử dụng bởi tài khoản khác.";
+                    return RedirectToAction(nameof(Profile));
+                }
+                user.Email = Email;
+            }
+
+            user.FullName = FullName;
+            user.PhoneNumber = PhoneNumber;
+            customer.Address = Address;
+
+            // 3. Xử lý File ảnh
+            if (AvatarFile != null && AvatarFile.Length > 0)
+            {
+                string uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/img/avatars");
+                if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
+
+                string fileName = Guid.NewGuid().ToString() + Path.GetExtension(AvatarFile.FileName);
+                string filePath = Path.Combine(uploadDir, fileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await AvatarFile.CopyToAsync(fileStream);
+                }
+                user.Avatar = "/img/avatars/" + fileName;
+            }
+
+            _context.Update(user);
+            _context.Update(customer);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Cập nhật thông tin thành công!";
+            return RedirectToAction(nameof(Profile));
+        }
     }
 }
