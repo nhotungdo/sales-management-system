@@ -27,7 +27,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             _coinService = coinService;
         }
 
-        // GET: Admin/Products
+        // GET: Admin/Products (Danh sách sản phẩm, quản lý tìm kiếm, sắp xếp và phân trang)
         public async Task<IActionResult> Index(string searchString, int? page, string sortOrder)
         {
             ViewData["CurrentSort"] = sortOrder;
@@ -68,8 +68,8 @@ namespace Sales_Management.Areas.Admin.Controllers
             int pageSize = 10;
             int pageNumber = (page ?? 1);
             
-            // ToListAsync for now, but in production should use PagedList<T>
-            // Simple manual pagination for requirement
+            // Sử dụng ToListAsync tạm thời, trong thực tế nên dùng PagedList<T>
+            // Phân trang thủ công đơn giản theo yêu cầu
             var count = await products.CountAsync();
             var items = await products.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
 
@@ -82,7 +82,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(items);
         }
 
-        // GET: Admin/Products/Details/5
+        // GET: Admin/Products/Details/5 (Xem chi tiết sản phẩm)
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -98,7 +98,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(product);
         }
 
-        // GET: Admin/Products/Create
+        // GET: Admin/Products/Create (Form tạo sản phẩm mới)
         public IActionResult Create()
         {
             ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "Name");
@@ -119,8 +119,8 @@ namespace Sales_Management.Areas.Admin.Controllers
                 product.CreatedDate = DateTime.Now;
                 product.UpdatedDate = DateTime.Now;
                 
-                // Get current user ID (assuming standard User Identity setup)
-                // If using custom auth, adjust accordingly. Safe to leave null if not critical or fetch from Claims.
+                // Lấy ID người dùng hiện tại (giả định thiết lập User Identity chuẩn)
+                // Nếu dùng auth tùy chỉnh, hãy điều chỉnh cho phù hợp.
                 var userName = User.Identity?.Name;
                 if (!string.IsNullOrEmpty(userName))
                 {
@@ -128,13 +128,13 @@ namespace Sales_Management.Areas.Admin.Controllers
                     if (user != null) product.CreatedBy = user.UserId;
                 }
 
-                // Calculate Coin Price
+                // Tính toán Giá Coin
                 product.CoinPrice = _coinService.CalculateCoin(product.SellingPrice);
 
                 _context.Add(product);
                 await _context.SaveChangesAsync();
 
-                // Image Handling
+                // Xử lý Hình ảnh
                 if (imageFiles != null && imageFiles.Count > 0)
                 {
                     bool isFirst = true;
@@ -159,7 +159,7 @@ namespace Sales_Management.Areas.Admin.Controllers
                             };
                             _context.ProductImages.Add(productImage);
                             
-                            // Only the first valid image is primary
+                            // Chỉ ảnh hợp lệ đầu tiên được đặt làm ảnh chính (Primary)
                             isFirst = false; 
                         }
                     }
@@ -173,7 +173,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(product);
         }
 
-        // GET: Admin/Products/Edit/5
+        // GET: Admin/Products/Edit/5 (Form chỉnh sửa sản phẩm)
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -185,7 +185,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(product);
         }
 
-        // POST: Admin/Products/Edit/5
+        // POST: Admin/Products/Edit/5 (Lưu thay đổi sản phẩm)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("ProductId,Code,Name,Description,CategoryId,ImportPrice,SellingPrice,Vatrate,StockQuantity,Status,CreatedBy,CreatedDate")] Product product, IFormFile? imageFile)
@@ -205,10 +205,9 @@ namespace Sales_Management.Areas.Admin.Controllers
                     if (existingProduct == null) return NotFound();
 
                     product.UpdatedDate = DateTime.Now;
-                    // Preserve original created info if not passed correctly (though Bind includes it, safe to double check logic if needed)
-                    // Logic: simple update here.
+                    // Giữ nguyên thông tin người tạo nếu không được truyền vào đúng (logic cập nhật đơn giản)
                     
-                    // Recalculate Coin Price
+                    // Tính lại Giá Coin
                     product.CoinPrice = _coinService.CalculateCoin(product.SellingPrice);
 
                     _context.Update(product);
@@ -216,8 +215,7 @@ namespace Sales_Management.Areas.Admin.Controllers
 
                     if (imageFile != null && imageFile.Length > 0)
                     {
-                        // Remove old images? Or just add new one as primary?
-                        // Simple approach: Add new as primary, maybe remove old primary status
+                        // Xử lý ảnh: Thêm ảnh mới làm ảnh chính, hạ cấp ảnh cũ
                         var userImages = _context.ProductImages.Where(pi => pi.ProductId == id);
                         foreach(var img in userImages) { img.IsPrimary = false; } // Demote others (or delete, user requirement vague, keeping history is safer usually but let's just add new one)
                         
@@ -252,7 +250,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(product);
         }
 
-        // GET: Admin/Products/Delete/5
+        // GET: Admin/Products/Delete/5 (Xác nhận xóa)
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -265,7 +263,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(product);
         }
 
-        // POST: Admin/Products/Delete/5
+        // POST: Admin/Products/Delete/5 (Xử lý xóa mềm)
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -273,11 +271,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             var product = await _context.Products.FindAsync(id);
             if (product != null)
             {
-                // Soft delete or hard delete? Request said "Consider soft deletion". 
-                // Currently database schema has 'Status'. Let's set Status to 'Deleted' or 'Inactive'.
-                // If there is an 'IsDeleted' column, use that.
-                // Checking Product model in Step 16: It has 'Status' string, no 'IsDeleted'.
-                // So I will set Status = 'Deleted'.
+                // Lưu ý: Sử dụng Status = "Deleted" để xóa mềm theo yêu cầu
                 
                 product.Status = "Deleted"; // Soft Delete
                 product.UpdatedDate = DateTime.Now;

@@ -17,12 +17,12 @@ namespace Sales_Management.Areas.Admin.Controllers
             _context = context;
         }
 
-        // GET: Admin/Settings
+        // GET: Admin/Settings (Hiển thị và quản lý cài đặt hệ thống)
         public async Task<IActionResult> Index()
         {
             var settings = await _context.SystemSettings.ToDictionaryAsync(s => s.SettingKey, s => s.SettingValue);
             
-            // Seed default values if empty (view only)
+            // Seed các giá trị mặc định nếu chưa có (view only)
             ViewData["StoreName"] = settings.ContainsKey("StoreName") ? settings["StoreName"] : "Fashion Store";
             ViewData["StoreEmail"] = settings.ContainsKey("StoreEmail") ? settings["StoreEmail"] : "contact@store.com";
             ViewData["StoreAddress"] = settings.ContainsKey("StoreAddress") ? settings["StoreAddress"] : "123 Shopping Street";
@@ -34,6 +34,7 @@ namespace Sales_Management.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        // Cập nhật cấu hình chung (UpdateGeneral)
         public async Task<IActionResult> UpdateGeneral(string StoreName, string StoreEmail, string StoreAddress, string Currency, bool MaintenanceMode)
         {
             await UpdateSetting("StoreName", StoreName, "General");
@@ -64,6 +65,7 @@ namespace Sales_Management.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        // Đổi mật khẩu Admin (UpdatePassword)
         public async Task<IActionResult> UpdatePassword(string CurrentPassword, string NewPassword, string ConfirmPassword)
         {
             if (NewPassword != ConfirmPassword)
@@ -85,7 +87,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             }
             catch(BCrypt.Net.SaltParseException)
             {
-                 // Fallback for plain text if any (legacy support)
+                 // Fallback cho mật khẩu dạng plain text nếu có (hỗ trợ legacy)
                  if(user.PasswordHash == CurrentPassword) isValid = true;
             }
 

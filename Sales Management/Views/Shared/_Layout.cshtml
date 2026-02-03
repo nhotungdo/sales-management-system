@@ -44,7 +44,10 @@
                     <ul class="navbar-nav align-items-center gap-2">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            @await Component.InvokeAsync("WalletBalance")
+                            @if (!User.IsInRole("Admin") && !User.IsInRole("Sales"))
+                            {
+                                @await Component.InvokeAsync("WalletBalance")
+                            }
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
@@ -61,7 +64,14 @@
                                     {
                                         <li><a class="dropdown-item" asp-area="Admin" asp-controller="Home" asp-action="Index"><i class="bi bi-speedometer2 me-2"></i> Quản trị</a></li>
                                     }
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Wallet" asp-action="Index"><i class="bi bi-wallet2 me-2"></i> Ví của tôi</a></li>
+                                    @if (User.IsInRole("Sales"))
+                                    {
+                                        <li><a class="dropdown-item" asp-area="Sale" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-speedometer2 me-2"></i> Quản trị</a></li>
+                                    }
+                                    @if (!User.IsInRole("Admin") && !User.IsInRole("Sales"))
+                                    {
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Wallet" asp-action="Index"><i class="bi bi-wallet2 me-2"></i> Ví của tôi</a></li>
+                                    }
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">

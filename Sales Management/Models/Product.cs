@@ -24,7 +24,7 @@ public partial class Product
     [Range(0.01, double.MaxValue, ErrorMessage = "Giá bán phải lớn hơn 0")]
     public decimal SellingPrice { get; set; }
 
-    public Decimal? CoinPrice { get; set; }
+    public int? CoinPrice { get; set; }
 
     public decimal? Vatrate { get; set; }
 

@@ -22,7 +22,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             _logger = logger;
         }
 
-        // GET: Admin/Discounts
+        // GET: Admin/Discounts (Danh sách mã giảm giá)
         public async Task<IActionResult> Index(string statusFilter, string searchString)
         {
             var query = _context.Promotions.AsQueryable();
@@ -49,18 +49,18 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View();
         }
 
-        // POST: Admin/Discounts/Create
+        // POST: Admin/Discounts/Create (Tạo mã giảm giá mới)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Promotion promotion)
         {
-            // 1. Setting the Validity Period: automatic StartDate
+            // 1. Thiết lập thời gian hiệu lực: tự động gán StartDate nếu chưa có
             if (!promotion.StartDate.HasValue)
             {
                 promotion.StartDate = DateTime.Now;
             }
 
-            // 3. Validation: StartDate < EndDate
+            // 3. Validate: Ngày kết thúc phải sau ngày bắt đầu
             if (promotion.EndDate.HasValue && promotion.StartDate >= promotion.EndDate)
             {
                 ModelState.AddModelError("EndDate", "End Date must be greater than Start Date.");
@@ -68,7 +68,7 @@ namespace Sales_Management.Areas.Admin.Controllers
 
             if (ModelState.IsValid)
             {
-                // Default status
+                // Trạng thái mặc định
                 if (string.IsNullOrEmpty(promotion.Status))
                     promotion.Status = "Active";
 
@@ -80,7 +80,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(promotion);
         }
 
-        // GET: Admin/Discounts/Edit/5
+        // GET: Admin/Discounts/Edit/5 (Chỉnh sửa mã giảm giá)
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -94,20 +94,17 @@ namespace Sales_Management.Areas.Admin.Controllers
                 return NotFound();
             }
 
-            // 3. Prevent editing of expired codes
+            // 3. Ngăn chặn chỉnh sửa mã đã hết hạn
             if (promotion.Status == "Expired" || promotion.Status == "Disabled" || (promotion.EndDate.HasValue && promotion.EndDate < DateTime.Now))
             {
-                 // We can show it readonly or redirect with message.
-                 // For now, let's just warn or redirect. User requirement says "Prevent editing".
-                 // Better UX: Allow viewing but disable save, or just show error.
-                 // I will return the View but perhaps set a ViewBag so the View validates/disables inputs.
+                 // UX: Có thể chỉ xem (readonly) hoặc báo lỗi. Ở đây cảnh báo qua ViewBag.
                  ViewBag.IsExpired = true;
             }
 
             return View(promotion);
         }
 
-        // POST: Admin/Discounts/Edit/5
+        // POST: Admin/Discounts/Edit/5 (Lưu thay đổi mã giảm giá)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Promotion promotion)
@@ -117,14 +114,14 @@ namespace Sales_Management.Areas.Admin.Controllers
                 return NotFound();
             }
 
-            // Re-fetch original to check if it WAS expired before this edit attempted (security check)
+            // Lấy lại dữ liệu gốc để kiểm tra xem nó CÓ TỪNG hết hạn trước khi sửa không (check bảo mật)
             var original = await _context.Promotions.AsNoTracking().FirstOrDefaultAsync(p => p.PromotionId == id);
             if (original == null) return NotFound();
 
             bool wasExpired = original.Status == "Expired" || original.Status == "Disabled" || (original.EndDate.HasValue && original.EndDate < DateTime.Now);
             if (wasExpired)
             {
-                 // Strict prevention
+                 // Ngăn chặn nghiêm ngặt
                  ModelState.AddModelError("", "Cannot edit an expired voucher.");
                  return View(promotion);
             }
@@ -139,7 +136,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             {
                 try
                 {
-                    // Detect Status Change
+                    // Phát hiện thay đổi trạng thái
                     if (original.Status != promotion.Status)
                     {
                         var logMsg = $"Status changed for voucher {promotion.Code} from {original.Status} to {promotion.Status} by Admin.";
@@ -166,7 +163,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(promotion);
         }
 
-        // GET: Admin/Discounts/Delete/5
+        // GET: Admin/Discounts/Delete/5 (Xác nhận xóa)
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -184,7 +181,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(promotion);
         }
 
-        // POST: Admin/Discounts/Delete/5
+        // POST: Admin/Discounts/Delete/5 (Xóa mã giảm giá)
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

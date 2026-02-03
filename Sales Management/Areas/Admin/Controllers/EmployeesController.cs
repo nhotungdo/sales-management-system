@@ -25,10 +25,13 @@ namespace Sales_Management.Areas.Admin.Controllers
             _logger = logger;
         }
 
-        // GET: Admin/Employees
+        // GET: Admin/Employees (Danh sách nhân viên, hỗ trợ tìm kiếm và lọc)
         public async Task<IActionResult> Index(string searchString, string contractType)
         {
-            var employees = _context.Employees.Include(e => e.User).Where(e => !e.IsDeleted);
+            var employees = _context.Employees
+                .Include(e => e.User)
+                .Include(e => e.TimeAttendances)
+                .Where(e => !e.IsDeleted);
 
             if (!string.IsNullOrEmpty(searchString))
             {
@@ -47,7 +50,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(await employees.ToListAsync());
         }
 
-        // GET: Admin/Employees/Details/5
+        // GET: Admin/Employees/Details/5 (Xem chi tiết nhân viên)
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -62,27 +65,25 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(employee);
         }
 
-        // GET: Admin/Employees/Create
+        // GET: Admin/Employees/Create (Form tạo nhân viên mới)
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Admin/Employees/Create
+        // POST: Admin/Employees/Create (Xử lý tạo nhân viên)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Position,BasicSalary,StartWorkingDate,Department,ContractType")] Employee employee, string FullName, string Email, string Password, string Role)
         {
-            // Remove User navigation property validation as it's not bound yet
-            ModelState.Remove("User");
-            ModelState.Remove("UserId");
+            // Loại bỏ validation cho User vì chưa được bind
 
             if (ModelState.IsValid)
             {
                 using var transaction = await _context.Database.BeginTransactionAsync();
                 try 
                 {
-                    // Check if user exists
+                    // Kiểm tra tồn tại user
                     if (await _context.Users.AnyAsync(u => u.Email == Email || u.Username == Email))
                     {
                         ModelState.AddModelError("Email", "Email/Username đã tồn tại trong hệ thống.");
@@ -100,7 +101,7 @@ namespace Sales_Management.Areas.Admin.Controllers
                         PasswordHash = BCrypt.Net.BCrypt.HashPassword(Password),
                         Role = Role,
                         CreatedDate = DateTime.Now,
-                        UpdatedDate = DateTime.Now, // Critical for SQL Server
+                        UpdatedDate = DateTime.Now, // Quan trọng cho SQL Server
                         IsActive = true
                     };
 
@@ -130,7 +131,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(employee);
         }
 
-        // GET: Admin/Employees/Edit/5
+        // GET: Admin/Employees/Edit/5 (Form chỉnh sửa nhân viên)
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -143,7 +144,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(employee);
         }
 
-        // POST: Admin/Employees/Edit/5
+        // POST: Admin/Employees/Edit/5 (Cập nhật nhân viên)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("EmployeeId,UserId,Position,BasicSalary,StartWorkingDate,Department,ContractType")] Employee employee, string PhoneNumber)
@@ -176,7 +177,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(employee);
         }
 
-        // GET: Admin/Employees/Delete/5
+        // GET: Admin/Employees/Delete/5 (Xác nhận xóa)
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -189,7 +190,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(employee);
         }
 
-        // POST: Admin/Employees/Delete/5
+        // POST: Admin/Employees/Delete/5 (Xóa mềm nhân viên)
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -197,7 +198,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             var employee = await _context.Employees.FindAsync(id);
             if (employee != null)
             {
-                employee.IsDeleted = true; // Soft Delete
+                employee.IsDeleted = true; // Xóa mềm
                 _context.Employees.Update(employee);
                 await _context.SaveChangesAsync();
             }

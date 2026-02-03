@@ -100,5 +100,73 @@ namespace Sales_Management.Services
 
             return user;
         }
+        public async Task CheckInSalesEmployee(int userId)
+        {
+            var user = await _context.Users
+                .Include(u => u.Employee)
+                .FirstOrDefaultAsync(u => u.UserId == userId);
+
+            if (user == null || user.Role != "Sales" || user.Employee == null)
+                return;
+
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            
+            // Check if there is already an active session (not checked out)
+            var activeSession = await _context.TimeAttendances
+                .FirstOrDefaultAsync(t => 
+                    t.EmployeeId == user.Employee.EmployeeId && 
+                    t.Date == today && 
+                    t.CheckOutTime == null);
+
+            if (activeSession == null)
+            {
+                var attendance = new TimeAttendance
+                {
+                    EmployeeId = user.Employee.EmployeeId,
+                    Date = today,
+                    CheckInTime = DateTime.Now,
+                    Status = "Present",
+                    Platform = "Web"
+                };
+                _context.TimeAttendances.Add(attendance);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task CheckOutSalesEmployee(int userId, string reason)
+        {
+            var user = await _context.Users
+                .Include(u => u.Employee)
+                .FirstOrDefaultAsync(u => u.UserId == userId);
+
+            if (user == null || user.Role != "Sales" || user.Employee == null)
+                return;
+
+            var today = DateOnly.FromDateTime(DateTime.Now);
+
+            // Find the active session to close
+            var activeSession = await _context.TimeAttendances
+                .OrderByDescending(t => t.CheckInTime)
+                .FirstOrDefaultAsync(t => 
+                    t.EmployeeId == user.Employee.EmployeeId && 
+                    t.CheckOutTime == null);
+
+            if (activeSession != null)
+            {
+                activeSession.CheckOutTime = DateTime.Now;
+                
+                if (string.IsNullOrWhiteSpace(reason))
+                {
+                    activeSession.Status = "Check-out"; // As per requirement for no reason provided
+                    activeSession.Notes = "No reason provided";
+                }
+                else
+                {
+                    activeSession.Notes = reason;
+                }
+                
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

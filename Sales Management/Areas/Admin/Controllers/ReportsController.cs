@@ -25,15 +25,18 @@ namespace Sales_Management.Areas.Admin.Controllers
         }
 
         public async Task<IActionResult> Index(string timeframe = "month", DateTime? startDate = null, DateTime? endDate = null)
-        {
+        {   
+            // Xác định time báo cáo
             var range = GetDateRange(timeframe, startDate, endDate);
             var start = range.Start;
             var end = range.End;
-
+            
+            // Lấy list orders trong khoảng thời gian
             var currentOrders = await _context.Orders
                 .Where(o => o.OrderDate >= start && o.OrderDate <= end)
                 .ToListAsync();
-
+            
+            // Lấy list orders của kỳ trước để so sánh với kỳ hiện tại
             var duration = end - start;
             var prevStart = start.Subtract(duration);
             var prevEnd = start.AddSeconds(-1);
@@ -41,17 +44,19 @@ namespace Sales_Management.Areas.Admin.Controllers
                 .Where(o => o.OrderDate >= prevStart && o.OrderDate <= prevEnd)
                 .ToListAsync();
 
+            // Tính doanh thu trong kỳ hiện tại
             var currentRevenue = currentOrders
                 .Where(o => o.Status == "Completed" || o.PaymentStatus == "Paid")
                 .Sum(o => o.TotalAmount ?? 0);
-
+            // Tính doanh thu trong kỳ trước
             var prevRevenue = prevOrders
                 .Where(o => o.Status == "Completed" || o.PaymentStatus == "Paid")
                 .Sum(o => o.TotalAmount ?? 0);
             
+            // Tính doanh thu tăng trưởng
             var revenueGrowth = prevRevenue > 0 ? ((currentRevenue - prevRevenue) / prevRevenue) * 100 : 100;
             
-            // Fix: OrdersGrowth calculation requires decimal cast
+            // Fix: tính toán OrdersGrowth yêu cầu chuyển đổi sang kiểu decimal
             decimal ordersGrowth = 100;
             if (prevOrders.Count > 0)
             {
@@ -71,12 +76,13 @@ namespace Sales_Management.Areas.Admin.Controllers
                 RevenueGrowth = Math.Round(revenueGrowth, 1),
                 OrdersGrowth = Math.Round(ordersGrowth, 1)
             };
-
+            // Chuẩn bị dữ liệu biểu đồ doanh thu
             PrepareRevenueChartData(model, currentOrders, timeframe, start, end);
 
             return View(model);
         }
 
+        // View báo cáo sản phẩm
         public async Task<IActionResult> Products(DateTime? startDate = null, DateTime? endDate = null)
         {
             var end = endDate ?? DateTime.Now;
@@ -88,10 +94,14 @@ namespace Sales_Management.Areas.Admin.Controllers
                 EndDate = end
             };
 
-            model.TopSellingProducts = await _context.OrderDetails
+            // Thống kê Top 10 sản phẩm bán chạy nhất
+            var topSellingQuery = await _context.OrderDetails
                 .Include(od => od.Product)
                 .Include(od => od.Order)
                 .Where(od => od.Order.OrderDate >= start && od.Order.OrderDate <= end && (od.Order.Status == "Completed" || od.Order.PaymentStatus == "Paid"))
+                .ToListAsync();
+
+            model.TopSellingProducts = topSellingQuery
                 .GroupBy(od => new { od.ProductId, od.Product.Name, od.Product.Code })
                 .Select(g => new TopProductViewModel
                 {
@@ -102,10 +112,11 @@ namespace Sales_Management.Areas.Admin.Controllers
                 })
                 .OrderByDescending(x => x.UnitsSold)
                 .Take(10)
-                .ToListAsync();
+                .ToList();
 
             var allProducts = await _context.Products.ToListAsync();
             
+            // Thống kê sản phẩm sắp hết hàng (tồn < 10)
             model.LowStockProducts = allProducts
                 .Where(p => (p.StockQuantity ?? 0) < 10)
                 .Select(p => new ProductInventoryViewModel
@@ -114,11 +125,12 @@ namespace Sales_Management.Areas.Admin.Controllers
                     Name = p.Name,
                     Code = p.Code,
                     StockQuantity = p.StockQuantity ?? 0,
-                    Value = (decimal)(p.StockQuantity ?? 0) * p.SellingPrice
+                    Value = (p.StockQuantity ?? 0) * p.SellingPrice
                 })
                 .OrderBy(p => p.StockQuantity)
                 .ToList();
 
+            // Thống kê hàng tồn kho lâu ngày (không cập nhật > 30 ngày)
             var thresholdDate = DateTime.Now.AddDays(-30);
             model.LongInStockProducts = allProducts
                 .Where(p => (p.StockQuantity ?? 0) > 0 && (p.UpdatedDate ?? DateTime.MaxValue) < thresholdDate)
@@ -129,20 +141,22 @@ namespace Sales_Management.Areas.Admin.Controllers
                     Code = p.Code,
                     StockQuantity = p.StockQuantity ?? 0,
                     DaysInStock = (DateTime.Now - (p.UpdatedDate ?? p.CreatedDate ?? DateTime.Now)).Days,
-                    Value = (decimal)(p.StockQuantity ?? 0) * p.SellingPrice
+                    Value = (p.StockQuantity ?? 0) * p.SellingPrice
                 })
                 .OrderByDescending(p => p.DaysInStock)
                 .ToList();
 
             model.TotalItemsInStock = allProducts.Count;
-            model.TotalInventoryValue = allProducts.Sum(p => (decimal)(p.StockQuantity ?? 0) * p.SellingPrice);
+            model.TotalInventoryValue = allProducts.Sum(p => (p.StockQuantity ?? 0) * p.SellingPrice);
             
+            // Tính toán tỷ lệ quay vòng hàng tồn kho
             decimal salesRevenue = model.TopSellingProducts.Sum(x => x.RevenueGenerated);
             model.InventoryTurnoverRate = model.TotalInventoryValue > 0 ? salesRevenue / model.TotalInventoryValue : 0;
 
             return View(model);
         }
 
+        // Báo cáo Tài chính (Financials)
         public async Task<IActionResult> Financials(DateTime? startDate = null, DateTime? endDate = null)
         {
             var end = endDate ?? DateTime.Now;
@@ -158,6 +172,7 @@ namespace Sales_Management.Areas.Admin.Controllers
                 .Where(o => o.OrderDate >= start && o.OrderDate <= end)
                 .ToListAsync();
 
+            // Thống kê trạng thái hóa đơn (Đã thanh toán, Chờ, Hoàn tiền)
             model.InvoiceStats = new List<InvoiceStatViewModel>
             {
                 new InvoiceStatViewModel { Status = "Paid", Count = orders.Count(o => o.Status == "Completed" || o.PaymentStatus == "Paid"), TotalAmount = orders.Where(o => o.Status == "Completed" || o.PaymentStatus == "Paid").Sum(o => o.TotalAmount ?? 0) },
@@ -166,9 +181,10 @@ namespace Sales_Management.Areas.Admin.Controllers
             };
 
             var walletTrans = await _context.WalletTransactions
-                .Where(w => w.CreatedDate >= start && w.CreatedDate <= end)
+                .Where(w => w.CreatedDate >= start && w.CreatedDate <= end && w.Status == "Success")
                 .ToListAsync();
 
+            // Tổng tiền vào/ra ví (chỉ tính giao dịch thành công)
             model.TotalCashIn = walletTrans.Where(w => w.Amount > 0).Sum(w => w.Amount);
             model.TotalCashOut = walletTrans.Where(w => w.Amount < 0).Sum(w => Math.Abs(w.Amount));
 
@@ -194,6 +210,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(model);
         }
 
+        // Xuất báo cáo Doanh thu ra CSV
         public async Task<IActionResult> ExportRevenue(string timeframe)
         {
             var range = GetDateRange(timeframe, null, null);
@@ -214,6 +231,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", $"RevenueReport_{DateTime.Now:yyyyMMdd}.csv");
         }
 
+        // Xuất báo cáo Tồn kho ra CSV
         public async Task<IActionResult> ExportProducts()
         {
             var products = await _context.Products.ToListAsync();
@@ -226,6 +244,7 @@ namespace Sales_Management.Areas.Admin.Controllers
              return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", $"InventoryReport_{DateTime.Now:yyyyMMdd}.csv");
         }
 
+        // Helper: Xác định khoảng thời gian báo cáo
         private (DateTime Start, DateTime End) GetDateRange(string timeframe, DateTime? start, DateTime? end)
         {
             if (start.HasValue && end.HasValue) return (start.Value, end.Value);

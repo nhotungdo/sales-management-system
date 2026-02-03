@@ -56,7 +56,8 @@
                     <th>Phòng ban</th>
                     <th>Loại hợp đồng</th>
                     <th>Ngày vào làm</th>
-                    <th>Trạng thái</th>
+                    <th>Tình trạng làm việc</th>
+                    <th>Trạng thái TK</th>
                     <th class="text-center">Hành động</th>
                 </tr>
             </thead>
@@ -96,13 +97,27 @@
                         </td>
                         <td>@item.StartWorkingDate?.ToString("dd/MM/yyyy")</td>
                         <td>
-                            @if (!item.IsDeleted)
+                             @{
+                                var today = DateOnly.FromDateTime(DateTime.Now);
+                                var isWorking = item.TimeAttendances.Any(t => t.Date == today && t.CheckOutTime == null);
+                            }
+                            @if(isWorking)
                             {
-                                <span class="badge-modern badge-success-modern">Hoạt động</span>
+                                <span class="badge-modern badge-success-modern"><i class="bi bi-circle-fill" style="font-size: 8px; margin-right: 4px; vertical-align: middle;"></i> Đang làm việc</span>
                             }
                             else
                             {
-                                <span class="badge-modern badge-danger-modern">Đã khóa</span>
+                                 <span class="badge-modern badge-secondary"><i class="bi bi-circle" style="font-size: 8px; margin-right: 4px; vertical-align: middle;"></i> Đã về / Nghỉ</span>
+                            }
+                        </td>
+                        <td>
+                            @if (!item.IsDeleted)
+                            {
+                                <span class="badge bg-light text-dark border">Hoạt động</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-light text-danger border">Đã khóa</span>
                             }
                         </td>
                         <td class="text-center">

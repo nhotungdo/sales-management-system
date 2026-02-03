@@ -334,7 +334,7 @@ h6 {
 }
 
 .table-modern tbody tr:hover {
-    transform: scale(1.01);
+    /* transform: scale(1.01); Removed to fix dropdown jitter */
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
     background: #fafbff;
 }

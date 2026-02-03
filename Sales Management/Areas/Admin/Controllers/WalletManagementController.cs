@@ -20,6 +20,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             _context = context;
         }
 
+        // Xem danh sách giao dịch ví (có lọc theo trạng thái, ngày tháng)
         public async Task<IActionResult> Index(string status, DateTime? fromDate, DateTime? toDate)
         {
             var query = _context.WalletTransactions
@@ -52,6 +53,7 @@ namespace Sales_Management.Areas.Admin.Controllers
         }
 
         [HttpPost]
+        // Duyệt giao dịch nạp tiền: Cập nhật trạng thái và cộng tiền vào ví
         public async Task<IActionResult> Approve(int id)
         {
             var transaction = await _context.WalletTransactions
@@ -61,7 +63,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             if (transaction != null && transaction.Status == "Pending")
             {
                 transaction.Status = "Success";
-                // Update Wallet Balance
+                // Cập nhật số dư Ví
                 transaction.Wallet.Balance = (transaction.Wallet.Balance ?? 0) + transaction.Amount;
                 transaction.Wallet.UpdatedDate = DateTime.Now;
                 
@@ -72,6 +74,7 @@ namespace Sales_Management.Areas.Admin.Controllers
         }
 
         [HttpPost]
+        // Từ chối/Hủy giao dịch
         public async Task<IActionResult> Reject(int id)
         {
              var transaction = await _context.WalletTransactions
@@ -87,6 +90,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // Xuất báo cáo giao dịch ra file CSV
         public async Task<IActionResult> Export(string status, DateTime? fromDate, DateTime? toDate)
         {
             var query = _context.WalletTransactions
@@ -117,6 +121,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return File(System.Text.Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", $"GiaoDichNapXu_{DateTime.Now:yyyyMMddHHmmss}.csv");
         }
 
+        // Quản lý danh sách tài khoản ví của khách hàng
         public async Task<IActionResult> Accounts(string search)
         {
             var query = _context.Wallets
@@ -136,6 +141,7 @@ namespace Sales_Management.Areas.Admin.Controllers
         }
 
         [HttpGet]
+        // Form điều chỉnh số dư thủ công (Admin can thiệp)
         public async Task<IActionResult> AdjustBalance(int id)
         {
             var wallet = await _context.Wallets
@@ -148,6 +154,7 @@ namespace Sales_Management.Areas.Admin.Controllers
         }
 
         [HttpPost]
+        // Xử lý điều chỉnh số dư (Cộng hoặc Trừ)
         public async Task<IActionResult> AdjustBalance(int walletId, string type, decimal amount, string reason)
         {
             var wallet = await _context.Wallets
@@ -163,19 +170,19 @@ namespace Sales_Management.Areas.Admin.Controllers
 
             decimal adjustment = (type == "add") ? amount : -amount;
             
-            // Check sufficient balance if deducting
+            // Kiểm tra số dư nếu là giao dịch trừ
             if (type == "deduct" && (wallet.Balance ?? 0) < amount)
             {
                 ModelState.AddModelError("", "Số dư hiện tại không đủ để trừ.");
                 return View(wallet);
             }
 
-            // Create Transaction
+            // Tạo giao dịch hệ thống
             var transaction = new WalletTransaction
             {
                 WalletId = wallet.WalletId,
                 Amount = adjustment,
-                AmountMoney = 0, // Admin adjustment, no money involved usually or manual
+                AmountMoney = 0, // Điều chỉnh bởi Admin, thường không liên quan đến tiền mặt thực tế tại thời điểm này
                 TransactionType = "Adjustment",
                 Method = "System",
                 Status = "Success", // Auto completed
@@ -184,7 +191,7 @@ namespace Sales_Management.Areas.Admin.Controllers
                 CreatedDate = DateTime.Now
             };
 
-            // Update Balance
+            // Cập nhật số dư
             wallet.Balance = (wallet.Balance ?? 0) + adjustment;
             wallet.UpdatedDate = DateTime.Now;
 

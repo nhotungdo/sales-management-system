@@ -19,7 +19,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // GET: Admin/Categories
+        // GET: Admin/Categories (Lấy danh sách danh mục, hỗ trợ tìm kiếm và lọc)
         public async Task<IActionResult> Index(string searchString, string statusFilter, string sortOrder)
         {
             var categories = _context.Categories.Where(c => !c.IsDeleted).AsQueryable();
@@ -58,7 +58,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(await categories.ToListAsync());
         }
 
-        // GET: Admin/Categories/Details/5
+        // GET: Admin/Categories/Details/5 (Xem chi tiết danh mục)
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -70,13 +70,13 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(category);
         }
 
-        // GET: Admin/Categories/Create
+        // GET: Admin/Categories/Create (Hiển thị form tạo mới)
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Admin/Categories/Create
+        // POST: Admin/Categories/Create (Xử lý tạo mới danh mục)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name,Description,Status,DisplayOrder")] Category category, IFormFile? imageFile)
@@ -109,7 +109,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(category);
         }
 
-        // GET: Admin/Categories/Edit/5
+        // GET: Admin/Categories/Edit/5 (Hiển thị form chỉnh sửa)
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -119,7 +119,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(category);
         }
 
-        // POST: Admin/Categories/Edit/5
+        // POST: Admin/Categories/Edit/5 (Xử lý cập nhật danh mục)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("CategoryId,Name,Description,Status,DisplayOrder,ImageUrl,CreatedDate,IsDeleted")] Category category, IFormFile? imageFile)
@@ -159,7 +159,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(category);
         }
 
-        // GET: Admin/Categories/Delete/5
+        // GET: Admin/Categories/Delete/5 (Hiển thị xác nhận xóa)
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -171,7 +171,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(category);
         }
 
-        // POST: Admin/Categories/Delete/5
+        // POST: Admin/Categories/Delete/5 (Xử lý xóa mềm danh mục)
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
