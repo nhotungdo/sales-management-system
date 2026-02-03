@@ -14,7 +14,6 @@ namespace Sales_Management.Areas.Sale.Controllers
             _context = context;
         }
 
-        // GET: Sale/Invoices
         public async Task<IActionResult> Index()
         {
             var invoices = await _context.Invoices
@@ -25,7 +24,7 @@ namespace Sales_Management.Areas.Sale.Controllers
 
             return View(invoices);
         }
-        // GET: Sale/Invoices/Details/5
+
         public async Task<IActionResult> Details(int id)
         {
             var invoice = await _context.Invoices
