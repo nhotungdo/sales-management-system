@@ -66,13 +66,11 @@ namespace Sales_Management.Controllers
                         : DateTimeOffset.UtcNow.AddHours(1)
                 });
 
-            // Auto Check-in for Sales
             if (user.Role == "Sales")
             {
                 await _authService.CheckInSalesEmployee(user.UserId);
             }
 
-            // Redirect theo role
             if (user.Role == "Admin")
                 return RedirectToAction("Index", "Home", new { area = "Admin" });
             else if (user.Role == "Sales")
@@ -116,7 +114,6 @@ namespace Sales_Management.Controllers
         [Authorize]
         public async Task<IActionResult> Logout(string? reason = null)
         {
-            // Auto Check-out for Sales
             if (User.IsInRole("Sales"))
             {
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -154,17 +151,30 @@ namespace Sales_Management.Controllers
                                      WalletStatus = w.Status,
                                      WalletUpdatedDate = w.UpdatedDate,
                                      Transactions = _context.WalletTransactions
-                                        .Where(t => t.WalletId == w.WalletId)
-                                        .OrderByDescending(t => t.CreatedDate)
-                                        .Select(t => new WalletTransactionViewModel
+                                         .Where(t => t.WalletId == w.WalletId)
+                                         .OrderByDescending(t => t.CreatedDate)
+                                         .Select(t => new WalletTransactionViewModel
+                                         {
+                                             TransactionCode = t.TransactionCode,
+                                             Amount = t.Amount,
+                                             Type = t.TransactionType,
+                                             Status = t.Status,
+                                             CreatedDate = t.CreatedDate ?? DateTime.Now,
+                                             Description = t.Description
+                                         }).ToList(),
+                                     Orders = _context.Orders
+                                        .Where(o => o.CustomerId == c.CustomerId)
+                                        .OrderByDescending(o => o.OrderDate)
+                                        .Select(o => new OrderHistoryViewModel
                                         {
-                                            TransactionCode = t.TransactionCode,
-                                            Amount = t.Amount,
-                                            Type = t.TransactionType,
-                                            Status = t.Status,
-                                            CreatedDate = t.CreatedDate ?? DateTime.Now,
-                                            Description = t.Description
-                                        }).Take(10).ToList()
+                                            OrderId = o.OrderId,
+                                            OrderDate = o.OrderDate ?? DateTime.Now,
+                                            TotalAmount = o.TotalAmount ?? 0,
+                                            Status = o.Status,
+                                            ProductNames = string.Join(", ", _context.OrderDetails
+                                                .Where(od => od.OrderId == o.OrderId)
+                                                .Select(od => od.Product.Name))
+                                        }).ToList()
                                  }).FirstOrDefaultAsync();
 
             if (profile == null) return NotFound();
@@ -200,7 +210,6 @@ namespace Sales_Management.Controllers
             user.PhoneNumber = PhoneNumber;
             customer.Address = Address;
 
-            // 3. Xử lý File ảnh
             if (AvatarFile != null && AvatarFile.Length > 0)
             {
                 string uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/img/avatars");

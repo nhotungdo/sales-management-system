@@ -5,7 +5,6 @@
 }
 
 <div class="container py-4">
-    @* HIỂN THỊ THÔNG BÁO SAU KHI CẬP NHẬT *@
     @if (TempData["Success"] != null)
     {
         <div class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm border-0 mb-4" role="alert">
@@ -40,7 +39,6 @@
                                 </div>
                             </div>
                         </div>
-                        @* NÚT MỞ MODAL CHỈNH SỬA *@
                         <button class="btn btn-outline-secondary btn-sm rounded-3 px-3" data-bs-toggle="modal" data-bs-target="#editProfileModal">
                             <i class="bi bi-pencil-square me-1"></i>Chỉnh sửa
                         </button>
@@ -75,70 +73,108 @@
                 </div>
             </div>
 
-            <div class="d-flex gap-2 mb-3 p-1 bg-light rounded-3 d-inline-flex">
-                <button class="btn btn-white shadow-sm border-0 rounded-3 px-4 py-2 fw-medium">
-                    <i class="bi bi-cart3 me-2"></i>Đơn hàng
-                </button>
-                <button class="btn btn-light border-0 rounded-3 px-4 py-2 fw-medium active">
-                    <i class="bi bi-wallet2 me-2"></i>Giao dịch
-                </button>
-            </div>
+            <ul class="nav nav-pills gap-2 mb-3 bg-light p-1 rounded-3 d-inline-flex border-0" id="profileTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active rounded-3 px-4 py-2 fw-medium border-0" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders-pane" type="button" role="tab">
+                        <i class="bi bi-cart3 me-2"></i>Đơn hàng
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-3 px-4 py-2 fw-medium border-0" id="trans-tab" data-bs-toggle="tab" data-bs-target="#trans-pane" type="button" role="tab">
+                        <i class="bi bi-wallet2 me-2"></i>Giao dịch
+                    </button>
+                </li>
+            </ul>
 
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-1"><i class="bi bi-archive me-2"></i>Lịch sử giao dịch</h5>
-                    <p class="text-muted small mb-4">Chi tiết các giao dịch trong ví của bạn</p>
-
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
-                                <tr class="small text-muted text-uppercase">
-                                    <th>Mã GD</th>
-                                    <th>Loại</th>
-                                    <th>Số tiền</th>
-                                    <th>Trạng thái</th>
-                                    <th>Mô tả</th>
-                                    <th>Ngày GD</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (Model.Transactions != null && Model.Transactions.Any())
-                                {
-                                    foreach (var item in Model.Transactions)
-                                    {
+            <div class="tab-content" id="profileTabsContent">
+                <div class="tab-pane fade show active" id="orders-pane" role="tabpanel">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold mb-4"><i class="bi bi-bag-check me-2"></i>Đơn hàng đã mua</h5>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light small text-uppercase">
                                         <tr>
-                                            <td class="fw-bold small text-secondary">@item.TransactionCode</td>
-                                            <td>
-                                                @if (item.Amount >= 0)
-                                                {
-                                                    <span class="text-success small"><i class="bi bi-arrow-down-left me-1"></i>Nạp tiền</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="text-danger small"><i class="bi bi-arrow-up-right me-1"></i>Thanh toán</span>
-                                                }
-                                            </td>
-                                            <td class="@(item.Amount >= 0 ? "text-success" : "text-danger") fw-bold">
-                                                @(item.Amount >= 0 ? "+" : "")@item.Amount.ToString("N0") <span class="text-decoration-underline">đ</span>
-                                            </td>
-                                            <td>
-                                                <span class="badge rounded-pill @(item.Status == "Success" ? "bg-success-subtle text-success" : "bg-warning-subtle text-warning") px-3">
-                                                    @(item.Status == "Success" ? "Thành công" : "Đang xử lý")
-                                                </span>
-                                            </td>
-                                            <td class="text-muted small">@item.Description</td>
-                                            <td class="text-muted small">@item.CreatedDate.ToString("HH:mm:ss dd/MM/yyyy")</td>
+                                            <th>Mã ĐH</th>
+                                            <th>Sản phẩm</th>
+                                            <th>Tổng tiền</th>
+                                            <th>Trạng thái</th>
                                         </tr>
-                                    }
-                                }
-                                else
-                                {
-                                    <tr>
-                                        <td colspan="6" class="text-center py-4 text-muted small">Chưa có giao dịch nào</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+                                    </thead>
+                                    <tbody>
+                                        @if (Model.Orders != null && Model.Orders.Any())
+                                        {
+                                            foreach (var order in Model.Orders)
+                                            {
+                                                <tr>
+                                                    <td class="fw-bold small text-secondary">#@order.OrderId</td>
+                                                    <td class="small">@order.ProductNames</td>
+                                                    <td class="fw-bold text-dark">@order.TotalAmount.ToString("N0") xu</td>
+                                                    <td>
+                                                        <span class="badge rounded-pill px-3 @(order.Status == "Completed" ? "bg-success-subtle text-success" : "bg-warning-subtle text-warning")">
+                                                            @(order.Status == "Completed" ? "Thành công" : "Đang xử lý")
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr><td colspan="4" class="text-center py-4 text-muted small">Chưa có đơn hàng nào</td></tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="trans-pane" role="tabpanel">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold mb-4"><i class="bi bi-clock-history me-2"></i>Lịch sử giao dịch ví</h5>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light small text-uppercase">
+                                        <tr>
+                                            <th>Mã GD</th>
+                                            <th>Loại</th>
+                                            <th>Số tiền</th>
+                                            <th>Trạng thái</th>
+                                            <th>Ngày GD</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (Model.Transactions != null && Model.Transactions.Any())
+                                        {
+                                            foreach (var item in Model.Transactions)
+                                            {
+                                                <tr>
+                                                    <td class="fw-bold small text-secondary">@item.TransactionCode</td>
+                                                    <td>
+                                                        @if (item.Type == "Payment")
+                                                        {
+                                                            <span class="text-danger small"><i class="bi bi-arrow-up-right me-1"></i>Thanh toán</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-success small"><i class="bi bi-arrow-down-left me-1"></i>Nạp tiền</span>
+                                                        }
+                                                    </td>
+                                                    <td class="@(item.Type == "Payment" ? "text-danger" : "text-success") fw-bold">
+                                                        @(item.Type == "Payment" ? "-" : "+")@item.Amount.ToString("N0") xu
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge rounded-pill bg-success-subtle text-success px-3">Thành công</span>
+                                                    </td>
+                                                    <td class="text-muted small">@item.CreatedDate.ToString("HH:mm dd/MM")</td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -160,7 +196,7 @@
                     <div class="bg-light rounded-4 p-4 text-center mb-4">
                         <span class="text-muted small d-block mb-2">Số dư hiện tại</span>
                         <h2 class="fw-bold mb-0 text-dark">
-                            @Model.WalletBalance.ToString("N0") <span class="text-decoration-underline">đ</span>
+                            @Model.WalletBalance.ToString("N0") <span class="text-decoration-underline">xu</span>
                         </h2>
                     </div>
 
@@ -173,7 +209,6 @@
     </div>
 </div>
 
-@* MODAL CHỈNH SỬA THÔNG TIN *@
 <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
@@ -226,7 +261,6 @@
 </div>
 
 <script>
-    // Hàm xử lý xem trước ảnh khi chọn file từ máy tính
     function previewImage(input) {
         if (input.files && input.files[0]) {
             var reader = new FileReader();
@@ -267,7 +301,16 @@
         border-bottom-width: 1px;
     }
 
-    /* Tinh chỉnh Modal Input */
+    .nav-pills .nav-link.active {
+        background-color: #fff !important;
+        color: #000 !important;
+        box-shadow: 0 .125rem .25rem rgba(0,0,0,.075) !important;
+    }
+
+    .nav-pills .nav-link {
+        color: #6c757d;
+    }
+
     .form-control:focus {
         border-color: #000;
         box-shadow: none;

@@ -7,7 +7,6 @@
 }
 
 <div class="container py-5">
-    <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb bg-transparent p-0">
             <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none text-muted">Trang chủ</a></li>
@@ -17,7 +16,6 @@
     </nav>
 
     <div class="row g-5">
-        <!-- Product Images -->
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm mb-3 overflow-hidden rounded-4">
                 <img id="mainImage" src="@primaryImg" class="img-fluid w-100 object-fit-cover" style="height: 500px;" alt="@Model.Name">
@@ -34,7 +32,6 @@
             }
         </div>
 
-        <!-- Product Info -->
         <div class="col-lg-6">
             <div class="ps-lg-4">
                 <div class="mb-3">
@@ -75,7 +72,6 @@
                     @(Model.Description?.Length > 150 ? Model.Description.Substring(0, 150) + "..." : Model.Description)
                 </p>
                 
-                <!-- Variations (Static for now) -->
                 @if (Model.StockQuantity > 0)
                 {
                     <div class="mb-4">
@@ -89,12 +85,19 @@
                     </div>
 
                     <div class="d-flex gap-3 mt-5">
-                        <button class="btn btn-primary btn-lg rounded-pill px-5 flex-grow-1 shadow-sm hover-elevate">
+                        <button type="button" class="btn btn-primary btn-lg rounded-pill px-5 flex-grow-1 shadow-sm hover-elevate">
                             <i class="bi bi-cart-plus me-2"></i> Thêm vào giỏ
                         </button>
-                        <button class="btn btn-outline-primary btn-lg rounded-pill px-5 flex-grow-1 hover-elevate">
-                            Mua ngay
-                        </button>
+
+                        <form id="buyNowForm" asp-controller="Orders" asp-action="Checkout" method="post" class="flex-grow-1">
+                            <input type="hidden" name="productId" value="@Model.ProductId" />
+                            <input type="hidden" name="quantity" id="hiddenQuantity" value="1" />
+                            
+                            <button type="button" class="btn btn-outline-primary btn-lg rounded-pill w-100 hover-elevate" 
+                                    onclick="confirmPurchaseDetail()">
+                                Mua ngay
+                            </button>
+                        </form>
                     </div>
                 }
                 else
@@ -107,7 +110,6 @@
                     </button>
                 }
                 
-                <!-- Features List -->
                 <div class="row mt-5 g-3">
                     <div class="col-6">
                         <div class="d-flex align-items-center text-muted">
@@ -134,12 +136,10 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 
-    <!-- Details Tabs -->
     <div class="row mt-6 pt-5">
         <div class="col-12">
             <div class="card shadow-sm border-0 rounded-4">
@@ -216,14 +216,32 @@
 </style>
 
 <script>
+    function confirmPurchaseDetail() {
+        var qty = document.getElementById('quantityInput').value;
+        document.getElementById('hiddenQuantity').value = qty;
+
+        Swal.fire({
+            title: 'Xác nhận mua hàng',
+            text: "Bạn chắc chắn muốn mua " + qty + " sản phẩm này chứ?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Đồng ý',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('buyNowForm').submit();
+            }
+        });
+    }
+
     function changeImage(src, element) {
         document.getElementById('mainImage').src = src;
-        // Reset opacity of all thumbs
         document.querySelectorAll('.product-thumb').forEach(el => {
             el.classList.add('opacity-50');
             el.classList.remove('border', 'border-primary', 'opacity-100');
         });
-        // Highlight current
         if (element.classList.contains('product-thumb')) {
             element.classList.remove('opacity-50');
             element.classList.add('border', 'border-primary', 'opacity-100');

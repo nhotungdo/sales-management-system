@@ -13,6 +13,16 @@
         public string WalletStatus { get; set; }
         public DateTime? WalletUpdatedDate { get; set; }
         public List<WalletTransactionViewModel> Transactions { get; set; }
+        public List<OrderHistoryViewModel> Orders { get; set; }
+    }
+
+    public class OrderHistoryViewModel
+    {
+        public int OrderId { get; set; }
+        public DateTime OrderDate { get; set; }
+        public decimal TotalAmount { get; set; }
+        public string Status { get; set; }
+        public string ProductNames { get; set; }
     }
 
     public class WalletTransactionViewModel

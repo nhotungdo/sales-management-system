@@ -7,9 +7,26 @@
     <title>@ViewData["Title"] - SalesM</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Sales_Management.styles.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
+    <style>
+        .notification-container {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            max-width: 450px;
+        }
+
+        .swal2-popup {
+            border-radius: 15px !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+    </style>
 </head>
 
 <body>
@@ -20,7 +37,7 @@
                     <i class="bi bi-graph-up-arrow"></i> SalesM
                 </a>
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
-                    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
@@ -51,7 +68,7 @@
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                                        @User.Identity.Name?.Substring(0,1).ToUpper()
+                                        @User.Identity.Name?.Substring(0, 1).ToUpper()
                                     </div>
                                     <span>@User.Identity.Name</span>
                                 </a>
@@ -97,64 +114,68 @@
             </div>
         </nav>
     </header>
-    
-    <!-- Main Content -->
+
+    <div class="notification-container">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show shadow-lg border-0 mb-3" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show shadow-lg border-0 mb-3" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+    </div>
+
     <main role="main" class="pb-3" style="min-height: 80vh; @(ViewData["HideHeaderSpacer"] == null ? "padding-top: 100px;" : "")">
         @RenderBody()
     </main>
 
-    <!-- Theme Switcher -->
-    <partial name="_ThemeSwitcher" />
-
     <footer class="modern-footer text-muted">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-4 mb-4">
-                    <a href="/" class="footer-brand"><i class="bi bi-graph-up-arrow"></i> SalesM</a>
-                    <p class="mb-4">Giải pháp quản lý bán hàng và phát triển doanh nghiệp hiện đại. Trao quyền cho doanh nghiệp của bạn với những thông tin chi tiết dựa trên dữ liệu.</p>
-                    <div class="d-flex gap-3">
-                        <a href="#" class="text-primary fs-5"><i class="bi bi-facebook"></i></a>
-                        <a href="#" class="text-primary fs-5"><i class="bi bi-twitter"></i></a>
-                        <a href="#" class="text-primary fs-5"><i class="bi bi-linkedin"></i></a>
-                        <a href="#" class="text-primary fs-5"><i class="bi bi-instagram"></i></a>
-                    </div>
-                </div>
-                <div class="col-lg-2 col-md-4 mb-4 footer-links">
-                    <h5>Sản phẩm</h5>
-                    <ul>
-                        <li><a href="#">Tính năng</a></li>
-                        <li><a href="#">Bảng giá</a></li>
-                        <li><a href="#">Tài liệu</a></li>
-                        <li><a href="#">Phiên bản</a></li>
-                    </ul>
-                </div>
-                <div class="col-lg-2 col-md-4 mb-4 footer-links">
-                    <h5>Công ty</h5>
-                    <ul>
-                        <li><a href="#">Về chúng tôi</a></li>
-                        <li><a href="#">Tuyển dụng</a></li>
-                        <li><a href="#">Liên hệ</a></li>
-                        <li><a href="#">Đối tác</a></li>
-                    </ul>
-                </div>
-                <div class="col-lg-4 col-md-4 mb-4 footer-links">
-                    <h5>Bản tin</h5>
-                    <p>Đăng ký nhận bản tin để cập nhật những thông tin mới nhất.</p>
-                    <div class="input-group mb-3">
-                        <input type="text" class="form-control" placeholder="Địa chỉ Email" aria-label="Email address">
-                        <button class="btn btn-primary-modern" type="button">Đăng ký</button>
-                    </div>
-                </div>
-            </div>
-            <div class="border-top pt-4 mt-4 text-center">
-                <p>&copy; 2026 Sales_Management. Đã đăng ký bản quyền. <a asp-area="" asp-controller="Home" asp-action="Privacy">Chính sách bảo mật</a></p>
-            </div>
+        <div class="container border-top pt-4 mt-4 text-center">
+            <p>&copy; 2026 SalesM. Đã đăng ký bản quyền.</p>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        $(document).ready(function () {
+            setTimeout(function () {
+                $(".alert").fadeOut('slow');
+            }, 5000);
+        });
+
+        function confirmPurchase(productId, productName, price) {
+            Swal.fire({
+                title: 'Xác nhận mua hàng?',
+                html: `Bạn muốn mua <b>${productName}</b> với giá <span class="text-primary">${price} xu</span>?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0d6efd',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Đồng ý, mua ngay!',
+                cancelButtonText: 'Để sau',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('buy-form-' + productId);
+                    if (form) {
+                        form.submit();
+                    }
+                }
+            });
+        }
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
-
 </html>
