@@ -21,7 +21,7 @@ namespace Sales_Management.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // 1. Fetch Key Metrics
+            // 1. Lấy Số Liệu Thống Kê Chính
             var totalRevenue = await _context.Orders
                 .Where(o => o.Status == "Completed" || o.PaymentStatus == "Paid")
                 .SumAsync(o => o.TotalAmount) ?? 0;
@@ -31,20 +31,20 @@ namespace Sales_Management.Areas.Admin.Controllers
             var pendingOrders = await _context.Orders
                 .CountAsync(o => o.Status == "Pending" || o.Status == "Processing");
 
-            // New Users (e.g., created this month)
+            // Người dùng mới (ví dụ: đăng ký trong tháng này)
             var currentMonth = DateTime.Now.Month;
             var currentYear = DateTime.Now.Year;
             var newUsers = await _context.Users
                 .CountAsync(u => u.CreatedDate.Month == currentMonth && u.CreatedDate.Year == currentYear);
 
-            // 2. Fetch Recent Transactions
+            // 2. Lấy Các Giao Dịch Gần Đây
             var recentOrders = await _context.Orders
                 .Include(o => o.Customer)
                 .OrderByDescending(o => o.OrderDate)
                 .Take(5)
                 .ToListAsync();
 
-            // 3. Prepare Chart Data (Revenue per Month for current year)
+            // 3. Chuẩn Bị Dữ Liệu Biểu Đồ (Doanh thu theo tháng cho năm hiện tại)
             var monthlyRevenues = await _context.Orders
                 .Where(o => o.OrderDate.HasValue && 
                             o.OrderDate.Value.Year == currentYear && 
@@ -61,9 +61,9 @@ namespace Sales_Management.Areas.Admin.Controllers
                 return monthData != null ? (int)monthData.Total : 0;
             }).ToList();
 
-            // 4. Prepare Chart Data (Sales by Category)
-            // Need to join OrderDetail -> Product -> Category
-            // Filtering out null Categories to prevent runtime errors
+            // 4. Chuẩn Bị Dữ Liệu Biểu Đồ (Doanh số theo Danh mục)
+            // Cần join OrderDetail -> Product -> Category
+            // Lọc bỏ các Danh mục null để tránh lỗi runtime
             var categoryStats = await _context.OrderDetails
                 .Include(od => od.Product)
                 .ThenInclude(p => p.Category)

@@ -92,6 +92,13 @@
                 </tbody>
             </table>
         }
+        <a asp-area="Sale"
+           asp-controller="InvoicePdf"
+           asp-action="Export"
+           asp-route-invoiceId="@Model.InvoiceId"
+           class="btn btn-danger">
+            📄 Export PDF
+        </a>
 
         <a asp-action="Index" class="btn btn-secondary mt-3">
             Back

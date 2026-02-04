@@ -38,10 +38,9 @@ namespace Sales_Management.Areas.Admin.Controllers
 
             var users = _context.Users.AsQueryable();
 
-            // Filter out deleted users by default? Or show them? 
-            // Typically "Delete" means soft delete, so we might want to hide them or show them with a status.
-            // Let's filter slightly to hide deleted ones unless requested, or just hide them.
-            // The prompt implies "Delete" functionality, usually means remove from list.
+            // Lọc bỏ người dùng đã xóa mềm? Hoặc hiển thị họ? 
+            // Thường "Xóa" nghĩa là xóa mềm, nên ta có thể ẩn họ đi hoặc hiển thị với trạng thái.
+            // Prompt ngụ ý chức năng "Xóa" thường ẩn khỏi danh sách.
             users = users.Where(u => !u.IsDeleted);
 
             if (!string.IsNullOrEmpty(search))
@@ -74,18 +73,18 @@ namespace Sales_Management.Areas.Admin.Controllers
         }
 
 
-        // GET: Admin/Users/Create
+        // GET: Admin/Users/Create (Form tạo người dùng mới)
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Admin/Users/Create
+        // POST: Admin/Users/Create (Xử lý tạo user)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("FullName,Email,Role,IsActive")] User user, string Password)
         {
-             // Fix validation for fields not in form
+             // Sửa lỗi validation cho các trường không có trong form
             ModelState.Remove("Username");
             ModelState.Remove("PasswordHash");
 
@@ -100,7 +99,7 @@ namespace Sales_Management.Areas.Admin.Controllers
                         return View(user);
                     }
 
-                    user.Username = user.Email; // Default Username to Email
+                    user.Username = user.Email; // Mặc định Username là Email
                     user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(Password);
                     user.CreatedDate = DateTime.Now;
                     user.UpdatedDate = DateTime.Now;
@@ -108,7 +107,7 @@ namespace Sales_Management.Areas.Admin.Controllers
                     _context.Users.Add(user);
                     await _context.SaveChangesAsync();
 
-                    // Automatic Sync: Create Employee if Role is Sales
+                    // Đồng bộ tự động: Tạo Employee nếu Role là Sales
                     if (user.Role == "Sales")
                     {
                         var employee = new Employee
@@ -137,7 +136,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(user);
         }
 
-        // GET: Admin/Users/Edit/5
+        // GET: Admin/Users/Edit/5 (Form chỉnh sửa user)
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -148,7 +147,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(user);
         }
 
-        // POST: Admin/Users/Edit/5
+        // POST: Admin/Users/Edit/5 (Lưu thay đổi user)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("UserId,Username,PasswordHash,Email,FullName,PhoneNumber,Role,IsActive,CreatedDate")] User user, string? NewPassword)
@@ -162,14 +161,14 @@ namespace Sales_Management.Areas.Admin.Controllers
                     var existingUser = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == id);
                     if (existingUser == null) return NotFound();
 
-                    // Restore fields we don't want to change via form binding quirks or that were hidden
+                    // Khôi phục các trường không muốn thay đổi do đặc thù binding form hoặc bị ẩn
                     user.UpdatedDate = DateTime.Now;
                     user.IsDeleted = existingUser.IsDeleted;
                     user.LastLogin = existingUser.LastLogin;
                     user.GoogleId = existingUser.GoogleId;
                     user.Avatar = existingUser.Avatar;
 
-                    // Handle Password Change
+                    // Xử lý thay đổi mật khẩu
                     if (!string.IsNullOrEmpty(NewPassword))
                     {
                         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(NewPassword);
@@ -194,7 +193,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(user);
         }
 
-        // GET: Admin/Users/Delete/5
+        // GET: Admin/Users/Delete/5 (Xác nhận xóa)
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -206,7 +205,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(user);
         }
 
-        // POST: Admin/Users/Delete/5
+        // POST: Admin/Users/Delete/5 (Xóa mềm user và dữ liệu liên quan)
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -217,14 +216,14 @@ namespace Sales_Management.Areas.Admin.Controllers
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == id);
                 if (user != null)
                 {
-                    // Soft Delete User
+                    // Xóa mềm User
                     user.IsDeleted = true;
-                    user.IsActive = false; // Deactivate as well
+                    user.IsActive = false; // Hủy kích hoạt
                     user.UpdatedDate = DateTime.Now;
                     
                     _context.Users.Update(user);
 
-                    // Requirement: Sync delete for "sales" role
+                    // Yêu cầu: Đồng bộ xóa cho role "Sales"
                     if (!string.IsNullOrEmpty(user.Role) && user.Role.Equals("Sales", StringComparison.OrdinalIgnoreCase))
                     {
                         var employee = await _context.Employees.FirstOrDefaultAsync(e => e.UserId == id);
@@ -241,7 +240,7 @@ namespace Sales_Management.Areas.Admin.Controllers
 
                     _logger.LogInformation($"User {user.UserId} deleted successfully.");
                     
-                    // Real-time notification
+                    // Thông báo Real-time
                     await _hubContext.Clients.All.SendAsync("ReceiveUpdate", "ReloadData");
                 }
             }

@@ -251,8 +251,7 @@ public partial class SalesManagementContext : DbContext
             entity.Property(e => e.UpdatedDate)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
-            entity.Property(e => e.CoinPrice)
-                .HasColumnType("decimal(15, 2)");
+            entity.Property(e => e.CoinPrice);
             entity.Property(e => e.Vatrate)
                 .HasDefaultValue(0m)
                 .HasColumnType("decimal(5, 2)")
@@ -378,6 +377,11 @@ public partial class SalesManagementContext : DbContext
                 .HasForeignKey(d => d.WalletId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__WalletTra__Walle__5CD6CB2B");
+
+            entity.HasOne(d => d.Invoice).WithMany()
+                .HasForeignKey(d => d.InvoiceId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_WalletTransactions_Invoices_InvoiceId");
         });
 
         modelBuilder.Entity<TimeAttendance>(entity =>
@@ -420,7 +424,7 @@ public partial class SalesManagementContext : DbContext
         Username = "sale",
         PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456"),
         Email = "sale@gmail.com",
-        Role = "Sale",
+        Role = "Sales",
         IsActive = true,
         CreatedDate = DateTime.Now
     }
@@ -434,6 +438,20 @@ public partial class SalesManagementContext : DbContext
     new Category { CategoryId = 5, Name = "Thời trang", Status = "Active", IsDeleted = false },
     new Category { CategoryId = 6, Name = "Đồ gia dụng", Status = "Active", IsDeleted = false },
     new Category { CategoryId = 7, Name = "Sách", Status = "Active", IsDeleted = false }
+);
+
+        modelBuilder.Entity<Employee>().HasData(
+    new Employee
+    {
+        EmployeeId = 1,
+        UserId = 2, // Linked to 'sale' user
+        Position = "Sales Staff",
+        BasicSalary = 5000000,
+        StartWorkingDate = DateOnly.FromDateTime(DateTime.Now),
+        Department = "Sales",
+        ContractType = "Full-time",
+        IsDeleted = false
+    }
 );
 
 

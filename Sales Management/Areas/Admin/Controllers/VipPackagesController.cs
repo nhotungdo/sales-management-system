@@ -17,6 +17,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             _context = context;
         }
 
+        // Lấy danh sách gói VIP
         public async Task<IActionResult> Index()
         {
             var packages = await _context.VipPackages
@@ -25,6 +26,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(packages);
         }
 
+        // Form tạo gói VIP mới
         public IActionResult Create()
         {
             return View();
@@ -32,6 +34,7 @@ namespace Sales_Management.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        // Xử lý tạo gói VIP
         public async Task<IActionResult> Create(VipPackage vipPackage)
         {
             if (ModelState.IsValid)
@@ -43,7 +46,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(vipPackage);
         }
 
-        // GET: Admin/VipPackages/Edit/5
+        // GET: Admin/VipPackages/Edit/5 (Form sửa gói VIP)
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -59,7 +62,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(vipPackage);
         }
 
-        // POST: Admin/VipPackages/Edit/5
+        // POST: Admin/VipPackages/Edit/5 (Lưu thay đổi gói VIP)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, VipPackage vipPackage)
@@ -92,7 +95,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(vipPackage);
         }
 
-        // GET: Admin/VipPackages/Delete/5
+        // GET: Admin/VipPackages/Delete/5 (Xác nhận xóa)
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -110,7 +113,7 @@ namespace Sales_Management.Areas.Admin.Controllers
             return View(vipPackage);
         }
 
-        // POST: Admin/VipPackages/Delete/5
+        // POST: Admin/VipPackages/Delete/5 (Xóa gói VIP)
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

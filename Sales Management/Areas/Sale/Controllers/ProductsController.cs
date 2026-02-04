@@ -29,8 +29,9 @@ namespace Sales_Management.Areas.Sale.Controllers
         }
 
         // GET: Sale/Products/Create
-        public IActionResult Create()
+        public IActionResult Create(string? returnUrl)
         {
+            ViewBag.ReturnUrl = returnUrl;
             ViewBag.CategoryId = _context.Categories
                 .AsNoTracking()
                 .Select(c => new SelectListItem
@@ -48,75 +49,63 @@ namespace Sales_Management.Areas.Sale.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Product product, IFormFile? imageFile)
         {
-            bool exists = await _context.Products.AnyAsync(p => p.Code == product.Code && p.Status != "Deleted");
+            bool exists = await _context.Products
+                .AnyAsync(p => p.Code == product.Code && p.Status != "Deleted");
+
             if (exists)
-            {
                 ModelState.AddModelError("Code", "Mã sản phẩm đã tồn tại!");
-            }
+
             if (product.SellingPrice <= 0)
-            {
                 ModelState.AddModelError("SellingPrice", "Giá bán phải lớn hơn 0!");
-            }
+
             if (product.StockQuantity < 0)
-            {
                 ModelState.AddModelError("StockQuantity", "Số lượng sản phẩm không được âm!");
-            }
-            if (ModelState.IsValid)
+
+            if (!ModelState.IsValid)
             {
-                // Calculate Coin Price
-                product.CoinPrice = _coinService.CalculateCoin(product.SellingPrice);
+                ViewBag.CategoryId = _context.Categories
+                    .Select(c => new SelectListItem
+                    {
+                        Value = c.CategoryId.ToString(),
+                        Text = c.Name
+                    }).ToList();
 
-                _context.Products.Add(product);
-                await _context.SaveChangesAsync();
+                return View(product);
+            }
 
-                // xử lý ảnh
-                if (imageFile != null && imageFile.Length > 0)
+            product.CoinPrice = _coinService.CalculateCoin(product.SellingPrice);
+
+            _context.Products.Add(product);
+            await _context.SaveChangesAsync();
+
+            // xử lý ảnh
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
+                Directory.CreateDirectory(uploadPath);
+
+                var fileName = Guid.NewGuid() + Path.GetExtension(imageFile.FileName);
+                var filePath = Path.Combine(uploadPath, fileName);
+
+                using var stream = new FileStream(filePath, FileMode.Create);
+                await imageFile.CopyToAsync(stream);
+
+                _context.ProductImages.Add(new ProductImage
                 {
-                    var uploadPath = Path.Combine(
-                        Directory.GetCurrentDirectory(),
-                        "wwwroot/images"
-                    );
+                    ProductId = product.ProductId,
+                    ImageUrl = "/images/" + fileName,
+                    IsPrimary = true,
+                    CreatedDate = DateTime.Now
+                });
 
-                    if (!Directory.Exists(uploadPath))
-                        Directory.CreateDirectory(uploadPath);
-
-                    var fileName = Guid.NewGuid() + Path.GetExtension(imageFile.FileName);
-                    var filePath = Path.Combine(uploadPath, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await imageFile.CopyToAsync(stream);
-                    }
-
-                    var productImage = new ProductImage
-                    {
-                        ProductId = product.ProductId,
-                        ImageUrl = "/images/" + fileName,
-                        IsPrimary = true,
-                        CreatedDate = DateTime.Now
-                    };
-
-                    _context.ProductImages.Add(productImage);
-                    await _context.SaveChangesAsync();
-                }
-
-                return RedirectToAction(nameof(Index));
+                await _context.SaveChangesAsync();
             }
 
-            ViewBag.CategoryId = _context.Categories
-            .AsNoTracking()
-            .Select(c => new SelectListItem
-            {
-            Value = c.CategoryId.ToString(),
-            Text = c.Name
-            })
-            .ToList();
-            return View(product);
+            return RedirectToAction("Index", "Home", new { area = "Sale" });
         }
 
-
         // GET: Sale/Products/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<IActionResult> Edit(int? id, string? returnUrl)
         {
             if (id == null) return NotFound();
 
@@ -125,6 +114,8 @@ namespace Sales_Management.Areas.Sale.Controllers
                 .FirstOrDefaultAsync(p => p.ProductId == id);
 
             if (product == null) return NotFound();
+
+            ViewBag.ReturnUrl = returnUrl;
 
             ViewBag.CategoryId = new SelectList(
                 _context.Categories,
@@ -151,10 +142,10 @@ namespace Sales_Management.Areas.Sale.Controllers
             if (dbProduct == null) return NotFound();
             // check trùng code
             bool codeExists = await _context.Products
-            .AnyAsync(p => p.Code == product.Code && p.ProductId != id);
+            .AnyAsync(p => p.Code == product.Code && p.ProductId != id && p.Status != "Deleted");
 
             if (codeExists)
-            {
+            {   
                 ModelState.AddModelError("Code", "Product code already exists!");
             }
             if (product.SellingPrice <= 0)
@@ -174,6 +165,7 @@ namespace Sales_Management.Areas.Sale.Controllers
                     product.CategoryId
                 );
                 return View(product);
+
             }
             // update field
             dbProduct.Code = product.Code;
@@ -217,21 +209,21 @@ namespace Sales_Management.Areas.Sale.Controllers
             }
 
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Index", "Home", new { area = "Sale" });
         }
 
 
         // GET: Sale/Products/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<IActionResult> Delete(int? id, string? returnUrl)
         {
-            if (id == null) return NotFound();
+            if (id == null) return NotFound();          
 
             var product = await _context.Products
                 .Include(p => p.Category)
                 .FirstOrDefaultAsync(m => m.ProductId == id);
 
             if (product == null) return NotFound();
-
+            ViewBag.ReturnUrl = returnUrl;
             return View(product);
         }
 
@@ -248,10 +240,11 @@ namespace Sales_Management.Areas.Sale.Controllers
                 _context.Update(product);
                 await _context.SaveChangesAsync();
             }
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Index", "Home", new { area = "Sale" });
+
         }
         // GET: Sale/Products/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(int? id, string? returnUrl)
         {
             if (id == null) return NotFound();
 
@@ -261,7 +254,7 @@ namespace Sales_Management.Areas.Sale.Controllers
                 .FirstOrDefaultAsync(p => p.ProductId == id);
 
             if (product == null || product.Status == "Deleted") return NotFound();
-
+            ViewBag.ReturnUrl = returnUrl ?? Url.Action("Index", "Home", new { area = "Sale" });
             return View(product);
         }
 

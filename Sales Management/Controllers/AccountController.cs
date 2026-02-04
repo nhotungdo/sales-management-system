@@ -66,9 +66,13 @@ namespace Sales_Management.Controllers
                         : DateTimeOffset.UtcNow.AddHours(1)
                 });
 
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                return Redirect(returnUrl);
+            // Auto Check-in for Sales
+            if (user.Role == "Sales")
+            {
+                await _authService.CheckInSalesEmployee(user.UserId);
+            }
 
+            // Redirect theo role
             if (user.Role == "Admin")
                 return RedirectToAction("Index", "Home", new { area = "Admin" });
             else if (user.Role == "Sales")
@@ -110,8 +114,18 @@ namespace Sales_Management.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        public async Task<IActionResult> Logout()
+        public async Task<IActionResult> Logout(string? reason = null)
         {
+            // Auto Check-out for Sales
+            if (User.IsInRole("Sales"))
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    await _authService.CheckOutSalesEmployee(userId, reason ?? "");
+                }
+            }
+
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");
         }

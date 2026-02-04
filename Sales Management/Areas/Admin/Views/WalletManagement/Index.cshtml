@@ -20,7 +20,7 @@
                     <select name="status" class="form-select" onchange="this.form.submit()">
                         <option value="">Tất cả trạng thái</option>
                         <option value="Pending" selected="@(ViewBag.CurrentStatus == "Pending")">Chờ duyệt</option>
-                        <option value="Completed" selected="@(ViewBag.CurrentStatus == "Completed")">Hoàn thành</option>
+                        <option value="Success" selected="@(ViewBag.CurrentStatus == "Success")">Hoàn thành</option>
                         <option value="Cancelled" selected="@(ViewBag.CurrentStatus == "Cancelled")">Đã hủy</option>
                     </select>
                 </div>
@@ -54,7 +54,7 @@
              <div class="card bg-success text-white shadow-sm border-0 h-100">
                 <div class="card-body">
                     <h6 class="text-white-50 text-uppercase small fw-bold">Tổng Xu Đã Nạp</h6>
-                    <h2 class="display-6 fw-bold mb-0">@Model.Where(x => x.Status == "Completed").Sum(x => x.Amount).ToString("N0")</h2>
+                    <h2 class="display-6 fw-bold mb-0">@Model.Where(x => x.Status == "Success").Sum(x => x.Amount).ToString("N0")</h2>
                 </div>
             </div>
         </div>
@@ -62,7 +62,7 @@
              <div class="card bg-info text-white shadow-sm border-0 h-100">
                 <div class="card-body">
                      <h6 class="text-white-50 text-uppercase small fw-bold">Tổng Doanh Thu</h6>
-                    <h2 class="display-6 fw-bold mb-0">@Model.Where(x => x.Status == "Completed").Sum(x => x.AmountMoney)?.ToString("N0") <span class="fs-6">VND</span></h2>
+                    <h2 class="display-6 fw-bold mb-0">@Model.Where(x => x.Status == "Success").Sum(x => x.AmountMoney)?.ToString("N0") <span class="fs-6">VND</span></h2>
                 </div>
             </div>
         </div>
@@ -112,7 +112,7 @@
                                 <td class="text-end fw-bold text-success">+@item.Amount.ToString("N0")</td>
                                 <td class="text-end fw-bold text-primary">@item.AmountMoney?.ToString("N0")</td>
                                 <td class="text-center">
-                                    @if (item.Status == "Completed")
+                                    @if (item.Status == "Success")
                                     {
                                         <span class="badge bg-success rounded-pill px-3">Hoàn thành</span>
                                     }

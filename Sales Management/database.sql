@@ -53,6 +53,11 @@ CREATE TABLE Employees (
     Position NVARCHAR(100),
     BasicSalary DECIMAL(15, 2) DEFAULT 0,
     StartWorkingDate DATE,
+    Department NVARCHAR(100),
+    ContractType NVARCHAR(50),
+    ContractFile NVARCHAR(255),
+    IsDeleted BIT NOT NULL DEFAULT 0,
+    ChangeHistory NVARCHAR(MAX),
     FOREIGN KEY (UserId) REFERENCES Users(UserId) ON DELETE CASCADE
 );
 GO
@@ -129,9 +134,16 @@ CREATE TABLE WalletTransactions (
     Method NVARCHAR(20) DEFAULT 'System' CHECK (Method IN ('VNPay', 'System')),
     Status NVARCHAR(20) DEFAULT 'Pending' CHECK (Status IN ('Pending', 'Success', 'Failed', 'Cancelled')),
     Description NVARCHAR(255),
+    TransactionCode NVARCHAR(50),
+    AmountMoney DECIMAL(15, 2),
+    InvoiceId INT NULL,
     CreatedDate DATETIME DEFAULT GETDATE(),
-    FOREIGN KEY (WalletId) REFERENCES Wallets(WalletId)
+    FOREIGN KEY (WalletId) REFERENCES Wallets(WalletId),
+    FOREIGN KEY (InvoiceId) REFERENCES Invoices(InvoiceId)
 );
+GO
+
+CREATE INDEX IX_WalletTransactions_InvoiceId ON WalletTransactions(InvoiceId);
 GO
 
 -- ====================================================
@@ -143,6 +155,12 @@ CREATE TABLE Categories (
     CategoryId INT IDENTITY(1,1) PRIMARY KEY,
     Name NVARCHAR(100) NOT NULL,
     Description NVARCHAR(MAX),
+    ImageUrl NVARCHAR(255),
+    Status NVARCHAR(20) DEFAULT 'Active',
+    IsDeleted BIT NOT NULL DEFAULT 0,
+    DisplayOrder INT,
+    CreatedDate DATETIME DEFAULT GETDATE(),
+    UpdatedDate DATETIME DEFAULT GETDATE(),
     ParentId INT,
     FOREIGN KEY (ParentId) REFERENCES Categories(CategoryId)
 );
@@ -159,6 +177,7 @@ CREATE TABLE Products (
     SellingPrice DECIMAL(15, 2) NOT NULL, 
     VATRate DECIMAL(5, 2) DEFAULT 0, 
     StockQuantity INT DEFAULT 0, 
+    CoinPrice INT,
     Status NVARCHAR(20) DEFAULT 'Active' CHECK (Status IN ('Active', 'Inactive')),
     CreatedBy INT, 
     CreatedDate DATETIME DEFAULT GETDATE(),
@@ -271,7 +290,37 @@ GO
 
 
 -- ====================================================
--- VI. SEED DATA (Dữ liệu mẫu)
+-- VI. System & Configuration
+-- ====================================================
+
+-- Bảng SystemSettings
+CREATE TABLE SystemSettings (
+    SettingKey NVARCHAR(50) PRIMARY KEY, -- Key length limited for safety
+    SettingValue NVARCHAR(MAX),
+    GroupName NVARCHAR(100),
+    Description NVARCHAR(255)
+);
+GO
+
+-- Bảng VipPackages
+CREATE TABLE VipPackages (
+    VipPackageId INT IDENTITY(1,1) PRIMARY KEY,
+    Name NVARCHAR(100) NOT NULL,
+    Tag NVARCHAR(50), 
+    Description NVARCHAR(500),
+    Price DECIMAL(18, 2) NOT NULL,
+    DurationMonth INT NOT NULL DEFAULT 12,
+    DiscountPercent FLOAT NOT NULL DEFAULT 0,
+    Features NVARCHAR(MAX), -- JSON or delimiter-separated
+    Icon NVARCHAR(50), 
+    ColorCode NVARCHAR(20), 
+    Status NVARCHAR(20) DEFAULT 'Active',
+    CreatedDate DATETIME DEFAULT GETDATE()
+);
+GO
+
+-- ====================================================
+-- VII. SEED DATA (Dữ liệu mẫu)
 -- ====================================================
 
 -- 1. Users

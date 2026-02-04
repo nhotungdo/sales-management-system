@@ -17,7 +17,7 @@ namespace Sales_Management.Controllers
     {
         private readonly SalesManagementContext _context;
         private readonly IConfiguration _configuration;
-        private const decimal COIN_RATE = 10; // 1 Coin = 10 cents
+        private const decimal COIN_RATE = 1000; // 1 Coin = 1000 VND
 
         public WalletController(SalesManagementContext context, IConfiguration configuration)
         {

@@ -15,7 +15,6 @@ namespace Sales_Management.Areas.Sale.Controllers
             _context = context;
         }
 
-        // LIST ORDER
         public async Task<IActionResult> Index()
         {
             var orders = _context.Orders
@@ -24,6 +23,7 @@ namespace Sales_Management.Areas.Sale.Controllers
 
             return View(await orders.ToListAsync());
         }
+
         public IActionResult Create()
         {
             ViewBag.Customers = _context.Customers.ToList();
@@ -33,7 +33,8 @@ namespace Sales_Management.Areas.Sale.Controllers
 
             return View();
         }
-                [HttpPost]
+
+        [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(
             int customerId,
@@ -55,9 +56,9 @@ namespace Sales_Management.Areas.Sale.Controllers
             {
                 CustomerId = customerId,
                 OrderDate = DateTime.Now,
-                Status = "Pending",
+                Status = "Completed",
                 PaymentStatus = "Unpaid",
-                CreatedBy = 1 // TODO: lấy từ User đăng nhập
+                CreatedBy = 1
             };
 
             decimal subTotal = 0;
@@ -68,13 +69,10 @@ namespace Sales_Management.Areas.Sale.Controllers
             for (int i = 0; i < productIds.Count; i++)
             {
                 var product = await _context.Products.FindAsync(productIds[i]);
-
                 if (product == null) continue;
 
                 if (quantities[i] <= 0 || quantities[i] > product.StockQuantity)
-                {
-                    continue; // không cho bán sai
-                }
+                    continue;
 
                 var detail = new OrderDetail
                 {
@@ -82,12 +80,11 @@ namespace Sales_Management.Areas.Sale.Controllers
                     ProductId = product.ProductId,
                     Quantity = quantities[i],
                     UnitPrice = product.SellingPrice,
-                    Total = quantities[i] * (product.SellingPrice)
+                    Total = quantities[i] * product.SellingPrice
                 };
 
                 subTotal += detail.Total ?? 0;
-
-                product.StockQuantity -= quantities[i]; // trừ kho
+                product.StockQuantity -= quantities[i];
 
                 _context.OrderDetails.Add(detail);
             }
@@ -96,11 +93,20 @@ namespace Sales_Management.Areas.Sale.Controllers
             order.TaxAmount = subTotal * 0.1m;
             order.TotalAmount = order.SubTotal + order.TaxAmount;
 
+            // ✅ AUTO CREATE INVOICE
+            var invoice = new Invoice
+            {
+                OrderId = order.OrderId,
+                InvoiceDate = DateTime.Now,
+                Amount = (decimal)order.TotalAmount,
+                Status = "Unpaid"
+            };
+
+            _context.Invoices.Add(invoice);
+
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
         }
     }
 }
-
-

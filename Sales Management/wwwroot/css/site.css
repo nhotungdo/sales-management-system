@@ -424,7 +424,6 @@ footer.modern-footer {
 }
 
 /* Product Cards */
-/* Product Cards */
 .product-card .product-img {
   height: 300px;
   object-fit: contain;
@@ -482,7 +481,56 @@ footer.modern-footer {
   color: var(--primary-color);
 }
 
-.pagination-modern .page-item.disabled .page-link {
-  background: transparent;
-  color: var(--text-muted);
+    .pagination-modern .page-item.disabled .page-link {
+        background: transparent;
+        color: var(--text-muted);
+    }
+
+/* ===== MODERN UI ===== */
+.bg-gradient {
+    background: linear-gradient(90deg, #0f172a, #1e3a8a, #312e81);
 }
+
+.logo-box {
+    width: 38px;
+    height: 38px;
+    background: #2563eb;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.user-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 30px;
+    color: white;
+    backdrop-filter: blur(6px);
+}
+
+.avatar {
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(135deg, #60a5fa, #6366f1);
+    border-radius: 50%;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-card {
+    padding: 20px;
+    border-radius: 18px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,.08);
+    transition: 0.3s;
+}
+
+    .stat-card:hover {
+        transform: translateY(-6px);
+    }

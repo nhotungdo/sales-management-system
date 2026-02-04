@@ -37,11 +37,11 @@
                                 <ul class="list-unstyled mb-0">
                                     <li class="d-flex justify-content-between mb-2">
                                         <span class="text-muted">Ngân hàng:</span>
-                                        <span class="fw-bold">MB Bank</span>
+                                        <span class="fw-bold">BIDV Bank</span>
                                     </li>
                                     <li class="d-flex justify-content-between mb-2">
                                         <span class="text-muted">Chủ tài khoản:</span>
-                                        <span class="fw-bold">NGUYEN HO TUNG</span>
+                                        <span class="fw-bold">DO NHO TUNG</span>
                                     </li>
                                     <li class="d-flex justify-content-between mb-2">
                                         <span class="text-muted">Số tài khoản:</span>
@@ -49,7 +49,7 @@
                                     </li>
                                     <li class="d-flex justify-content-between mb-2">
                                         <span class="text-muted">Số tiền:</span>
-                                        <span class="fw-bold text-primary fs-5">@((Model.AmountMoney / 10)?.ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu</span>
+                                        <span class="fw-bold text-primary fs-5">@Model.AmountMoney?.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) vnđ</span>
                                     </li>
                                     <li class="d-flex justify-content-between border-top pt-2 mt-2">
                                         <span class="text-muted">Nội dung CK:</span>
@@ -91,7 +91,7 @@
             fetch(checkStatusUrl)
                 .then(response => response.json())
                 .then(data => {
-                    if (data.status === 'Completed') {
+                    if (data.status === 'Success') {
                         document.getElementById('statusText').innerText = 'Giao dịch thành công!';
                         document.getElementById('statusText').classList.remove('text-dark');
                         document.getElementById('statusText').classList.add('text-success');
