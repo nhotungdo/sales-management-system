@@ -9,6 +9,8 @@ public partial class TimeAttendance
 
     public int EmployeeId { get; set; }
 
+    public int? ShiftId { get; set; }
+
     public DateOnly Date { get; set; }
 
     public DateTime? CheckInTime { get; set; }
@@ -22,4 +24,6 @@ public partial class TimeAttendance
     public string? Notes { get; set; }
 
     public virtual Employee Employee { get; set; } = null!;
+
+    public virtual Shift? Shift { get; set; }
 }

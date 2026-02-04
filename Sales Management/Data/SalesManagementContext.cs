@@ -52,6 +52,9 @@ public partial class SalesManagementContext : DbContext
 
     public virtual DbSet<VipPackage> VipPackages { get; set; }
 
+    public virtual DbSet<Shift> Shifts { get; set; }
+
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Category>(entity =>
@@ -109,6 +112,10 @@ public partial class SalesManagementContext : DbContext
             entity.HasOne(d => d.User).WithOne(p => p.Employee)
                 .HasForeignKey<Employee>(d => d.UserId)
                 .HasConstraintName("FK__Employees__UserI__4316F928");
+
+            entity.HasOne(d => d.Shift).WithMany(p => p.Employees)
+                .HasForeignKey(d => d.ShiftId)
+                .HasConstraintName("FK_Employees_Shifts");
         });
 
         modelBuilder.Entity<InventoryTransaction>(entity =>
@@ -391,6 +398,18 @@ public partial class SalesManagementContext : DbContext
                 .HasForeignKey(d => d.EmployeeId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
             entity.Property(e => e.Date).HasColumnType("date");
+
+            entity.HasOne(d => d.Shift).WithMany(p => p.TimeAttendances)
+                .HasForeignKey(d => d.ShiftId)
+                .HasConstraintName("FK_TimeAttendances_Shifts");
+        });
+
+        modelBuilder.Entity<Shift>(entity =>
+        {
+            entity.HasKey(e => e.ShiftId);
+            entity.Property(e => e.ShiftName).HasMaxLength(50);
+            entity.Property(e => e.StartTime).HasColumnType("time");
+            entity.Property(e => e.EndTime).HasColumnType("time");
         });
 
         modelBuilder.Entity<Payroll>(entity =>

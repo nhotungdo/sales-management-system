@@ -80,6 +80,14 @@ namespace Sales_Management.Areas.Admin.Controllers
             var categoryLabels = categoryStats.Select(x => x.CategoryName ?? "Unknown").ToList();
             var categoryData = categoryStats.Select(x => x.Count).ToList();
 
+            // 5. Pending ReLogin Requests
+            var pendingRequests = await _context.TimeAttendances
+                .Include(t => t.Employee)
+                .ThenInclude(e => e.User)
+                .Where(t => t.Status == "PendingReLogin")
+                .OrderByDescending(t => t.CheckInTime)
+                .ToListAsync();
+
             var viewModel = new DashboardViewModel
             {
                 TotalRevenue = totalRevenue,
@@ -89,10 +97,29 @@ namespace Sales_Management.Areas.Admin.Controllers
                 RecentOrders = recentOrders ?? new List<Order>(),
                 RevenueData = revenueData,
                 CategoryLabels = categoryLabels,
-                CategoryData = categoryData
+                CategoryData = categoryData,
+                PendingReloginRequests = pendingRequests
             };
 
             return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApproveRelogin(int attendanceId)
+        {
+            var attendance = await _context.TimeAttendances.FindAsync(attendanceId);
+            if (attendance != null && attendance.Status == "PendingReLogin")
+            {
+                attendance.Status = "ApprovedReLogin";
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Đã phê duyệt yêu cầu đăng nhập lại.";
+            }
+            else
+            {
+                 TempData["Error"] = "Không tìm thấy yêu cầu hoặc trạng thái không hợp lệ.";
+            }
+            return RedirectToAction(nameof(Index));
         }
     }
 }

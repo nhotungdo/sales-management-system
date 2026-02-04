@@ -58,6 +58,9 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Middleware kiểm tra Session cho Sales
+app.UseMiddleware<Sales_Management.Middleware.SalesSessionMiddleware>();
+
 // Session
 app.UseSession();
 

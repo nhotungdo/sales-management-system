@@ -10,7 +10,7 @@
             <div class="stat-content">
                 <h6>Tổng doanh thu</h6>
                 <h3>@Model.TotalRevenue.ToString("C")</h3>
-                <span class="stat-trend text-success"><i class="bi bi-graph-up-arrow"></i> +12% tháng này</span>
+          
             </div>
             <div class="stat-icon-wrapper bg-light-primary">
                 <i class="bi bi-currency-dollar"></i>
@@ -60,6 +60,53 @@
         </div>
     </div>
 </div>
+
+@if (Model.PendingReloginRequests != null && Model.PendingReloginRequests.Any())
+{
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm border-start border-4 border-warning">
+            <div class="card-header bg-white border-0 py-3">
+                 <h5 class="fw-bold mb-0 text-warning"><i class="bi bi-clock-history me-2"></i>Yêu cầu đăng nhập lại (Cần phê duyệt)</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                             <tr>
+                                <th class="ps-4">Nhân viên</th>
+                                <th>Thời gian</th>
+                                <th>Lý do</th>
+                                <th class="text-end pe-4">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach(var req in Model.PendingReloginRequests) {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold">@req.Employee?.User?.FullName</div>
+                                        <small class="text-muted">@req.Employee?.User?.Username</small>
+                                    </td>
+                                    <td>@req.CheckInTime?.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@req.Notes</td>
+                                    <td class="text-end pe-4">
+                                         <form asp-action="ApproveRelogin" method="post">
+                                            <input type="hidden" name="attendanceId" value="@req.AttendanceId" />
+                                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">
+                                                <i class="bi bi-check2"></i> Duyệt
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+}
 
 <div class="row g-4 mb-4">
     <!-- Revenue Chart -->

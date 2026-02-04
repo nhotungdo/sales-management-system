@@ -47,8 +47,11 @@ namespace Sales_Management.Areas.Admin.Controllers
 
             ViewData["CurrentFilter"] = searchString;
             ViewData["CurrentContractType"] = contractType;
+
             return View(await employees.ToListAsync());
         }
+
+
 
         // GET: Admin/Employees/Details/5 (Xem chi tiết nhân viên)
         public async Task<IActionResult> Details(int? id)
