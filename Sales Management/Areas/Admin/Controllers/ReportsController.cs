@@ -306,5 +306,45 @@ namespace Sales_Management.Areas.Admin.Controllers
                 }
             }
         }
+
+        // Xuất báo cáo Chấm công & Phạt lương
+        [HttpGet]
+        public async Task<IActionResult> ExportAttendance(int? month, int? year)
+        {
+            var m = month ?? DateTime.Now.Month;
+            var y = year ?? DateTime.Now.Year;
+
+            var start = new DateOnly(y, m, 1);
+            var end = start.AddMonths(1).AddDays(-1);
+
+            var data = await _context.TimeAttendances
+                .Include(t => t.Employee).ThenInclude(e => e.User)
+                .Where(t => t.Date >= start && t.Date <= end)
+                .ToListAsync();
+
+            var grouped = data.GroupBy(t => t.Employee)
+                .Select(g => new 
+                {
+                    EmployeeName = g.Key.User?.FullName ?? g.Key.User?.Username ?? "Unknown",
+                    EmployeeId = g.Key.EmployeeId,
+                    DaysWorked = g.Count(),
+                    TotalLateMinutes = g.Sum(x => x.MinutesLate),
+                    TotalDeductions = g.Sum(x => x.DeductionAmount),
+                    TotalWorkHours = g.Sum(x => x.WorkHours)
+                })
+                .OrderBy(x => x.EmployeeName)
+                .ToList();
+
+            var csv = new StringBuilder();
+            csv.AppendLine($"Attendance Report - {m}/{y}");
+            csv.AppendLine("Employee ID,Name,Days Worked,Total Hours,Total Minutes Late,Total Deductions");
+
+            foreach (var item in grouped)
+            {
+                csv.AppendLine($"{item.EmployeeId},{item.EmployeeName},{item.DaysWorked},{Math.Round(item.TotalWorkHours, 2)},{item.TotalLateMinutes},{item.TotalDeductions}");
+            }
+
+            return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", $"Attendance_Report_{m}_{y}.csv");
+        }
     }
 }

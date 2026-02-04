@@ -12,7 +12,7 @@ using Sales_Management.Data;
 namespace Sales_Management.Migrations
 {
     [DbContext(typeof(SalesManagementContext))]
-    [Migration("20260204065153_AddShiftSystem")]
+    [Migration("AddShiftSystem")]
     partial class AddShiftSystem
     {
         /// <inheritdoc />

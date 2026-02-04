@@ -20,11 +20,13 @@ namespace Sales_Management.Areas.Admin.Controllers
     {
         private readonly SalesManagementContext _context;
         private readonly ICoinService _coinService;
+        private readonly ICurrencyService _currencyService;
 
-        public AdminProductsController(SalesManagementContext context, ICoinService coinService)
+        public AdminProductsController(SalesManagementContext context, ICoinService coinService, ICurrencyService currencyService)
         {
             _context = context;
             _coinService = coinService;
+            _currencyService = currencyService;
         }
 
         // GET: Admin/Products (Danh sách sản phẩm, quản lý tìm kiếm, sắp xếp và phân trang)
@@ -130,6 +132,9 @@ namespace Sales_Management.Areas.Admin.Controllers
 
                 // Tính toán Giá Coin
                 product.CoinPrice = _coinService.CalculateCoin(product.SellingPrice);
+                
+                // Tính toán Giá Cents (1000 VND = 1 Cent)
+                product.PriceCents = _currencyService.ConvertVndToCents(product.SellingPrice);
 
                 _context.Add(product);
                 await _context.SaveChangesAsync();
@@ -209,6 +214,9 @@ namespace Sales_Management.Areas.Admin.Controllers
                     
                     // Tính lại Giá Coin
                     product.CoinPrice = _coinService.CalculateCoin(product.SellingPrice);
+                    
+                    // Tính lại Giá Cents (1000 VND = 1 Cent)
+                    product.PriceCents = _currencyService.ConvertVndToCents(product.SellingPrice);
 
                     _context.Update(product);
                     await _context.SaveChangesAsync();

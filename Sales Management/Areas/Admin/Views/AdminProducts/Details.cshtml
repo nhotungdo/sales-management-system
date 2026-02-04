@@ -47,7 +47,7 @@
                         <dd class="col-sm-9"><span class="badge bg-info text-dark">@Model.Category?.Name</span></dd>
 
                         <dt class="col-sm-3">Selling Price</dt>
-                        <dd class="col-sm-9 text-success fw-bold">@((Model.SellingPrice / 10).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu</dd>
+                        <dd class="col-sm-9 text-success fw-bold">@((Model.CoinPrice ?? 0).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu</dd>
 
                         <dt class="col-sm-3">Coin Price</dt>
                         <dd class="col-sm-9 text-warning">@(Model.CoinPrice?.ToString("N0") ?? "0") Coins</dd>

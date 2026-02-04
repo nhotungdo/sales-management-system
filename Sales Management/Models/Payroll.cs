@@ -21,6 +21,14 @@ public partial class Payroll
 
     public decimal Penalty { get; set; }
 
+    public decimal TotalAllowances { get; set; }
+
+    public decimal TotalDeductions { get; set; }
+
+    public decimal TaxAmount { get; set; }
+
+    public decimal NetSalary { get; set; }
+
     public decimal TotalSalary { get; set; }
 
     public string Status { get; set; } = "Pending"; // Pending, Paid

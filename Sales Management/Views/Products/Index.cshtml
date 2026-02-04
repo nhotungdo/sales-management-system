@@ -62,7 +62,7 @@
                                 <td class="fw-bold text-primary">@Html.DisplayFor(modelItem => item.Name)</td>
                                 <td><span class="badge bg-light text-dark border">@Html.DisplayFor(modelItem => item.Code)</span></td>
                                 <td>@Html.DisplayFor(modelItem => item.Category.Name)</td>
-                                <td class="text-end pe-4">@((item.SellingPrice / 10).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu</td>
+                                <td class="text-end pe-4">@((item.CoinPrice ?? 0).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu</td>
                                 <td class="text-center">
                                     @if(item.StockQuantity < 10)
                                     {

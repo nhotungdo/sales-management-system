@@ -27,6 +27,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 // Register AuthService
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICoinService, CoinService>();
+builder.Services.AddScoped<IPayrollService, PayrollService>();
+builder.Services.AddScoped<ICurrencyService, CurrencyService>();
+builder.Services.AddScoped<ITimeProvider, SystemTimeProvider>();
 
 // Add Session
 builder.Services.AddSession(options =>

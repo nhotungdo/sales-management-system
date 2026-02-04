@@ -86,7 +86,7 @@
                                     <small class="text-muted text-truncate d-block" style="max-width: 200px;">@item.Description</small>
                                 </td>
                                 <td><span class="badge bg-light text-dark border">@item.Category?.Name</span></td>
-                                <td class="fw-bold text-primary">@((item.SellingPrice / 10).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu</td>
+                                <td class="fw-bold text-primary">@((item.CoinPrice ?? 0).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu</td>
                                 <td>
                                     @if(item.StockQuantity < 10)
                                     {

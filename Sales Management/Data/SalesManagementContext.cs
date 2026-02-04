@@ -54,6 +54,14 @@ public partial class SalesManagementContext : DbContext
 
     public virtual DbSet<Shift> Shifts { get; set; }
 
+    public virtual DbSet<LeaveRequest> LeaveRequests { get; set; }
+
+    public virtual DbSet<SalaryComponent> SalaryComponents { get; set; }
+
+    public virtual DbSet<EmployeeSalaryComponent> EmployeeSalaryComponents { get; set; }
+
+    public virtual DbSet<ConversionAuditLog> ConversionAuditLogs { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -259,6 +267,7 @@ public partial class SalesManagementContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
             entity.Property(e => e.CoinPrice);
+            entity.Property(e => e.PriceCents).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Vatrate)
                 .HasDefaultValue(0m)
                 .HasColumnType("decimal(5, 2)")
@@ -422,7 +431,29 @@ public partial class SalesManagementContext : DbContext
             entity.Property(e => e.Benefits).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Bonus).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Penalty).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalAllowances).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TotalDeductions).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.TaxAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.NetSalary).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.TotalSalary).HasColumnType("decimal(18, 2)");
+        });
+
+        modelBuilder.Entity<SalaryComponent>(entity =>
+        {
+            entity.Property(e => e.DefaultAmount).HasColumnType("decimal(18, 2)");
+        });
+
+        modelBuilder.Entity<EmployeeSalaryComponent>(entity =>
+        {
+            entity.Property(e => e.Amount).HasColumnType("decimal(18, 2)");
+        });
+
+        modelBuilder.Entity<ConversionAuditLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.VndAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.CentsAmount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.ConversionRate).HasColumnType("decimal(18, 4)");
         });
 
         OnModelCreatingPartial(modelBuilder);

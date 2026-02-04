@@ -44,7 +44,7 @@
                     @Html.DisplayNameFor(model => model.SellingPrice)
                 </dt>
                 <dd class = "col-sm-10">
-                    @((Model.SellingPrice / 10).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu
+                    @((Model.CoinPrice ?? 0).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu
                 </dd>
                  <dt class = "col-sm-2">
                     @Html.DisplayNameFor(model => model.StockQuantity)

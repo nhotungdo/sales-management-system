@@ -26,6 +26,9 @@ public partial class Product
 
     public int? CoinPrice { get; set; }
 
+    // Price in Cents (1000 VND = 1 Cent)
+    public decimal? PriceCents { get; set; }
+
     public decimal? Vatrate { get; set; }
 
     [Required]

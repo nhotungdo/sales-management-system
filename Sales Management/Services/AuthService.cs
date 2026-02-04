@@ -11,11 +11,13 @@ namespace Sales_Management.Services
     {
         private readonly SalesManagementContext _context;
         private readonly IHubContext<SystemHub> _hubContext;
+        private readonly ITimeProvider _time;
 
-        public AuthService(SalesManagementContext context, IHubContext<SystemHub> hubContext)
+        public AuthService(SalesManagementContext context, IHubContext<SystemHub> hubContext, ITimeProvider time)
         {
             _context = context;
             _hubContext = hubContext;
+            _time = time;
         }
 
 
@@ -170,7 +172,8 @@ namespace Sales_Management.Services
 
             if (user.Employee == null) return;
 
-            var today = DateOnly.FromDateTime(DateTime.Now);
+            var today = _time.Today;
+            var now = _time.Now;
             
             // Check if there is already an active session (not checked out)
             var activeSession = await _context.TimeAttendances
@@ -187,11 +190,39 @@ namespace Sales_Management.Services
                 // If no assigned shift, try to find a matching one
                 if (shiftId == null)
                 {
-                    // Fallback: Find shift that covers current time
-                    var timeNow = DateTime.Now.TimeOfDay;
+                    var timeNow = now.TimeOfDay;
                     var matchedShift = await _context.Shifts
                         .FirstOrDefaultAsync(s => s.StartTime <= timeNow && s.EndTime >= timeNow);
                     shiftId = matchedShift?.ShiftId;
+                }
+
+                // Rule 1 & 2 & 3: Work shift setup: start at 7:30 AM
+                // Calculate Minutes Late
+                // Standard Start Time: 07:30:00
+                DateTime standardStartTime = new DateTime(now.Year, now.Month, now.Day, 7, 30, 0);
+                
+                int minutesLate = 0;
+                decimal deduction = 0;
+                string status = "Checked in";
+                string notes = "";
+
+                // Only calculate late if checking in AFTER 7:30 AM
+                if (now > standardStartTime)
+                {
+                    minutesLate = (int)(now - standardStartTime).TotalMinutes;
+                    
+                    if (minutesLate > 0) 
+                    {
+                        status = $"Late ({minutesLate}m)";
+                        notes = $"Logged in late by {minutesLate} minutes.";
+                    }
+
+                    // Rule 3: > 10 mins late => 20,000 VND deducted
+                    if (minutesLate > 10)
+                    {
+                        deduction = 20000;
+                        notes += " Penalty applied: 20,000 VND.";
+                    }
                 }
 
                 var attendance = new TimeAttendance
@@ -199,12 +230,22 @@ namespace Sales_Management.Services
                     EmployeeId = user.Employee.EmployeeId,
                     ShiftId = shiftId, 
                     Date = today,
-                    CheckInTime = DateTime.Now,
-                    Status = "Checked in",
-                    Platform = "Web"
+                    CheckInTime = now,
+                    Status = status,
+                    Platform = "Web",
+                    MinutesLate = minutesLate,
+                    DeductionAmount = deduction,
+                    Notes = notes
                 };
                 _context.TimeAttendances.Add(attendance);
                 await _context.SaveChangesAsync();
+                
+                // Notify if late
+                 if (minutesLate > 0)
+                 {
+                     await _hubContext.Clients.All.SendAsync("ReceiveUpdate", 
+                        $"ATTENDANCE: Employee {user.FullName} ({user.Username}) checked in late ({minutesLate}m).");
+                 }
             }
         }
 
@@ -237,12 +278,28 @@ namespace Sales_Management.Services
                     shift = await _context.Shifts.FindAsync(activeSession.ShiftId);
                 }
                 
+                // Calculate Hours
+                var duration = (activeSession.CheckOutTime.Value - activeSession.CheckInTime.Value).TotalHours;
+                activeSession.WorkHours = Math.Round(duration, 2);
+
+                if (shift != null)
+                {
+                    var shiftEndTime = activeSession.Date.ToDateTime(TimeOnly.FromTimeSpan(shift.EndTime));
+                    // Handle shift spanning midnight if needed (not here for now)
+                    
+                    if (activeSession.CheckOutTime.Value > shiftEndTime)
+                    {
+                        var ot = (activeSession.CheckOutTime.Value - shiftEndTime).TotalHours;
+                        activeSession.OvertimeHours = Math.Round(ot, 2);
+                    }
+                }
+
                 bool isEarly = false;
                 if (shift != null)
                 {
                     var timeNow = DateTime.Now.TimeOfDay;
-                    // If current time is strictly before end time
-                    if (timeNow < shift.EndTime)
+                    // If current time is strictly before end time (with buffer of 5 mins)
+                    if (timeNow < shift.EndTime.Subtract(TimeSpan.FromMinutes(5)))
                     {
                         isEarly = true;
                     }
@@ -251,7 +308,7 @@ namespace Sales_Management.Services
                 if (isEarly && string.IsNullOrWhiteSpace(reason))
                 {
                     activeSession.Status = "Early shift end without reason";
-                    activeSession.Notes = "Automatic detection: Early Logout";
+                    activeSession.Notes = "Automatic detection: Early Logout. " + reason;
                     
                     // Real-time notification
                     await _hubContext.Clients.All.SendAsync("ReceiveUpdate", 

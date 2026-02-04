@@ -60,7 +60,7 @@
                 <div class="mb-4">
                     <div class="d-flex align-items-end gap-2">
                         <h2 class="text-primary fw-bold mb-0 display-6">
-                            @((Model.SellingPrice / 10).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) <small class="fs-4">xu</small>
+                            @((Model.CoinPrice ?? 0).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) <small class="fs-4">xu</small>
                         </h2>
                         @if (Model.CoinPrice.HasValue)
                         {

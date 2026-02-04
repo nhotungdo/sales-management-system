@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Sales_Management.Data;
 
@@ -11,9 +12,11 @@ using Sales_Management.Data;
 namespace Sales_Management.Migrations
 {
     [DbContext(typeof(SalesManagementContext))]
-    partial class SalesManagementContextModelSnapshot : ModelSnapshot
+    [Migration("AddConversionAuditLog")]
+    partial class AddConversionAuditLog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -674,9 +677,6 @@ namespace Sales_Management.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
-                    b.Property<decimal?>("PriceCents")
-                        .HasColumnType("decimal(18, 2)");
-
                     b.Property<decimal>("SellingPrice")
                         .HasColumnType("decimal(15, 2)");
 
@@ -1013,11 +1013,11 @@ namespace Sales_Management.Migrations
                         new
                         {
                             UserId = 1,
-                            CreatedDate = new DateTime(2026, 2, 4, 21, 47, 53, 860, DateTimeKind.Local).AddTicks(7524),
+                            CreatedDate = new DateTime(2026, 2, 4, 21, 23, 51, 497, DateTimeKind.Local).AddTicks(9862),
                             Email = "admin@gmail.com",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$YE68K2Qi9lSCuL/PdfW6wuzQOJL8GljZEl3Yt1HEOo8besI7Xosh6",
+                            PasswordHash = "$2a$11$JlSOstXdYsXWXIi8.K5cQOx1CLonwcrra4SfnqX386Sa1XwNfZEWu",
                             Role = "Admin",
                             UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "admin"
@@ -1025,11 +1025,11 @@ namespace Sales_Management.Migrations
                         new
                         {
                             UserId = 2,
-                            CreatedDate = new DateTime(2026, 2, 4, 21, 47, 53, 982, DateTimeKind.Local).AddTicks(7735),
+                            CreatedDate = new DateTime(2026, 2, 4, 21, 23, 51, 624, DateTimeKind.Local).AddTicks(720),
                             Email = "sale@gmail.com",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$HM6/PnhoSZWAXgBYE7qTGe0Y61om/tb4nElZ31EVGAw5ajZBWoRoO",
+                            PasswordHash = "$2a$11$DKWK9LiD1SWyUHUDqAiEFOAt1ZwNAFjNT4LQ37Wj9bAmQXFevnpji",
                             Role = "Sales",
                             UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "sale"

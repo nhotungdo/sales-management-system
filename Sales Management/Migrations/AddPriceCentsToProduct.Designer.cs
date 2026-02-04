@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Sales_Management.Data;
 
@@ -11,9 +12,11 @@ using Sales_Management.Data;
 namespace Sales_Management.Migrations
 {
     [DbContext(typeof(SalesManagementContext))]
-    partial class SalesManagementContextModelSnapshot : ModelSnapshot
+    [Migration("AddPriceCentsToProduct")]
+    partial class AddPriceCentsToProduct
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1013,11 +1016,11 @@ namespace Sales_Management.Migrations
                         new
                         {
                             UserId = 1,
-                            CreatedDate = new DateTime(2026, 2, 4, 21, 47, 53, 860, DateTimeKind.Local).AddTicks(7524),
+                            CreatedDate = new DateTime(2026, 2, 4, 21, 44, 37, 661, DateTimeKind.Local).AddTicks(7296),
                             Email = "admin@gmail.com",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$YE68K2Qi9lSCuL/PdfW6wuzQOJL8GljZEl3Yt1HEOo8besI7Xosh6",
+                            PasswordHash = "$2a$11$AuC26NorVAtOIchnst5oc.02zBLtOQH.oZDWBiPBjfooUOGft1ng.",
                             Role = "Admin",
                             UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "admin"
@@ -1025,11 +1028,11 @@ namespace Sales_Management.Migrations
                         new
                         {
                             UserId = 2,
-                            CreatedDate = new DateTime(2026, 2, 4, 21, 47, 53, 982, DateTimeKind.Local).AddTicks(7735),
+                            CreatedDate = new DateTime(2026, 2, 4, 21, 44, 37, 785, DateTimeKind.Local).AddTicks(6790),
                             Email = "sale@gmail.com",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$HM6/PnhoSZWAXgBYE7qTGe0Y61om/tb4nElZ31EVGAw5ajZBWoRoO",
+                            PasswordHash = "$2a$11$5i8MZchCAbV8Q3vqLNjMMOd7.FKh4VN/9MVczTgO8DSC1JMnruTdS",
                             Role = "Sales",
                             UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "sale"

@@ -24,7 +24,7 @@
         </p>
 
         <h4 class="text-danger">
-            @((Model.SellingPrice / 10).ToString("N0", new System.Globalization.CultureInfo("vi-VN")) ?? "0") xu
+            @((Model.CoinPrice ?? 0).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu
         </h4>
         @if (Model.CoinPrice.HasValue)
         {

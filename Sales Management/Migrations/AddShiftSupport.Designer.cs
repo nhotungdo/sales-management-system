@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Sales_Management.Data;
 
@@ -11,9 +12,11 @@ using Sales_Management.Data;
 namespace Sales_Management.Migrations
 {
     [DbContext(typeof(SalesManagementContext))]
-    partial class SalesManagementContextModelSnapshot : ModelSnapshot
+    [Migration("AddShiftSupport")]
+    partial class AddShiftSupport
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -128,43 +131,6 @@ namespace Sales_Management.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Sales_Management.Models.ConversionAuditLog", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("CentsAmount")
-                        .HasColumnType("decimal(18, 2)");
-
-                    b.Property<decimal>("ConversionRate")
-                        .HasColumnType("decimal(18, 4)");
-
-                    b.Property<string>("ErrorMessage")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("IpAddress")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<bool>("IsSuccess")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("VndAmount")
-                        .HasColumnType("decimal(18, 2)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ConversionAuditLogs");
-                });
-
             modelBuilder.Entity("Sales_Management.Models.Customer", b =>
                 {
                     b.Property<int>("CustomerId")
@@ -247,9 +213,6 @@ namespace Sales_Management.Migrations
                     b.Property<string>("Department")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal?>("HourlyWage")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -288,32 +251,6 @@ namespace Sales_Management.Migrations
                             StartWorkingDate = new DateOnly(2026, 2, 4),
                             UserId = 2
                         });
-                });
-
-            modelBuilder.Entity("Sales_Management.Models.EmployeeSalaryComponent", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18, 2)");
-
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SalaryComponentId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.HasIndex("SalaryComponentId");
-
-                    b.ToTable("EmployeeSalaryComponents");
                 });
 
             modelBuilder.Entity("Sales_Management.Models.InventoryTransaction", b =>
@@ -387,48 +324,6 @@ namespace Sales_Management.Migrations
                     b.HasIndex("OrderId");
 
                     b.ToTable("Invoices");
-                });
-
-            modelBuilder.Entity("Sales_Management.Models.LeaveRequest", b =>
-                {
-                    b.Property<int>("LeaveRequestId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LeaveRequestId"));
-
-                    b.Property<string>("AdminComment")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("int");
-
-                    b.Property<DateOnly>("EndDate")
-                        .HasColumnType("date");
-
-                    b.Property<string>("LeaveType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateOnly>("StartDate")
-                        .HasColumnType("date");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("LeaveRequestId");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.ToTable("LeaveRequests");
                 });
 
             modelBuilder.Entity("Sales_Management.Models.Order", b =>
@@ -602,24 +497,12 @@ namespace Sales_Management.Migrations
                     b.Property<int>("Month")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("NetSalary")
-                        .HasColumnType("decimal(18, 2)");
-
                     b.Property<decimal>("Penalty")
                         .HasColumnType("decimal(18, 2)");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("TaxAmount")
-                        .HasColumnType("decimal(18, 2)");
-
-                    b.Property<decimal>("TotalAllowances")
-                        .HasColumnType("decimal(18, 2)");
-
-                    b.Property<decimal>("TotalDeductions")
-                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<decimal>("TotalSalary")
                         .HasColumnType("decimal(18, 2)");
@@ -673,9 +556,6 @@ namespace Sales_Management.Migrations
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
-
-                    b.Property<decimal?>("PriceCents")
-                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<decimal>("SellingPrice")
                         .HasColumnType("decimal(15, 2)");
@@ -800,37 +680,6 @@ namespace Sales_Management.Migrations
                     b.ToTable("Promotions");
                 });
 
-            modelBuilder.Entity("Sales_Management.Models.SalaryComponent", b =>
-                {
-                    b.Property<int>("SalaryComponentId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SalaryComponentId"));
-
-                    b.Property<decimal>("DefaultAmount")
-                        .HasColumnType("decimal(18, 2)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsPercentage")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("SalaryComponentId");
-
-                    b.ToTable("SalaryComponents");
-                });
-
             modelBuilder.Entity("Sales_Management.Models.Shift", b =>
                 {
                     b.Property<int>("ShiftId")
@@ -891,20 +740,11 @@ namespace Sales_Management.Migrations
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
-                    b.Property<decimal>("DeductionAmount")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<int>("EmployeeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MinutesLate")
                         .HasColumnType("int");
 
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<double>("OvertimeHours")
-                        .HasColumnType("float");
 
                     b.Property<string>("Platform")
                         .HasColumnType("nvarchar(max)");
@@ -914,9 +754,6 @@ namespace Sales_Management.Migrations
 
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<double>("WorkHours")
-                        .HasColumnType("float");
 
                     b.HasKey("AttendanceId");
 
@@ -1013,11 +850,11 @@ namespace Sales_Management.Migrations
                         new
                         {
                             UserId = 1,
-                            CreatedDate = new DateTime(2026, 2, 4, 21, 47, 53, 860, DateTimeKind.Local).AddTicks(7524),
+                            CreatedDate = new DateTime(2026, 2, 4, 13, 13, 10, 699, DateTimeKind.Local).AddTicks(1382),
                             Email = "admin@gmail.com",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$YE68K2Qi9lSCuL/PdfW6wuzQOJL8GljZEl3Yt1HEOo8besI7Xosh6",
+                            PasswordHash = "$2a$11$UDL3DL.22jOytAoQNZzMWuWqWced6RIW99rdLFerCev.kIqSwWs2C",
                             Role = "Admin",
                             UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "admin"
@@ -1025,11 +862,11 @@ namespace Sales_Management.Migrations
                         new
                         {
                             UserId = 2,
-                            CreatedDate = new DateTime(2026, 2, 4, 21, 47, 53, 982, DateTimeKind.Local).AddTicks(7735),
+                            CreatedDate = new DateTime(2026, 2, 4, 13, 13, 10, 835, DateTimeKind.Local).AddTicks(2679),
                             Email = "sale@gmail.com",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$HM6/PnhoSZWAXgBYE7qTGe0Y61om/tb4nElZ31EVGAw5ajZBWoRoO",
+                            PasswordHash = "$2a$11$MQ2rKIGAf3c4fpaodI312uTEi3ky3.eIBOW8Glc72rOgK6jreWzdO",
                             Role = "Sales",
                             UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "sale"
@@ -1226,25 +1063,6 @@ namespace Sales_Management.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Sales_Management.Models.EmployeeSalaryComponent", b =>
-                {
-                    b.HasOne("Sales_Management.Models.Employee", "Employee")
-                        .WithMany("EmployeeSalaryComponents")
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Sales_Management.Models.SalaryComponent", "SalaryComponent")
-                        .WithMany()
-                        .HasForeignKey("SalaryComponentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("SalaryComponent");
-                });
-
             modelBuilder.Entity("Sales_Management.Models.InventoryTransaction", b =>
                 {
                     b.HasOne("Sales_Management.Models.User", "CreatedByNavigation")
@@ -1272,17 +1090,6 @@ namespace Sales_Management.Migrations
                         .HasConstraintName("FK__Invoices__OrderI__1AD3FDA4");
 
                     b.Navigation("Order");
-                });
-
-            modelBuilder.Entity("Sales_Management.Models.LeaveRequest", b =>
-                {
-                    b.HasOne("Sales_Management.Models.Employee", "Employee")
-                        .WithMany("LeaveRequests")
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("Sales_Management.Models.Order", b =>
@@ -1447,10 +1254,6 @@ namespace Sales_Management.Migrations
 
             modelBuilder.Entity("Sales_Management.Models.Employee", b =>
                 {
-                    b.Navigation("EmployeeSalaryComponents");
-
-                    b.Navigation("LeaveRequests");
-
                     b.Navigation("Payrolls");
 
                     b.Navigation("TimeAttendances");

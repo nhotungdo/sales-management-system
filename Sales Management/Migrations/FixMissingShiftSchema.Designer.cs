@@ -12,7 +12,7 @@ using Sales_Management.Data;
 namespace Sales_Management.Migrations
 {
     [DbContext(typeof(SalesManagementContext))]
-    [Migration("20260204065827_FixMissingShiftSchema")]
+    [Migration("FixMissingShiftSchema")]
     partial class FixMissingShiftSchema
     {
         /// <inheritdoc />

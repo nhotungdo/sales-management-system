@@ -1,0 +1,144 @@
+@{
+    ViewData["Title"] = "Chuyển Đổi Tiền Tệ";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-7">
+            <div class="card glass-effect border-0 rounded-4 shadow-lg p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <div class="mb-3 d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle" style="width: 64px; height: 64px;">
+                        <i class="bi bi-currency-exchange fs-2"></i>
+                    </div>
+                    <h2 class="fw-bold text-gradient mb-1">VNĐ sang Xu</h2>
+                    <p class="text-secondary small">Tỷ lệ quy đổi: 1.000 VNĐ = 1 Xu</p>
+                </div>
+
+                <form id="conversionForm" novalidate>
+                    <div class="mb-4">
+                        <label for="vndAmount" class="form-label text-secondary fw-semibold small text-uppercase">Số tiền (VNĐ)</label>
+                        <div class="input-group input-group-lg shadow-sm rounded-3 overflow-hidden">
+                            <span class="input-group-text bg-white border-0 text-primary fw-bold ps-3">₫</span>
+                            <input type="number" 
+                                   class="form-control border-0 bg-white py-3 ps-2" 
+                                   id="vndAmount" 
+                                   placeholder="0" 
+                                   min="0" 
+                                   max="999999999" 
+                                   step="any"
+                                   required>
+                        </div>
+                        <div class="form-text text-danger d-none mt-2 d-flex align-items-center gap-1" id="validationError">
+                            <i class="bi bi-exclamation-circle-fill"></i> <span></span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-modern w-100 py-3 fs-6 fw-bold shadow-sm" id="convertBtn">
+                        <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+                        <span class="btn-text">Chuyển Đổi Ngay</span>
+                    </button>
+                </form>
+
+                <div class="mt-4 pt-4 border-top border-light d-none fade-in-up" id="resultContainer">
+                    <div class="text-center bg-primary bg-opacity-10 rounded-3 p-4">
+                        <h6 class="text-secondary text-uppercase small fw-bold mb-2">Kết Quả Chuyển Đổi</h6>
+                        <div class="d-flex align-items-end justify-content-center gap-2 lh-1 mb-1">
+                            <span class="display-4 fw-bold text-primary" id="resultValue">0.00</span>
+                            <span class="fs-5 text-primary fw-semibold mb-2">Xu</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fade-in-up {
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+    
+    /* Remove number input arrows */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+        -webkit-appearance: none; 
+        margin: 0; 
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#conversionForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                const amountInput = $('#vndAmount');
+                const amount = parseFloat(amountInput.val());
+                const btn = $('#convertBtn');
+                const spinner = btn.find('.spinner-border');
+                const btnText = btn.find('.btn-text');
+                const resultContainer = $('#resultContainer');
+                const resultValue = $('#resultValue');
+                const errorDiv = $('#validationError');
+                const errorSpan = errorDiv.find('span');
+
+                // Client-side validation
+                if (isNaN(amount) || amount < 0) {
+                    errorSpan.text("Vui lòng nhập số tiền hợp lệ (số dương).");
+                    errorDiv.removeClass('d-none');
+                    amountInput.addClass('is-invalid');
+                    return;
+                }
+                if (amount > 999999999) {
+                    errorSpan.text("Số tiền vượt quá giới hạn tối đa 999.999.999 VNĐ.");
+                    errorDiv.removeClass('d-none');
+                    amountInput.addClass('is-invalid');
+                    return;
+                }
+                
+                // Clear errors
+                errorDiv.addClass('d-none');
+                amountInput.removeClass('is-invalid');
+                resultContainer.addClass('d-none');
+
+                // UI Loading State
+                btn.prop('disabled', true);
+                spinner.removeClass('d-none');
+                btnText.text('Đang xử lý...');
+
+                $.ajax({
+                    url: '/Currency/Convert',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ vndAmount: amount }),
+                    success: function(response) {
+                        if (response.success) {
+                            resultValue.text(response.cents.toFixed(2));
+                            resultContainer.removeClass('d-none');
+                        } else {
+                            errorSpan.text(response.message);
+                            errorDiv.removeClass('d-none');
+                        }
+                    },
+                    error: function() {
+                        errorSpan.text("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.");
+                        errorDiv.removeClass('d-none');
+                    },
+                    complete: function() {
+                        btn.prop('disabled', false);
+                        spinner.addClass('d-none');
+                        btnText.text('Chuyển Đổi Ngay');
+                    }
+                });
+            });
+            
+            // Real-time validation clear
+            $('#vndAmount').on('input', function() {
+                if ($(this).hasClass('is-invalid')) {
+                    $(this).removeClass('is-invalid');
+                    $('#validationError').addClass('d-none');
+                }
+            });
+        });
+    </script>
+}

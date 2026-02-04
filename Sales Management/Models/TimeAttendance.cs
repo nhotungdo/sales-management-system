@@ -23,6 +23,16 @@ public partial class TimeAttendance
 
     public string? Notes { get; set; }
 
+    public double WorkHours { get; set; }
+
+    public double OvertimeHours { get; set; }
+
+
+
+    public int MinutesLate { get; set; }
+
+    public decimal DeductionAmount { get; set; }
+
     public virtual Employee Employee { get; set; } = null!;
 
     public virtual Shift? Shift { get; set; }

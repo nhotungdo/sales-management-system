@@ -13,6 +13,8 @@ public partial class Employee
 
     public decimal? BasicSalary { get; set; }
 
+    public decimal? HourlyWage { get; set; }
+
     public DateOnly? StartWorkingDate { get; set; }
 
     public string? Department { get; set; }
@@ -34,4 +36,8 @@ public partial class Employee
     public virtual ICollection<TimeAttendance> TimeAttendances { get; set; } = new List<TimeAttendance>();
 
     public virtual ICollection<Payroll> Payrolls { get; set; } = new List<Payroll>();
+
+    public virtual ICollection<LeaveRequest> LeaveRequests { get; set; } = new List<LeaveRequest>();
+
+    public virtual ICollection<EmployeeSalaryComponent> EmployeeSalaryComponents { get; set; } = new List<EmployeeSalaryComponent>();
 }
