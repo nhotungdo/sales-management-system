@@ -4,22 +4,6 @@
     <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
         <h5 class="fw-bold m-0">Danh sách sản phẩm</h5>
 
-        <a asp-area="Sale"
-           asp-controller="Products"
-           asp-action="Create"
-           asp-route-returnUrl="@Url.Action("Index","Home",new{area="Sale"})"
-           class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-circle"></i> Thêm sản phẩm
-        </a>
-
-        <a asp-area="Sale"
-           asp-controller="Invoices"
-           asp-action="Index"
-           class="btn btn-outline-primary">
-            🧾 Xem Invoice
-        </a>
-
-
     </div>
 
     <div class="table-responsive">
@@ -31,7 +15,6 @@
                     <th>GIÁ BÁN</th>
                     <th>SỐ LƯỢNG</th>
                     <th>TRẠNG THÁI</th>
-                    <th class="text-end pe-4">THAO TÁC</th>
                 </tr>
             </thead>
 
@@ -68,7 +51,7 @@
 
                         <!-- GIÁ -->
                         <td class="fw-bold">
-                            $@p.SellingPrice.ToString("N0")
+                            @p.SellingPrice.ToString("N0") đ
                         </td>
 
                         <!-- SỐ LƯỢNG -->
@@ -97,39 +80,6 @@
                                     Ngừng bán
                                 </span>
                             }
-                        </td>
-
-                        <!-- THAO TÁC -->
-                        <td class="text-end pe-4">
-                            <a asp-area="Sale"
-                               asp-controller="Products"
-                               asp-action="Details"
-                               asp-route-id="@p.ProductId"
-                               asp-route-returnUrl="@Url.Action("Index","Home",new{area="Sale"})"
-                               class="btn btn-sm btn-light border"
-                               title="Chi tiết">
-                                <i class="bi bi-eye text-info"></i>
-                            </a>
-
-                            <a asp-area="Sale"
-                               asp-controller="Products"
-                               asp-action="Edit"
-                               asp-route-id="@p.ProductId"
-                               asp-route-returnUrl="@Url.Action("Index","Home",new{area="Sale"})"
-                               class="btn btn-sm btn-light border"
-                               title="Sửa">
-                                <i class="bi bi-pencil text-primary"></i>
-                            </a>
-
-                            <a asp-area="Sale"
-                               asp-controller="Products"
-                               asp-action="Delete"
-                               asp-route-id="@p.ProductId"
-                               asp-route-returnUrl="@Url.Action("Index","Home",new{area="Sale"})"
-                               class="btn btn-sm btn-light border"
-                               title="Xóa">
-                                <i class="bi bi-trash text-danger"></i>
-                            </a>
                         </td>
                     </tr>
                 }

@@ -184,10 +184,10 @@
             <a asp-area="Sale" asp-controller="Dashboard" asp-action="Index" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "active" : "")">
                 <i class="bi bi-grid-1x2-fill"></i> Tổng quan
             </a>
-            <a asp-area="Sale" asp-controller="Product" asp-action="Index" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Product" ? "active" : "")">
+            <a asp-area="Sale" asp-controller="Products" asp-action="Index" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Products" ? "active" : "")">
                 <i class="bi bi-box-seam"></i> Sản phẩm
             </a>
-            <a asp-area="Sale" asp-controller="Order" asp-action="Index" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Order" ? "active" : "")">
+            <a asp-area="Sale" asp-controller="Orders" asp-action="Index" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Orders" ? "active" : "")">
                 <i class="bi bi-cart3"></i> Đơn hàng
             </a>
             <a asp-area="Sale" asp-controller="Customer" asp-action="Index" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Customer" ? "active" : "")">
