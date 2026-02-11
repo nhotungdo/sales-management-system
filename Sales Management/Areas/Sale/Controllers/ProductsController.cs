@@ -1,111 +1,156 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Sales_Management.Data;
 using Sales_Management.Models;
-using Sales_Management.Services;
+using Microsoft.AspNetCore.Authorization;
+using Sales_Management.Areas.Sale.Models;
+using System.Security.Claims;
 
 namespace Sales_Management.Areas.Sale.Controllers
 {
     [Area("Sale")]
+    [Authorize(Roles = "Sales, Admin")]
     public class ProductsController : Controller
     {
         private readonly SalesManagementContext _context;
-        private readonly ICoinService _coinService;
+        private readonly IWebHostEnvironment _env;
 
-        public ProductsController(SalesManagementContext context, ICoinService coinService)
+        public ProductsController(SalesManagementContext context, IWebHostEnvironment env)
         {
             _context = context;
-            _coinService = coinService;
+            _env = env;
         }
 
-        // GET: Sale/Products
-        public async Task<IActionResult> Index()
+        // ================= INDEX =================
+        public async Task<IActionResult> Index(string searchString, string currentFilter, int? pageNumber)
         {
+            ViewData["CurrentFilter"] = searchString;
+
+            if (searchString != null)
+                pageNumber = 1;
+            else
+                searchString = currentFilter;
+
             var products = _context.Products
-                                   .Include(p => p.Category)
-                                   .Where(p => p.Status != "Deleted");
-            return View(await products.ToListAsync());
+                .Include(p => p.Category)
+                .Include(p => p.ProductImages)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                products = products.Where(p =>
+                    p.Name.Contains(searchString) ||
+                    p.Code.Contains(searchString));
+            }
+
+            int pageSize = 10;
+            return View(await PaginatedList<Product>
+                .CreateAsync(products.AsNoTracking(), pageNumber ?? 1, pageSize));
         }
 
-        // GET: Sale/Products/Create
-        public IActionResult Create(string? returnUrl)
+        // ================= CREATE =================
+        public IActionResult Create()
         {
-            ViewBag.ReturnUrl = returnUrl;
-            ViewBag.CategoryId = _context.Categories
-                .AsNoTracking()
-                .Select(c => new SelectListItem
-                {
-                    Value = c.CategoryId.ToString(),
-                    Text = c.Name
-                })
-                .ToList();
-
+            ViewData["CategoryId"] =
+                new SelectList(_context.Categories, "CategoryId", "Name");
             return View();
         }
 
-        // POST: Sale/Products/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Product product, IFormFile? imageFile)
+        public async Task<IActionResult> Create(
+        [Bind("Code,Name,Description,CategoryId,ImportPrice,SellingPrice,StockQuantity,Status")]
+        Product product,
+        IFormFile? ImageFile,
+        string? ImageUrl)
         {
-            bool exists = await _context.Products
-                .AnyAsync(p => p.Code == product.Code && p.Status != "Deleted");
+            product.CreatedDate = DateTime.Now;
 
-            if (exists)
-                ModelState.AddModelError("Code", "Mã sản phẩm đã tồn tại!");
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (claim == null)
+                return Unauthorized();
 
-            if (product.SellingPrice <= 0)
-                ModelState.AddModelError("SellingPrice", "Giá bán phải lớn hơn 0!");
+            product.CreatedBy = int.Parse(claim.Value);
 
-            if (product.StockQuantity < 0)
-                ModelState.AddModelError("StockQuantity", "Số lượng sản phẩm không được âm!");
+            // ================= VALIDATE GIÁ =================
+            if (product.ImportPrice.HasValue &&
+                product.SellingPrice <= product.ImportPrice.Value)
+            {
+                ModelState.AddModelError("SellingPrice",
+                    "Giá bán phải lớn hơn giá nhập.");
+            }
 
+            // ================= CHỌN 1 TRONG 2 ẢNH =================
+            string finalImageUrl = "";
+
+            if (ImageFile != null && ImageFile.Length > 0)
+            {
+                string uploadFolder = Path.Combine(_env.WebRootPath, "uploads/products");
+                Directory.CreateDirectory(uploadFolder);
+
+                string fileName = Guid.NewGuid() + Path.GetExtension(ImageFile.FileName);
+                string filePath = Path.Combine(uploadFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await ImageFile.CopyToAsync(stream);
+                }
+
+                finalImageUrl = "/uploads/products/" + fileName;
+            }
+            else if (!string.IsNullOrWhiteSpace(ImageUrl))
+            {
+                finalImageUrl = ImageUrl.Trim();
+            }
+            else
+            {
+                ModelState.AddModelError("",
+                    "Vui lòng chọn 1 trong 2: Upload file hoặc nhập URL ảnh.");
+            }
+
+            // ================= CHECK MODEL =================
             if (!ModelState.IsValid)
             {
-                ViewBag.CategoryId = _context.Categories
-                    .Select(c => new SelectListItem
-                    {
-                        Value = c.CategoryId.ToString(),
-                        Text = c.Name
-                    }).ToList();
+                ViewData["CategoryId"] =
+                    new SelectList(_context.Categories, "CategoryId", "Name", product.CategoryId);
 
                 return View(product);
             }
 
-            product.CoinPrice = _coinService.CalculateCoin(product.SellingPrice);
+            // ================= CHECK TRÙNG CODE =================
+            if (await _context.Products.AnyAsync(p => p.Code == product.Code))
+            {
+                ModelState.AddModelError("Code", "Mã sản phẩm đã tồn tại.");
 
+                ViewData["CategoryId"] =
+                    new SelectList(_context.Categories, "CategoryId", "Name", product.CategoryId);
+
+                return View(product);
+            }
+
+            // ================= LƯU PRODUCT =================
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            // xử lý ảnh
-            if (imageFile != null && imageFile.Length > 0)
+            // ================= LƯU ẢNH (NOT NULL) =================
+            _context.ProductImages.Add(new ProductImage
             {
-                var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
-                Directory.CreateDirectory(uploadPath);
+                ProductId = product.ProductId,
+                ImageUrl = finalImageUrl,   
+                IsPrimary = true,
+                CreatedDate = DateTime.Now
+            });
 
-                var fileName = Guid.NewGuid() + Path.GetExtension(imageFile.FileName);
-                var filePath = Path.Combine(uploadPath, fileName);
+            await _context.SaveChangesAsync();
 
-                using var stream = new FileStream(filePath, FileMode.Create);
-                await imageFile.CopyToAsync(stream);
-
-                _context.ProductImages.Add(new ProductImage
-                {
-                    ProductId = product.ProductId,
-                    ImageUrl = "/images/" + fileName,
-                    IsPrimary = true,
-                    CreatedDate = DateTime.Now
-                });
-
-                await _context.SaveChangesAsync();
-            }
-
-            return RedirectToAction("Index", "Home", new { area = "Sale" });
+            return RedirectToAction(nameof(Index));
         }
 
-        // GET: Sale/Products/Edit/5
-        public async Task<IActionResult> Edit(int? id, string? returnUrl)
+
+
+        // ================= EDIT =================
+        public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
 
@@ -115,148 +160,150 @@ namespace Sales_Management.Areas.Sale.Controllers
 
             if (product == null) return NotFound();
 
-            ViewBag.ReturnUrl = returnUrl;
+            ViewData["ImageUrl"] =
+                product.ProductImages.FirstOrDefault(i => i.IsPrimary == true)?.ImageUrl;
 
-            ViewBag.CategoryId = new SelectList(
-                _context.Categories,
-                "CategoryId",
-                "Name",
-                product.CategoryId
-            );
+            ViewData["CategoryId"] =
+                new SelectList(_context.Categories, "CategoryId", "Name", product.CategoryId);
 
             return View(product);
         }
 
-
-        // POST: Sale/Products/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Product product, IFormFile? imageFile)
+        public async Task<IActionResult> Edit(
+        int id,
+        [Bind("ProductId,Code,Name,Description,CategoryId,ImportPrice,SellingPrice,StockQuantity,Status,CreatedDate,CreatedBy")]
+        Product product,
+        IFormFile? ImageFile,
+        string? ImageUrl)
         {
-            if (id != product.ProductId) return NotFound();
+            if (id != product.ProductId)
+                return NotFound();
 
-            var dbProduct = await _context.Products
-                .Include(p => p.ProductImages)
-                .FirstOrDefaultAsync(p => p.ProductId == id);
-
-            if (dbProduct == null) return NotFound();
-            // check trùng code
-            bool codeExists = await _context.Products
-            .AnyAsync(p => p.Code == product.Code && p.ProductId != id && p.Status != "Deleted");
-
-            if (codeExists)
-            {   
-                ModelState.AddModelError("Code", "Product code already exists!");
-            }
-            if (product.SellingPrice <= 0)
+            // ===== VALIDATE GIÁ =====
+            if (product.ImportPrice.HasValue &&
+                product.SellingPrice <= product.ImportPrice.Value)
             {
-                ModelState.AddModelError("SellingPrice", "Giá bán phải lớn hơn 0!");
+                ModelState.AddModelError("SellingPrice",
+                    "Giá bán phải lớn hơn giá nhập.");
             }
-            if (product.StockQuantity < 0)
+
+            var existingImage = await _context.ProductImages
+                .FirstOrDefaultAsync(p => p.ProductId == id && p.IsPrimary == true);
+
+            // ===== CHỌN 1 TRONG 2 =====
+            string finalImageUrl = existingImage?.ImageUrl; // mặc định giữ ảnh cũ
+
+            if (ImageFile != null && ImageFile.Length > 0)
             {
-                ModelState.AddModelError("StockQuantity", "Số lượng sản phẩm không được âm!");
-            }
-            if (!ModelState.IsValid)
-            {
-                ViewBag.CategoryId = new SelectList(
-                    _context.Categories,
-                    "CategoryId",
-                    "Name",
-                    product.CategoryId
-                );
-                return View(product);
+                // ưu tiên upload file
+                string uploadFolder = Path.Combine(_env.WebRootPath, "uploads/products");
+                Directory.CreateDirectory(uploadFolder);
 
-            }
-            // update field
-            dbProduct.Code = product.Code;
-            dbProduct.Name = product.Name;
-            dbProduct.SellingPrice = product.SellingPrice;
-            dbProduct.StockQuantity = product.StockQuantity;
-            dbProduct.Description = product.Description;
-            dbProduct.CategoryId = product.CategoryId;
-
-            // Recalculate Coin Price
-            dbProduct.CoinPrice = _coinService.CalculateCoin(product.SellingPrice);
-
-            // xử lý ảnh
-            if (imageFile != null && imageFile.Length > 0)
-            {
-                var uploadPath = Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "wwwroot/images"
-                );
-
-                if (!Directory.Exists(uploadPath))
-                    Directory.CreateDirectory(uploadPath);
-
-                var fileName = Guid.NewGuid() + Path.GetExtension(imageFile.FileName);
-                var filePath = Path.Combine(uploadPath, fileName);
+                string fileName = Guid.NewGuid() + Path.GetExtension(ImageFile.FileName);
+                string filePath = Path.Combine(uploadFolder, fileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    await imageFile.CopyToAsync(stream);
+                    await ImageFile.CopyToAsync(stream);
                 }
 
-                // xóa ảnh cũ
-                _context.ProductImages.RemoveRange(dbProduct.ProductImages);
-
-                dbProduct.ProductImages.Add(new ProductImage
-                {
-                    ImageUrl = "/images/" + fileName,
-                    IsPrimary = true,
-                    CreatedDate = DateTime.Now
-                });
+                finalImageUrl = "/uploads/products/" + fileName;
+            }
+            else if (!string.IsNullOrWhiteSpace(ImageUrl))
+            {
+                finalImageUrl = ImageUrl.Trim();
+            }
+            else if (existingImage == null)
+            {
+                ModelState.AddModelError("",
+                    "Vui lòng chọn 1 trong 2: Upload file hoặc nhập URL.");
             }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction("Index", "Home", new { area = "Sale" });
+            if (!ModelState.IsValid)
+            {
+                ViewData["CategoryId"] =
+                    new SelectList(_context.Categories, "CategoryId", "Name", product.CategoryId);
+
+                return View(product);
+            }
+
+            try
+            {
+                _context.Update(product);
+
+                if (existingImage != null)
+                {
+                    existingImage.ImageUrl = finalImageUrl;
+                    _context.Update(existingImage);
+                }
+                else
+                {
+                    _context.ProductImages.Add(new ProductImage
+                    {
+                        ProductId = id,
+                        ImageUrl = finalImageUrl, 
+                        IsPrimary = true,
+                        CreatedDate = DateTime.Now
+                    });
+                }
+
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ProductExists(product.ProductId))
+                    return NotFound();
+                throw;
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
-
-        // GET: Sale/Products/Delete/5
-        public async Task<IActionResult> Delete(int? id, string? returnUrl)
+        // ================= DELETE =================
+        public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null) return NotFound();          
+            if (id == null) return NotFound();
 
             var product = await _context.Products
                 .Include(p => p.Category)
                 .FirstOrDefaultAsync(m => m.ProductId == id);
 
             if (product == null) return NotFound();
-            ViewBag.ReturnUrl = returnUrl;
+
             return View(product);
         }
 
-        // POST: Sale/Products/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var product = await _context.Products.FindAsync(id);
             if (product != null)
-            {
-                product.Status = "Deleted";
-                product.UpdatedDate = DateTime.Now;
-                _context.Update(product);
-                await _context.SaveChangesAsync();
-            }
-            return RedirectToAction("Index", "Home", new { area = "Sale" });
+                _context.Products.Remove(product);
 
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
-        // GET: Sale/Products/Details/5
-        public async Task<IActionResult> Details(int? id, string? returnUrl)
+
+        private bool ProductExists(int id)
+        {
+            return _context.Products.Any(e => e.ProductId == id);
+        }
+        public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
 
             var product = await _context.Products
                 .Include(p => p.Category)
-                .Include(p => p.ProductImages)   // ảnh
+                .Include(p => p.ProductImages)
                 .FirstOrDefaultAsync(p => p.ProductId == id);
 
-            if (product == null || product.Status == "Deleted") return NotFound();
-            ViewBag.ReturnUrl = returnUrl ?? Url.Action("Index", "Home", new { area = "Sale" });
+            if (product == null) return NotFound();
+
             return View(product);
         }
-
     }
 }
+

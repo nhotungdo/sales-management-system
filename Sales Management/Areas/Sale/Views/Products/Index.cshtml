@@ -1,131 +1,101 @@
-﻿@model List<Sales_Management.Models.Product>
+@model Sales_Management.Areas.Sale.Models.PaginatedList<Sales_Management.Models.Product>
 
-<div class="card shadow-sm table-container">
-    <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
-        <h5 class="fw-bold m-0">Danh sách sản phẩm</h5>
+@{
+    ViewData["Title"] = "Quản lý sản phẩm";
+    Layout = "_SaleLayout";
+}
 
-        <a asp-area="Sale"
-           asp-controller="Products"
-           asp-action="Create"
-           asp-route-returnUrl="@Url.Action("Index","Home",new{area="Sale"})"
-           class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-circle"></i> Thêm sản phẩm
+<div class="card border-0 shadow-sm" style="border-radius: 12px;">
+    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0">Danh sách sản phẩm</h5>
+        <a asp-action="Create" class="btn btn-primary btn-sm rounded-pill px-3">
+            <i class="bi bi-plus-lg"></i> Thêm mới
         </a>
-
     </div>
+    <div class="card-body">
+        <form asp-action="Index" method="get" class="mb-4">
+            <div class="input-group" style="max-width: 400px;">
+                <input type="text" name="SearchString" value="@ViewData["CurrentFilter"]" class="form-control" placeholder="Tìm kiếm sản phẩm...">
+                <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+            </div>
+        </form>
 
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="bg-light text-muted">
-                <tr>
-                    <th class="ps-4">SẢN PHẨM</th>
-                    <th>DANH MỤC</th>
-                    <th>GIÁ BÁN</th>
-                    <th>SỐ LƯỢNG</th>
-                    <th>TRẠNG THÁI</th>
-                    <th class="text-end pe-4">THAO TÁC</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @foreach (var p in Model)
-                {
-                    var imageUrl = p.ProductImages?
-                    .FirstOrDefault(i => i.IsPrimary == true)?.ImageUrl
-                    ?? "/images/default-product.png";
-
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="bg-light">
                     <tr>
-                        <!-- SẢN PHẨM -->
-                        <td class="ps-4">
-                            <div class="d-flex align-items-center">
-                                <img src="@imageUrl"
-                                     class="me-3 shadow-sm"
-                                     style="width:60px;height:60px;object-fit:contain;" />
-
-                                <div>
-                                    <div class="fw-semibold">@p.Name</div>
-                                    <small class="text-muted">
-                                        Code: @p.Code | ID: #@p.ProductId
-                                    </small>
-                                </div>
-                            </div>
-                        </td>
-
-                        <!-- DANH MỤC -->
-                        <td>
-                            <span class="badge bg-info-subtle text-info px-3">
-                                @p.Category?.Name
-                            </span>
-                        </td>
-
-                        <!-- GIÁ -->
-                        <td class="fw-bold">
-                            $@p.SellingPrice.ToString("N0")
-                        </td>
-
-                        <!-- SỐ LƯỢNG -->
-                        <td>
-                            @if (p.StockQuantity <= 5)
-                            {
-                                <span class="text-danger fw-bold">@p.StockQuantity</span>
-                            }
-                            else
-                            {
-                                <span class="fw-semibold">@p.StockQuantity</span>
-                            }
-                        </td>
-
-                        <!-- TRẠNG THÁI -->
-                        <td>
-                            @if (p.Status == "Active")
-                            {
-                                <span class="badge bg-success-subtle text-success px-3">
-                                    Hoạt động
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary-subtle text-secondary px-3">
-                                    Ngừng bán
-                                </span>
-                            }
-                        </td>
-
-                        <!-- THAO TÁC -->
-                        <td class="text-end pe-4">
-                            <a asp-area="Sale"
-                               asp-controller="Products"
-                               asp-action="Details"
-                               asp-route-id="@p.ProductId"
-                               asp-route-returnUrl="@Url.Action("Index","Home",new{area="Sale"})"
-                               class="btn btn-sm btn-light border"
-                               title="Chi tiết">
-                                <i class="bi bi-eye text-info"></i>
-                            </a>
-
-                            <a asp-area="Sale"
-                               asp-controller="Products"
-                               asp-action="Edit"
-                               asp-route-id="@p.ProductId"
-                               asp-route-returnUrl="@Url.Action("Index","Home",new{area="Sale"})"
-                               class="btn btn-sm btn-light border"
-                               title="Sửa">
-                                <i class="bi bi-pencil text-primary"></i>
-                            </a>
-
-                            <a asp-area="Sale"
-                               asp-controller="Products"
-                               asp-action="Delete"
-                               asp-route-id="@p.ProductId"
-                               asp-route-returnUrl="@Url.Action("Index","Home",new{area="Sale"})"
-                               class="btn btn-sm btn-light border"
-                               title="Xóa">
-                                <i class="bi bi-trash text-danger"></i>
-                            </a>
-                        </td>
+                        <th style="width: 80px;">Ảnh</th>
+                        <th>Mã SP</th>
+                        <th>Tên sản phẩm</th>
+                        <th>Giá Nhập</th>
+                        <th>Giá bán</th>
+                        <th>Tồn kho</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Thao tác</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <img src="@(item.ProductImages.FirstOrDefault(p => p.IsPrimary == true)?.ImageUrl ?? "https://placehold.co/50")" 
+                                     class="rounded" style="width: 50px; height: 50px; object-fit: cover;" onerror="this.src='https://placehold.co/50'"/>
+                            </td>
+                            <td><span class="badge bg-light text-dark border">@item.Code</span></td>
+                            <td class="fw-bold">@item.Name</td>
+                            <td class="text-muted">@item.ImportPrice?.ToString("N0") đ</td>
+                            <td class="text-primary fw-bold">@item.SellingPrice.ToString("N0") đ</td>
+                            <td>
+                                @if(item.StockQuantity < 10)
+                                {
+                                    <span class="text-danger fw-bold">@item.StockQuantity</span>
+                                }
+                                else
+                                {
+                                    @item.StockQuantity
+                                }
+                            </td>
+                            <td>
+                                @if (item.Status == "Active")
+                                {
+                                    <span class="badge bg-success bg-opacity-10 text-success">Hoạt động</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">Ngừng bán</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                                <a asp-action="Delete" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+                                <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye text-info"></i></a>
+
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div class="text-muted small">
+                Trang @Model.PageIndex / @Model.TotalPages
+            </div>
+            <div>
+                <a asp-action="Index"
+                   asp-route-pageNumber="@(Model.PageIndex - 1)"
+                   asp-route-currentFilter="@ViewData["CurrentFilter"]"
+                   class="btn btn-sm btn-outline-secondary @(!Model.HasPreviousPage ? "disabled" : "")">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+                <a asp-action="Index"
+                   asp-route-pageNumber="@(Model.PageIndex + 1)"
+                   asp-route-currentFilter="@ViewData["CurrentFilter"]"
+                   class="btn btn-sm btn-outline-secondary @(!Model.HasNextPage ? "disabled" : "")">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
+        </div>
     </div>
 </div>
