@@ -115,6 +115,7 @@ public partial class SalesManagementContext : DbContext
             entity.Property(e => e.BasicSalary)
                 .HasDefaultValue(0m)
                 .HasColumnType("decimal(15, 2)");
+            entity.Property(e => e.HourlyWage).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.Position).HasMaxLength(100);
 
             entity.HasOne(d => d.User).WithOne(p => p.Employee)
@@ -411,6 +412,7 @@ public partial class SalesManagementContext : DbContext
             entity.HasOne(d => d.Shift).WithMany(p => p.TimeAttendances)
                 .HasForeignKey(d => d.ShiftId)
                 .HasConstraintName("FK_TimeAttendances_Shifts");
+            entity.Property(e => e.DeductionAmount).HasColumnType("decimal(18, 2)");
         });
 
         modelBuilder.Entity<Shift>(entity =>

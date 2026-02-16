@@ -12,8 +12,8 @@ using Sales_Management.Data;
 namespace Sales_Management.Migrations
 {
     [DbContext(typeof(SalesManagementContext))]
-    [Migration("UpdatePayrollAndAttendance")]
-    partial class UpdatePayrollAndAttendance
+    [Migration("InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -131,6 +131,43 @@ namespace Sales_Management.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Sales_Management.Models.ConversionAuditLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("CentsAmount")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<decimal>("ConversionRate")
+                        .HasColumnType("decimal(18, 4)");
+
+                    b.Property<string>("ErrorMessage")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsSuccess")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("VndAmount")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ConversionAuditLogs");
+                });
+
             modelBuilder.Entity("Sales_Management.Models.Customer", b =>
                 {
                     b.Property<int>("CustomerId")
@@ -213,6 +250,9 @@ namespace Sales_Management.Migrations
                     b.Property<string>("Department")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("HourlyWage")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -248,7 +288,7 @@ namespace Sales_Management.Migrations
                             Department = "Sales",
                             IsDeleted = false,
                             Position = "Sales Staff",
-                            StartWorkingDate = new DateOnly(2026, 2, 4),
+                            StartWorkingDate = new DateOnly(2026, 2, 17),
                             UserId = 2
                         });
                 });
@@ -637,6 +677,9 @@ namespace Sales_Management.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
+                    b.Property<decimal?>("PriceCents")
+                        .HasColumnType("decimal(18, 2)");
+
                     b.Property<decimal>("SellingPrice")
                         .HasColumnType("decimal(15, 2)");
 
@@ -851,7 +894,13 @@ namespace Sales_Management.Migrations
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
+                    b.Property<decimal>("DeductionAmount")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MinutesLate")
                         .HasColumnType("int");
 
                     b.Property<string>("Notes")
@@ -967,11 +1016,11 @@ namespace Sales_Management.Migrations
                         new
                         {
                             UserId = 1,
-                            CreatedDate = new DateTime(2026, 2, 4, 17, 48, 25, 264, DateTimeKind.Local).AddTicks(2534),
+                            CreatedDate = new DateTime(2026, 2, 17, 1, 0, 44, 452, DateTimeKind.Local).AddTicks(359),
                             Email = "admin@gmail.com",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$YUNj8mkDOA56W9mqMjwut.sXl.lF1YQ6dkl6YlD/lv5aItNfQjFzu",
+                            PasswordHash = "$2a$11$e4ZNsoZllbo3YwASmlVeqe298nKaH.0hZQwJjEEzqTpPac8lNAFH.",
                             Role = "Admin",
                             UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "admin"
@@ -979,11 +1028,11 @@ namespace Sales_Management.Migrations
                         new
                         {
                             UserId = 2,
-                            CreatedDate = new DateTime(2026, 2, 4, 17, 48, 25, 389, DateTimeKind.Local).AddTicks(3005),
+                            CreatedDate = new DateTime(2026, 2, 17, 1, 0, 44, 578, DateTimeKind.Local).AddTicks(818),
                             Email = "sale@gmail.com",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$WeLoTlD/ZFX4HACPx0.nEOBpOLR9EZILGpCqgE9N2STjVFILQ3OYe",
+                            PasswordHash = "$2a$11$diAV3x7LOmRsHAd/BuJ8S.Q6rAojWqHyUvoA5pyz846IRCKKSvbRC",
                             Role = "Sales",
                             UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "sale"

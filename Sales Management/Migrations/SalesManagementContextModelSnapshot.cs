@@ -248,7 +248,7 @@ namespace Sales_Management.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("HourlyWage")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -285,7 +285,7 @@ namespace Sales_Management.Migrations
                             Department = "Sales",
                             IsDeleted = false,
                             Position = "Sales Staff",
-                            StartWorkingDate = new DateOnly(2026, 2, 4),
+                            StartWorkingDate = new DateOnly(2026, 2, 17),
                             UserId = 2
                         });
                 });
@@ -892,7 +892,7 @@ namespace Sales_Management.Migrations
                         .HasColumnType("date");
 
                     b.Property<decimal>("DeductionAmount")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
@@ -1013,11 +1013,11 @@ namespace Sales_Management.Migrations
                         new
                         {
                             UserId = 1,
-                            CreatedDate = new DateTime(2026, 2, 4, 21, 47, 53, 860, DateTimeKind.Local).AddTicks(7524),
+                            CreatedDate = new DateTime(2026, 2, 17, 1, 2, 5, 70, DateTimeKind.Local).AddTicks(4490),
                             Email = "admin@gmail.com",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$YE68K2Qi9lSCuL/PdfW6wuzQOJL8GljZEl3Yt1HEOo8besI7Xosh6",
+                            PasswordHash = "$2a$11$TVDBJped4kQfPSmndZhJ3eOkKb.4ly9HrbS02sCjsHjYWIlclPBFG",
                             Role = "Admin",
                             UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "admin"
@@ -1025,11 +1025,11 @@ namespace Sales_Management.Migrations
                         new
                         {
                             UserId = 2,
-                            CreatedDate = new DateTime(2026, 2, 4, 21, 47, 53, 982, DateTimeKind.Local).AddTicks(7735),
+                            CreatedDate = new DateTime(2026, 2, 17, 1, 2, 5, 392, DateTimeKind.Local).AddTicks(5020),
                             Email = "sale@gmail.com",
                             IsActive = true,
                             IsDeleted = false,
-                            PasswordHash = "$2a$11$HM6/PnhoSZWAXgBYE7qTGe0Y61om/tb4nElZ31EVGAw5ajZBWoRoO",
+                            PasswordHash = "$2a$11$qUWtUYJsbNPq4ZN15WePke4clwHNBE0ogmaLpXKKaMszd5SW.01eG",
                             Role = "Sales",
                             UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Username = "sale"
