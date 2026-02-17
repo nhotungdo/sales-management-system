@@ -47,8 +47,37 @@
             <input type="hidden" asp-for="EmployeeId" />
             <input type="hidden" asp-for="UserId" />
 
+             <!-- User Account Info (Editable) -->
             <div class="card-modern mb-4">
-                <h5 class="mb-4 text-dark fw-bold border-bottom pb-2">Thông tin chi tiết</h5>
+                <h5 class="mb-4 text-dark fw-bold border-bottom pb-2">Thông tin tài khoản</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold small text-muted">Họ và tên <span class="text-danger">*</span></label>
+                        <input name="FullName" class="form-control" value="@Model.User?.FullName" required />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold small text-muted">Email (Tên đăng nhập) <span class="text-danger">*</span></label>
+                        <input name="Email" type="email" class="form-control" value="@Model.User?.Email" required />
+                        <div class="form-text text-muted">Thay đổi email sẽ thay đổi tên đăng nhập.</div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                         <label class="form-label fw-bold small text-muted">Số điện thoại</label>
+                        <input name="PhoneNumber" class="form-control" value="@Model.User?.PhoneNumber" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold small text-muted">Vai trò <span class="text-danger">*</span></label>
+                        <select name="Role" class="form-select">
+                            <option value="Sales" selected="@(Model.User?.Role == "Sales")">Nhân viên kinh doanh (Sales)</option>
+                            <option value="Admin" selected="@(Model.User?.Role == "Admin")">Quản trị viên (Admin)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-modern mb-4">
+                <h5 class="mb-4 text-dark fw-bold border-bottom pb-2">Thông tin công việc</h5>
                 
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -64,10 +93,6 @@
                 </div>
 
                  <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold small text-muted">Số điện thoại</label>
-                        <input name="PhoneNumber" class="form-control" value="@Model.User?.PhoneNumber" />
-                    </div>
                      <div class="col-md-6 mb-3">
                         <label asp-for="ContractType" class="form-label fw-bold small text-muted">Loại hợp đồng</label>
                          <select asp-for="ContractType" class="form-select">
@@ -78,14 +103,14 @@
                         </select>
                         <span asp-validation-for="ContractType" class="text-danger"></span>
                     </div>
-                </div>
-
-                <div class="row">
                     <div class="col-md-6 mb-3">
                         <label asp-for="StartWorkingDate" class="form-label fw-bold small text-muted">Ngày bắt đầu</label>
                         <input asp-for="StartWorkingDate" class="form-control" type="date" />
                         <span asp-validation-for="StartWorkingDate" class="text-danger"></span>
                     </div>
+                </div>
+
+                <div class="row">
                      <div class="col-md-6 mb-3">
                         <label asp-for="BasicSalary" class="form-label fw-bold small text-muted">Lương cơ bản</label>
                         <div class="input-group">

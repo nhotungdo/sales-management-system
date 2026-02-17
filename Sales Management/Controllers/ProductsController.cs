@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Sales_Management.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    // [Authorize(Roles = "Admin")] - Removed to allow public/sales access as regular users
     public class ProductsController : Controller
     {
         private readonly SalesManagementContext _context;
@@ -32,6 +32,7 @@ namespace Sales_Management.Controllers
             ViewData["CurrentSort"] = sortOrder;
             ViewData["NameSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
             ViewData["PriceSortParm"] = sortOrder == "Price" ? "price_desc" : "Price";
+            ViewData["DateSortParm"] = sortOrder == "Date" ? "date_desc" : "Date";
 
             if (searchString != null)
             {
@@ -44,7 +45,9 @@ namespace Sales_Management.Controllers
 
             ViewData["CurrentFilter"] = searchString;
 
-            var products = _context.Products.Include(p => p.Category).Include(p => p.ProductImages).Where(p => p.Status != "Deleted").AsQueryable();
+            var products = from s in _context.Products.Include(p => p.Category).Include(p => p.ProductImages)
+                           where s.Status == "Active" // Ensure only active products are shown like regular users
+                           select s;
 
             if (!String.IsNullOrEmpty(searchString))
             {
@@ -62,12 +65,37 @@ namespace Sales_Management.Controllers
                 case "price_desc":
                     products = products.OrderByDescending(s => s.SellingPrice);
                     break;
+                case "Date":
+                    products = products.OrderBy(s => s.CreatedDate);
+                    break;
+                case "date_desc":
+                    products = products.OrderByDescending(s => s.CreatedDate);
+                    break;
                 default:
-                    products = products.OrderBy(s => s.Name);
+                    products = products.OrderByDescending(s => s.CreatedDate);
                     break;
             }
 
-            return View(await products.ToListAsync());
+            int pageSize = 12;
+            int pageIndex = (pageNumber ?? 1);
+            int count = await products.CountAsync();
+            
+            if (pageIndex < 1) pageIndex = 1;
+            int totalPages = (int)Math.Ceiling(count / (double)pageSize);
+            if (pageIndex > totalPages && totalPages > 0) pageIndex = totalPages;
+
+            var items = await products.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            var viewModel = new Sales_Management.ViewModels.HomeProductViewModel
+            {
+                Products = items,
+                CurrentPage = pageIndex,
+                TotalPages = totalPages,
+                SearchString = searchString,
+                SortOrder = sortOrder
+            };
+
+            return View(viewModel);
         }
 
         // GET: Products/Details/5

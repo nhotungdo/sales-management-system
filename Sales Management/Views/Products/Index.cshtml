@@ -1,99 +1,170 @@
- @model IEnumerable<Sales_Management.Models.Product>
+@model Sales_Management.ViewModels.HomeProductViewModel
 
 @{
-    ViewData["Title"] = "Quản lý sản phẩm";
+    ViewData["Title"] = "Danh sách sản phẩm";
 }
 
-<div class="container-fluid px-4">
-    <h1 class="mt-4">Quản lý sản phẩm</h1>
-    <ol class="breadcrumb mb-4">
-        <li class="breadcrumb-item"><a asp-area="" asp-controller="Home" asp-action="Index">Trang chủ</a></li>
-        <li class="breadcrumb-item active">Sản phẩm</li>
-    </ol>
-    
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <i class="fas fa-table me-1"></i>
-            Danh sách sản phẩm
-        </div>
-        <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-6">
-                     <!-- Filter/Search could go here -->
-                     <form asp-action="Index" method="get" class="d-flex">
-                        <input type="text" name="searchString" class="form-control me-2" placeholder="Tìm kiếm theo tên/mã..." value="@ViewData["CurrentFilter"]">
-                        <button class="btn btn-outline-primary" type="submit"><i class="fas fa-search"></i></button>
-                    </form>
-                </div>
-                <div class="col-md-6 text-end">
-                    <!-- Create button removed as per requirements -->
-                </div>
-            </div>
+<div class="container py-5">
+    <div class="section-title mb-5 text-center">
+        <span class="text-primary fw-bold text-uppercase ls-1">Bộ Sưu Tập</span>
+        <h2 class="display-5 fw-bold">Danh Sách Sản Phẩm</h2>
+        <p class="text-muted w-75 mx-auto">Khám phá các sản phẩm chất lượng cao của chúng tôi.</p>
+    </div>
 
-            <div class="table-responsive">
-                <table class="table table-hover table-bordered align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th scope="col">Hình ảnh</th>
-                            <th scope="col">
-                                <a asp-action="Index" asp-route-sortOrder="@ViewData["NameSortParm"]" class="text-decoration-none text-dark">
-                                    Tên sản phẩm <i class="fas fa-sort"></i>
+    <!-- Filter & Search -->
+    <div class="card card-modern mb-5 shadow-sm border-0">
+        <div class="card-body p-4">
+            <form asp-action="Index" method="get" class="row g-3 align-items-center">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-primary"></i></span>
+                        <input type="text" name="SearchString" value="@Model.SearchString" class="form-control border-start-0 ps-0 form-control-lg" placeholder="Tìm kiếm theo tên hoặc mã sản phẩm...">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select name="sortOrder" class="form-select form-select-lg" onchange="this.form.submit()">
+                        <option value="">Sắp xếp: Mới nhất</option>
+                        <option value="name_desc" selected="@(Model.SortOrder == "name_desc")">Tên: Z đến A</option>
+                        <option value="Price" selected="@(Model.SortOrder == "Price")">Giá: Thấp đến Cao</option>
+                        <option value="price_desc" selected="@(Model.SortOrder == "price_desc")">Giá: Cao đến Thấp</option>
+                        <option value="Date" selected="@(Model.SortOrder == "Date")">Cũ nhất trước</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary-modern btn-lg w-100 shadow-sm">Lọc</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.Products.Any())
+    {
+        <div class="row g-4">
+            @foreach (var item in Model.Products)
+            {
+                <div class="col-md-3 col-sm-6">
+                    <div class="card h-100 card-modern product-card border-0 shadow-sm">
+                        <div class="position-relative overflow-hidden rounded-top">
+                            @if (item.ProductImages != null && item.ProductImages.Any())
+                            {
+                                <a asp-action="Details" asp-route-id="@item.ProductId" class="d-block ratio ratio-1x1">
+                                    <img src="@item.ProductImages.First().ImageUrl" class="card-img-top product-img object-fit-cover" alt="@item.Name">
                                 </a>
-                            </th>
-                            <th scope="col">Mã</th>
-                            <th scope="col">Danh mục</th>
-                            <th scope="col">
-                                <a asp-action="Index" asp-route-sortOrder="@ViewData["PriceSortParm"]" class="text-decoration-none text-dark">
-                                    Giá bán <i class="fas fa-sort"></i>
+                            }
+                            else
+                            {
+                                <a asp-action="Details" asp-route-id="@item.ProductId" class="d-block text-decoration-none ratio ratio-1x1">
+                                    <div class="bg-light d-flex align-items-center justify-content-center text-muted card-img-top product-img h-100">
+                                        <i class="bi bi-image fs-1 opacity-25"></i>
+                                    </div>
                                 </a>
-                            </th>
-                            <th scope="col">Tồn kho</th>
-                            <th scope="col">Trạng thái</th>
-                            <th scope="col">Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model) {
-                            var primaryImg = item.ProductImages.FirstOrDefault(p => p.IsPrimary == true)?.ImageUrl ?? "/images/no-image.png";
-                            <tr>
-                                <td class="text-center">
-                                    <img src="@primaryImg" alt="@item.Name" style="width: 50px; height: 50px; object-fit: cover;" class="rounded border shadow-sm" />
-                                </td>
-                                <td class="fw-bold text-primary">@Html.DisplayFor(modelItem => item.Name)</td>
-                                <td><span class="badge bg-light text-dark border">@Html.DisplayFor(modelItem => item.Code)</span></td>
-                                <td>@Html.DisplayFor(modelItem => item.Category.Name)</td>
-                                <td class="text-end pe-4">@((item.CoinPrice ?? 0).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu</td>
-                                <td class="text-center">
-                                    @if(item.StockQuantity < 10)
+                            }
+                            <div class="position-absolute top-0 end-0 p-3">
+                                <span class="badge bg-white text-primary shadow-sm rounded-pill px-3 py-2">@item.Category?.Name</span>
+                            </div>
+                            
+                            <!-- Overlay Actions -->
+                            <div class="product-overlay d-flex justify-content-center align-items-center gap-2">
+                                <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-light rounded-circle shadow-sm p-3 lh-1" title="Xem chi tiết">
+                                    <i class="bi bi-eye fs-5"></i>
+                                </a>
+                                <!-- Add to Cart Button (disabled for Sales/Admin view or generally available) -->
+                                <button class="btn btn-primary rounded-circle shadow-sm p-3 lh-1" title="Thêm vào giỏ hàng">
+                                    <i class="bi bi-cart fs-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="card-body d-flex flex-column p-4">
+                            <h5 class="card-title fw-bold text-truncate mb-2" title="@item.Name">
+                                <a asp-action="Details" asp-route-id="@item.ProductId" class="text-decoration-none text-dark stretched-link-custom">@item.Name</a>
+                            </h5>
+                            <p class="card-text text-muted small flex-grow-1 mb-3" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 3em;">
+                                @item.Description ?? "Không có mô tả."
+                            </p>
+                            <div class="d-flex justify-content-between align-items-end mt-auto pt-3 border-top">
+                                <div>
+                                    <span class="d-block text-muted small mb-1">Giá bán</span>
+                                    <span class="h5 mb-0 text-primary fw-bold">@((item.CoinPrice ?? 0).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) <small>xu</small></span>
+                                </div>
+                                <div class="text-end">
+                                    @if(item.StockQuantity > 0)
                                     {
-                                        <span class="badge bg-danger">@item.StockQuantity</span>
-                                    }
-                                    else 
-                                    {
-                                        <span class="badge bg-success">@item.StockQuantity</span>
-                                    }
-                                </td>
-                                <td class="text-center">
-                                    @if (item.Status == "Active")
-                                    {
-                                        <span class="badge bg-success rounded-pill">Hoạt động</span>
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">
+                                            <i class="bi bi-check-circle-fill me-1"></i> Còn hàng
+                                        </span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-secondary rounded-pill">@item.Status</span>
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">
+                                            <i class="bi bi-x-circle-fill me-1"></i> Hết hàng
+                                        </span>
                                     }
-                                </td>
-                                <td class="text-center">
-                                    <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-sm btn-info text-white" title="Xem chi tiết">
-                                        <i class="fas fa-info-circle"></i> Chi tiết
-                                    </a>
-                                    <!-- Edit/Delete actions removed -->
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
-    </div>
+
+        <!-- Pagination -->
+        <div class="mt-5 d-flex justify-content-center">
+            <nav aria-label="Page navigation">
+                <ul class="pagination pagination-modern shadow-sm">
+                    <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                        <a class="page-link border-0" asp-action="Index"
+                           asp-route-pageNumber="@(Model.CurrentPage - 1)"
+                           asp-route-sortOrder="@Model.SortOrder"
+                           asp-route-currentFilter="@Model.SearchString">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    
+                    @if (Model.TotalPages <= 7)
+                    {
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(Model.CurrentPage == i ? "active" : "")">
+                                <a class="page-link border-0" asp-action="Index"
+                                   asp-route-pageNumber="@i"
+                                   asp-route-sortOrder="@Model.SortOrder"
+                                   asp-route-currentFilter="@Model.SearchString">@i</a>
+                            </li>
+                        }
+                    }
+                    else
+                    {
+                        // Simplified pagination for many pages
+                        <li class="page-item active"><span class="page-link border-0">@Model.CurrentPage</span></li>
+                        <li class="page-item disabled"><span class="page-link border-0">/ @Model.TotalPages</span></li>
+                    }
+                    
+                    <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link border-0" asp-action="Index"
+                           asp-route-pageNumber="@(Model.CurrentPage + 1)"
+                           asp-route-sortOrder="@Model.SortOrder"
+                           asp-route-currentFilter="@Model.SearchString">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                    <i class="bi bi-search fs-1 text-muted opacity-50"></i>
+                </div>
+            </div>
+            <h3 class="fw-bold text-secondary">Không tìm thấy sản phẩm nào</h3>
+            <p class="text-muted mb-4">Chúng tôi không tìm thấy kết quả nào phù hợp với tìm kiếm của bạn.</p>
+            <a asp-action="Index" class="btn btn-outline-primary rounded-pill px-4">
+                <i class="bi bi-arrow-repeat me-2"></i> Xóa bộ lọc
+            </a>
+        </div>
+    }
 </div>

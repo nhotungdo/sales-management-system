@@ -4,10 +4,12 @@ using Microsoft.EntityFrameworkCore;
 using Sales_Management.Data;
 using Sales_Management.Models;
 using Sales_Management.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Sales_Management.Areas.Sale.Controllers
 {
     [Area("Sale")]
+    [Authorize(Roles = "Sales, Admin")]
     public class ProductsController : Controller
     {
         private readonly SalesManagementContext _context;
