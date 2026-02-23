@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
-using Sales_Management.Data; // Đảm bảo namespace này chứa SalesManagementContext
+using Sales_Management.Data; 
 using Sales_Management.Services;
 using Sales_Management.Hubs;
 
@@ -39,6 +39,8 @@ builder.Services.AddSession(options =>
 
 // Background Services
 builder.Services.AddHostedService<VoucherExpirationService>();
+// --- THÊM DÒNG DƯỚI ĐÂY ĐỂ CHẠY TỰ ĐỘNG HOÀN KHO GIỎ HÀNG ---
+builder.Services.AddHostedService<CartAutoReleaseService>();
 
 var app = builder.Build();
 

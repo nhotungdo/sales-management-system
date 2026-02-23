@@ -85,7 +85,7 @@
                     </div>
 
                     <div class="d-flex gap-3 mt-5">
-                        <button type="button" class="btn btn-primary btn-lg rounded-pill px-5 flex-grow-1 shadow-sm hover-elevate">
+                        <button type="button" onclick="addToCart(@Model.ProductId)" class="btn btn-primary btn-lg rounded-pill px-5 flex-grow-1 shadow-sm hover-elevate">
                             <i class="bi bi-cart-plus me-2"></i> Thêm vào giỏ
                         </button>
 
@@ -260,4 +260,37 @@
         var value = parseInt(input.value);
         if (value > 1) input.value = value - 1;
     }
+
+    function addToCart(productId) {
+    var qty = document.getElementById('quantityInput').value;
+    
+    $.ajax({
+        url: '/Cart/AddToCart',
+        type: 'POST',
+        data: { 
+            productId: productId, 
+            quantity: qty 
+        },
+        success: function (response) {
+            if (response.success) {
+                Swal.fire({
+                    title: 'Thành công!',
+                    text: 'Đã thêm vào giỏ hàng',
+                    icon: 'success',
+                    showConfirmButton: false, 
+                    timer: 1000, 
+                    timerProgressBar: true 
+                }).then(() => {
+                    location.reload(); 
+                });
+            } else {
+                Swal.fire('Lỗi!', response.message, 'error');
+            }
+        },
+        error: function () {
+            Swal.fire('Lỗi!', 'Không thể kết nối đến máy chủ', 'error');
+        }
+    });
+}
+}
 </script>

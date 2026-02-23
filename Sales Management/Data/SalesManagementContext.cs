@@ -52,6 +52,8 @@ public partial class SalesManagementContext : DbContext
 
     public virtual DbSet<VipPackage> VipPackages { get; set; }
 
+    public virtual DbSet<CartItem> CartItems { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Category>(entity =>
