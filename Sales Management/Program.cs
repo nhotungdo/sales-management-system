@@ -1,19 +1,21 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
-using Sales_Management.Data; 
+using Sales_Management.Data;
 using Sales_Management.Services;
 using Sales_Management.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// 1. Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 
-// Giữ nguyên chuỗi kết nối DBDefault của bạn
+// Kết nối Database
+var connectionString = builder.Configuration.GetConnectionString("DBDefault");
 builder.Services.AddDbContext<SalesManagementContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DBDefault")));
+    options.UseSqlServer(connectionString));
 
+// Cấu hình Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -24,12 +26,11 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
     });
 
-// Register AuthService & các dịch vụ khác
+// Đăng ký các dịch vụ Dependency Injection
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICoinService, CoinService>();
-// Nếu bạn có thêm CustomerService thì đăng ký tại đây
 
-// Add Session
+// Cấu hình Session
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -37,14 +38,13 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// Background Services
+// Đăng ký Background Services (Chạy ngầm)
 builder.Services.AddHostedService<VoucherExpirationService>();
-// --- THÊM DÒNG DƯỚI ĐÂY ĐỂ CHẠY TỰ ĐỘNG HOÀN KHO GIỎ HÀNG ---
 builder.Services.AddHostedService<CartAutoReleaseService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// 2. Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -53,10 +53,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 
-// Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -66,6 +64,7 @@ app.UseMiddleware<Sales_Management.Middleware.SalesSessionMiddleware>();
 // Session
 app.UseSession();
 
+// Cấu hình Routing
 app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}"

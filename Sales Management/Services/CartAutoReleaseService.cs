@@ -16,51 +16,58 @@ namespace Sales_Management.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Cart Auto-Release Service đang chạy...");
+            _logger.LogInformation("Cart Auto-Release Service is starting.");
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                using (var scope = _services.CreateScope())
+                try
                 {
-                    var context = scope.ServiceProvider.GetRequiredService<SalesManagementContext>();
-                    var now = DateTime.Now;
-
-                    // 1. Lấy danh sách các sản phẩm trong giỏ đã quá 30 phút mà chưa thanh toán
-                    var expiredItems = await context.CartItems
-                        .Include(c => c.Product)
-                        .Where(c => c.ExpiryTime < now)
-                        .ToListAsync();
-
-                    if (expiredItems.Any())
+                    using (var scope = _services.CreateScope())
                     {
-                        foreach (var item in expiredItems)
+                        var context = scope.ServiceProvider.GetRequiredService<SalesManagementContext>();
+                        var now = DateTime.Now;
+
+                        // 1. Lấy danh sách hết hạn
+                        var expiredItems = await context.CartItems
+                            .Include(c => c.Product)
+                            .Where(c => c.ExpiryTime < now)
+                            .ToListAsync(stoppingToken);
+
+                        if (expiredItems.Any())
                         {
-                            if (item.Product != null)
+                            foreach (var item in expiredItems)
                             {
-                                // 2. Hoàn trả số lượng vào kho thực tế
-                                item.Product.StockQuantity += item.Quantity;
-
-                                // 3. Ghi nhật ký hoàn kho để Admin theo dõi
-                                context.InventoryTransactions.Add(new Models.InventoryTransaction
+                                if (item.Product != null)
                                 {
-                                    ProductId = item.ProductId,
-                                    Quantity = item.Quantity,
-                                    Type = "Auto-Release-Expired",
-                                    CreatedDate = DateTime.Now,
-                                    CreatedBy = 0 // Hệ thống tự động
-                                });
+                                    // 2. Hoàn tồn kho
+                                    item.Product.StockQuantity += item.Quantity;
 
-                                _logger.LogInformation($"Đã hoàn lại {item.Quantity} sản phẩm (ID: {item.ProductId}) do hết hạn giỏ hàng.");
+                                    // 3. Ghi lịch sử kho
+                                    context.InventoryTransactions.Add(new Models.InventoryTransaction
+                                    {
+                                        ProductId = item.ProductId,
+                                        Quantity = item.Quantity,
+                                        Type = "Auto-Release",
+                                        CreatedDate = DateTime.Now,
+                                        CreatedBy = 3 // Đảm bảo ID này luôn tồn tại trong bảng Users
+                                    });
+                                }
                             }
-                        }
 
-                        // 4. Xóa các mục đã hết hạn khỏi bảng CartItems
-                        context.CartItems.RemoveRange(expiredItems);
-                        await context.SaveChangesAsync();
+                            // 4. Xóa khỏi giỏ và lưu thay đổi
+                            context.CartItems.RemoveRange(expiredItems);
+                            await context.SaveChangesAsync(stoppingToken);
+
+                            _logger.LogInformation($"Successfully released {expiredItems.Count} expired cart items.");
+                        }
                     }
                 }
+                catch (Exception ex) when (!(ex is OperationCanceledException))
+                {
+                    _logger.LogError(ex, "Error occurred while releasing expired cart items.");
+                }
 
-                // 5. Nghỉ 1 phút rồi quét lại một lần
+                // Quét lại sau mỗi 1 phút
                 await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
             }
         }
