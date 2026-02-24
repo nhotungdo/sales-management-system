@@ -1,37 +1,39 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Sales_Management.Data;
 using Sales_Management.Services;
 using Sales_Management.ViewModels;
-using System.Security.Claims;
 
 namespace Sales_Management.Controllers
 {
     public class AccountController : Controller
     {
         private readonly IAuthService _authService;
+        private readonly SalesManagementContext _context;
 
-        public AccountController(IAuthService authService)
+        public AccountController(IAuthService authService, SalesManagementContext context)
         {
             _authService = authService;
+            _context = context;
         }
 
-        // GET: /Account/Login
         [HttpGet]
         public IActionResult Login(string? returnUrl = null)
         {
+            if (User.Identity.IsAuthenticated) return RedirectToAction("Index", "Home");
             ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
 
-        // POST: /Account/Login
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
-            if (!ModelState.IsValid)
-                return View(model);
+            if (!ModelState.IsValid) return View(model);
 
             var user = await _authService.ValidateUser(model.Username, model.Password);
 
@@ -41,7 +43,6 @@ namespace Sales_Management.Controllers
                 return View(model);
             }
 
-            // Tạo claims
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
@@ -60,18 +61,16 @@ namespace Sales_Management.Controllers
                 new AuthenticationProperties
                 {
                     IsPersistent = model.RememberMe,
-                    ExpiresUtc = model.RememberMe 
-                        ? DateTimeOffset.UtcNow.AddDays(30) 
+                    ExpiresUtc = model.RememberMe
+                        ? DateTimeOffset.UtcNow.AddDays(30)
                         : DateTimeOffset.UtcNow.AddHours(1)
                 });
 
-            // Auto Check-in for Sales
             if (user.Role == "Sales")
             {
                 await _authService.CheckInSalesEmployee(user.UserId);
             }
 
-            // Redirect theo role
             if (user.Role == "Admin")
                 return RedirectToAction("Index", "Home", new { area = "Admin" });
             else if (user.Role == "Sales")
@@ -80,20 +79,17 @@ namespace Sales_Management.Controllers
                 return RedirectToAction("Index", "Home");
         }
 
-        // GET: /Account/Register
         [HttpGet]
         public IActionResult Register()
         {
             return View();
         }
 
-        // POST: /Account/Register
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
-            if (!ModelState.IsValid)
-                return View(model);
+            if (!ModelState.IsValid) return View(model);
 
             var user = await _authService.RegisterUser(
                 model.Username,
@@ -113,13 +109,11 @@ namespace Sales_Management.Controllers
             return RedirectToAction(nameof(Login));
         }
 
-        // POST: /Account/Logout
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
         public async Task<IActionResult> Logout(string? reason = null)
         {
-            // Auto Check-out for Sales
             if (User.IsInRole("Sales"))
             {
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -131,6 +125,112 @@ namespace Sales_Management.Controllers
 
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> Profile()
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return RedirectToAction(nameof(Login));
+
+            var profile = await (from u in _context.Users
+                                 join c in _context.Customers on u.UserId equals c.UserId
+                                 join w in _context.Wallets on c.CustomerId equals w.CustomerId
+                                 where u.UserId == userId
+                                 select new CustomerProfileViewModel
+                                 {
+                                     FullName = u.FullName,
+                                     Email = u.Email,
+                                     PhoneNumber = u.PhoneNumber,
+                                     Address = c.Address,
+                                     Avatar = u.Avatar,
+                                     CreatedDate = u.CreatedDate,
+                                     CustomerLevel = c.CustomerLevel,
+                                     WalletBalance = w.Balance ?? 0,
+                                     WalletStatus = w.Status,
+                                     WalletUpdatedDate = w.UpdatedDate,
+                                     Transactions = _context.WalletTransactions
+                                         .Where(t => t.WalletId == w.WalletId)
+                                         .OrderByDescending(t => t.CreatedDate)
+                                         .Select(t => new WalletTransactionViewModel
+                                         {
+                                             TransactionCode = t.TransactionCode,
+                                             Amount = t.Amount,
+                                             Type = t.TransactionType,
+                                             Status = t.Status,
+                                             CreatedDate = t.CreatedDate ?? DateTime.Now,
+                                             Description = t.Description
+                                         }).ToList(),
+                                     Orders = _context.Orders
+                                        .Where(o => o.CustomerId == c.CustomerId)
+                                        .OrderByDescending(o => o.OrderDate)
+                                        .Select(o => new OrderHistoryViewModel
+                                        {
+                                            OrderId = o.OrderId,
+                                            OrderDate = o.OrderDate ?? DateTime.Now,
+                                            TotalAmount = o.TotalAmount ?? 0,
+                                            Status = o.Status,
+                                            ProductNames = string.Join(", ", _context.OrderDetails
+                                                .Where(od => od.OrderId == o.OrderId)
+                                                .Select(od => od.Product.Name))
+                                        }).ToList()
+                                 }).FirstOrDefaultAsync();
+
+            if (profile == null) return NotFound();
+
+            return View(profile);
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateProfile(string FullName, string Email, string PhoneNumber, string Address, IFormFile AvatarFile)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId)) return RedirectToAction(nameof(Login));
+
+            var user = await _context.Users.FindAsync(userId);
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (user == null || customer == null) return NotFound();
+
+            if (user.Email != Email)
+            {
+                bool emailExists = await _context.Users.AnyAsync(u => u.Email == Email && u.UserId != userId);
+                if (emailExists)
+                {
+                    TempData["Error"] = "Email này đã được sử dụng bởi tài khoản khác.";
+                    return RedirectToAction(nameof(Profile));
+                }
+                user.Email = Email;
+            }
+
+            user.FullName = FullName;
+            user.PhoneNumber = PhoneNumber;
+            customer.Address = Address;
+
+            if (AvatarFile != null && AvatarFile.Length > 0)
+            {
+                string uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/img/avatars");
+                if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
+
+                string fileName = Guid.NewGuid().ToString() + Path.GetExtension(AvatarFile.FileName);
+                string filePath = Path.Combine(uploadDir, fileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await AvatarFile.CopyToAsync(fileStream);
+                }
+                user.Avatar = "/img/avatars/" + fileName;
+            }
+
+            _context.Update(user);
+            _context.Update(customer);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Cập nhật thông tin thành công!";
+            return RedirectToAction(nameof(Profile));
         }
     }
 }

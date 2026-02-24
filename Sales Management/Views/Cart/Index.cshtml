@@ -1,0 +1,137 @@
+﻿@model List<Sales_Management.ViewModels.CartItemViewModel>
+
+@{
+    ViewData["Title"] = "Giỏ hàng của tôi";
+}
+
+<div class="container py-5">
+    <h2 class="mb-4"><i class="bi bi-cart3 me-2"></i>Giỏ hàng của bạn</h2>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="text-center py-5 shadow-sm rounded-4 bg-white">
+            <i class="bi bi-cart-x display-1 text-muted opacity-25"></i>
+            <p class="lead mt-3 text-muted">Giỏ hàng đang trống.</p>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary rounded-pill px-4">Tiếp tục mua sắm</a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Sản phẩm</th>
+                                    <th>Giá</th>
+                                    <th>Số lượng</th>
+                                    <th>Tổng</th>
+                                    <th class="pe-4"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <img src="@item.ImageUrl" class="rounded-3 shadow-sm" style="width: 60px; height: 60px; object-fit: cover;">
+                                                <span class="fw-bold">@item.Name</span>
+                                            </div>
+                                        </td>
+                                        <td>@item.Price.ToString("N0") xu</td>
+                                        <td>
+                                            <div class="fw-semibold">@item.Quantity</div>
+                                        </td>
+                                        <td class="text-primary fw-bold">@item.Total.ToString("N0") xu</td>
+                                        <td class="pe-4 text-end">
+                                            <button class="btn btn-outline-danger btn-sm border-0" onclick="removeFromCart(@item.ProductId)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4">
+                    <h4 class="mb-4">Tổng cộng</h4>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Tạm tính:</span>
+                        <span class="fw-bold">@Model.Sum(x => x.Total).ToString("N0") xu</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-4">
+                        <span class="fs-5 fw-bold">Tổng thanh toán:</span>
+                        <span class="fs-5 fw-bold text-primary">@Model.Sum(x => x.Total).ToString("N0") xu</span>
+                    </div>
+                    <button onclick="checkout()" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm">
+                        Thanh toán ngay
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <script>
+        function removeFromCart(productId) {
+            Swal.fire({
+                title: 'Xác nhận xóa?',
+                text: "Bạn có chắc muốn bỏ sản phẩm này khỏi giỏ hàng?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('/Cart/RemoveFromCart', { productId: productId }, function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Đã xóa!',
+                                text: response.message,
+                                showConfirmButton: false,
+                                timer: 1500
+                            }).then(() => {
+                                location.reload();
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        function checkout() {
+            Swal.fire({
+                title: 'Xác nhận thanh toán',
+                text: "Hệ thống sẽ trừ xu từ ví của bạn để thanh toán đơn hàng này.",
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Xác nhận thanh toán',
+                cancelButtonText: 'Kiểm tra lại'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('/Cart/Checkout', function (response) {
+                        if (response.success) {
+                            Swal.fire('Thành công!', response.message, 'success').then(() => {
+                                window.location.href = '/Orders/Index'; // Chuyển đến lịch sử đơn hàng
+                            });
+                        } else {
+                            Swal.fire('Thanh toán thất bại', response.message, 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+</div>

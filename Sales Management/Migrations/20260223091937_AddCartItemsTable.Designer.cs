@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Sales_Management.Data;
 
@@ -11,9 +12,11 @@ using Sales_Management.Data;
 namespace Sales_Management.Migrations
 {
     [DbContext(typeof(SalesManagementContext))]
-    partial class SalesManagementContextModelSnapshot : ModelSnapshot
+    [Migration("20260223091937_AddCartItemsTable")]
+    partial class AddCartItemsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -245,9 +248,6 @@ namespace Sales_Management.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int?>("ShiftId")
-                        .HasColumnType("int");
-
                     b.Property<DateOnly?>("StartWorkingDate")
                         .HasColumnType("date");
 
@@ -256,8 +256,6 @@ namespace Sales_Management.Migrations
 
                     b.HasKey("EmployeeId")
                         .HasName("PK__Employee__7AD04F11523887C0");
-
-                    b.HasIndex("ShiftId");
 
                     b.HasIndex(new[] { "UserId" }, "UQ__Employee__1788CC4D33A8FEBD")
                         .IsUnique();
@@ -705,30 +703,6 @@ namespace Sales_Management.Migrations
                     b.ToTable("Promotions");
                 });
 
-            modelBuilder.Entity("Sales_Management.Models.Shift", b =>
-                {
-                    b.Property<int>("ShiftId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ShiftId"));
-
-                    b.Property<TimeSpan>("EndTime")
-                        .HasColumnType("time");
-
-                    b.Property<string>("ShiftName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<TimeSpan>("StartTime")
-                        .HasColumnType("time");
-
-                    b.HasKey("ShiftId");
-
-                    b.ToTable("Shifts");
-                });
-
             modelBuilder.Entity("Sales_Management.Models.SystemSetting", b =>
                 {
                     b.Property<string>("SettingKey")
@@ -774,17 +748,12 @@ namespace Sales_Management.Migrations
                     b.Property<string>("Platform")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("ShiftId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("AttendanceId");
 
                     b.HasIndex("EmployeeId");
-
-                    b.HasIndex("ShiftId");
 
                     b.ToTable("TimeAttendances");
                 });
@@ -1082,19 +1051,12 @@ namespace Sales_Management.Migrations
 
             modelBuilder.Entity("Sales_Management.Models.Employee", b =>
                 {
-                    b.HasOne("Sales_Management.Models.Shift", "Shift")
-                        .WithMany("Employees")
-                        .HasForeignKey("ShiftId")
-                        .HasConstraintName("FK_Employees_Shifts");
-
                     b.HasOne("Sales_Management.Models.User", "User")
                         .WithOne("Employee")
                         .HasForeignKey("Sales_Management.Models.Employee", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK__Employees__UserI__4316F928");
-
-                    b.Navigation("Shift");
 
                     b.Navigation("User");
                 });
@@ -1234,14 +1196,7 @@ namespace Sales_Management.Migrations
                         .HasForeignKey("EmployeeId")
                         .IsRequired();
 
-                    b.HasOne("Sales_Management.Models.Shift", "Shift")
-                        .WithMany("TimeAttendances")
-                        .HasForeignKey("ShiftId")
-                        .HasConstraintName("FK_TimeAttendances_Shifts");
-
                     b.Navigation("Employee");
-
-                    b.Navigation("Shift");
                 });
 
             modelBuilder.Entity("Sales_Management.Models.Wallet", b =>
@@ -1316,13 +1271,6 @@ namespace Sales_Management.Migrations
             modelBuilder.Entity("Sales_Management.Models.Promotion", b =>
                 {
                     b.Navigation("OrderPromotions");
-                });
-
-            modelBuilder.Entity("Sales_Management.Models.Shift", b =>
-                {
-                    b.Navigation("Employees");
-
-                    b.Navigation("TimeAttendances");
                 });
 
             modelBuilder.Entity("Sales_Management.Models.User", b =>

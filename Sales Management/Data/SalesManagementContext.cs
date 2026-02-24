@@ -52,6 +52,7 @@ public partial class SalesManagementContext : DbContext
 
     public virtual DbSet<VipPackage> VipPackages { get; set; }
 
+    public virtual DbSet<CartItem> CartItems { get; set; }
     public virtual DbSet<Shift> Shifts { get; set; }
 
 
