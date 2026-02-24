@@ -215,6 +215,7 @@
     }
 </style>
 
+@section Scripts {
 <script>
     function confirmPurchaseDetail() {
         var qty = document.getElementById('quantityInput').value;
@@ -238,14 +239,12 @@
 
     function changeImage(src, element) {
         document.getElementById('mainImage').src = src;
-        document.querySelectorAll('.product-thumb').forEach(el => {
+        document.querySelectorAll('.product-thumb, .cursor-pointer').forEach(el => {
             el.classList.add('opacity-50');
             el.classList.remove('border', 'border-primary', 'opacity-100');
         });
-        if (element.classList.contains('product-thumb')) {
-            element.classList.remove('opacity-50');
-            element.classList.add('border', 'border-primary', 'opacity-100');
-        }
+        element.classList.remove('opacity-50');
+        element.classList.add('border', 'border-primary', 'opacity-100');
     }
 
     function incrementQty() {
@@ -262,35 +261,36 @@
     }
 
     function addToCart(productId) {
-    var qty = document.getElementById('quantityInput').value;
-    
-    $.ajax({
-        url: '/Cart/AddToCart',
-        type: 'POST',
-        data: { 
-            productId: productId, 
-            quantity: qty 
-        },
-        success: function (response) {
-            if (response.success) {
-                Swal.fire({
-                    title: 'Thành công!',
-                    text: 'Đã thêm vào giỏ hàng',
-                    icon: 'success',
-                    showConfirmButton: false, 
-                    timer: 1000, 
-                    timerProgressBar: true 
-                }).then(() => {
-                    location.reload(); 
-                });
-            } else {
-                Swal.fire('Lỗi!', response.message, 'error');
+        var qty = document.getElementById('quantityInput').value;
+        
+        $.ajax({
+            url: '/Cart/AddToCart',
+            type: 'POST',
+            data: { 
+                productId: productId, 
+                quantity: qty 
+            },
+            success: function (response) {
+                if (response.success) {
+                    Swal.fire({
+                        title: 'Thành công!',
+                        text: 'Đã thêm vào giỏ hàng',
+                        icon: 'success',
+                        showConfirmButton: false, 
+                        timer: 1000, 
+                        timerProgressBar: true 
+                    }).then(() => {
+                        // Tùy chọn: reload hoặc cập nhật số icon giỏ hàng
+                        location.reload(); 
+                    });
+                } else {
+                    Swal.fire('Lỗi!', response.message, 'error');
+                }
+            },
+            error: function () {
+                Swal.fire('Lỗi!', 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại jQuery.', 'error');
             }
-        },
-        error: function () {
-            Swal.fire('Lỗi!', 'Không thể kết nối đến máy chủ', 'error');
-        }
-    });
-}
-}
+        });
+    } 
 </script>
+}
