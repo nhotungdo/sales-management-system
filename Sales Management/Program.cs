@@ -60,7 +60,10 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Session - Đặt sau Authorization để đảm bảo an toàn
+// Middleware kiểm tra Session cho Sales
+app.UseMiddleware<Sales_Management.Middleware.SalesSessionMiddleware>();
+
+// Session
 app.UseSession();
 
 app.MapControllerRoute(

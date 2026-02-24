@@ -5,6 +5,8 @@ VisualStudioVersion = 17.14.36811.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sales Management", "Sales Management\Sales Management.csproj", "{ABCE74F6-C043-4FA8-95D1-712DAB99E857}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sales Management.Tests", "Sales Management.Tests\Sales Management.Tests.csproj", "{88695DA7-ECE7-4A43-A53A-9ACCB7E844D6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,18 @@ Global
 		{ABCE74F6-C043-4FA8-95D1-712DAB99E857}.Release|x64.Build.0 = Release|Any CPU
 		{ABCE74F6-C043-4FA8-95D1-712DAB99E857}.Release|x86.ActiveCfg = Release|Any CPU
 		{ABCE74F6-C043-4FA8-95D1-712DAB99E857}.Release|x86.Build.0 = Release|Any CPU
+		{88695DA7-ECE7-4A43-A53A-9ACCB7E844D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88695DA7-ECE7-4A43-A53A-9ACCB7E844D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88695DA7-ECE7-4A43-A53A-9ACCB7E844D6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{88695DA7-ECE7-4A43-A53A-9ACCB7E844D6}.Debug|x64.Build.0 = Debug|Any CPU
+		{88695DA7-ECE7-4A43-A53A-9ACCB7E844D6}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{88695DA7-ECE7-4A43-A53A-9ACCB7E844D6}.Debug|x86.Build.0 = Debug|Any CPU
+		{88695DA7-ECE7-4A43-A53A-9ACCB7E844D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88695DA7-ECE7-4A43-A53A-9ACCB7E844D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88695DA7-ECE7-4A43-A53A-9ACCB7E844D6}.Release|x64.ActiveCfg = Release|Any CPU
+		{88695DA7-ECE7-4A43-A53A-9ACCB7E844D6}.Release|x64.Build.0 = Release|Any CPU
+		{88695DA7-ECE7-4A43-A53A-9ACCB7E844D6}.Release|x86.ActiveCfg = Release|Any CPU
+		{88695DA7-ECE7-4A43-A53A-9ACCB7E844D6}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

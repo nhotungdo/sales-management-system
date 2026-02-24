@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Sales_Management.Models;
 using Sales_Management.Data;
 using Sales_Management.ViewModels;
+using System.Linq;
 
 namespace Sales_Management.Controllers
 {
@@ -70,21 +71,25 @@ namespace Sales_Management.Controllers
             }
 
             int pageSize = 12;
-            int pageNumber = (page ?? 1);
+            int pageNumber = page ?? 1;
             int count = await products.CountAsync();
-            
-            // Ensure page number is valid
-            if (pageNumber < 1) pageNumber = 1;
-            int totalPages = (int)Math.Ceiling(count / (double)pageSize);
-            if (pageNumber > totalPages && totalPages > 0) pageNumber = totalPages;
 
-            var items = await products.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+            if (pageNumber < 1) pageNumber = 1;
+
+            int totalPages = (int)Math.Ceiling(count / (double)pageSize);
+            if (pageNumber > totalPages && totalPages > 0)
+                pageNumber = totalPages;
+
+            var items = await products
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
 
             var viewModel = new HomeProductViewModel
             {
                 Products = items,
-                CurrentPage = pageNumber,
-                TotalPages = totalPages,
+                CurrentPage = (int)pageNumber,
+                TotalPages = (int)totalPages,
                 SearchString = searchString,
                 SortOrder = sortOrder
             };
