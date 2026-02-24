@@ -1,17 +1,57 @@
 using Microsoft.EntityFrameworkCore;
 using Sales_Management.Data;
 using Sales_Management.Models;
-using BCrypt.Net;
+// using BCrypt.Net;
+using Microsoft.AspNetCore.SignalR;
+using Sales_Management.Hubs;
 
 namespace Sales_Management.Services
 {
     public class AuthService : IAuthService
     {
         private readonly SalesManagementContext _context;
+        private readonly IHubContext<SystemHub> _hubContext;
 
-        public AuthService(SalesManagementContext context)
+        public AuthService(SalesManagementContext context, IHubContext<SystemHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
+        }
+
+
+
+        public async Task<string> GetSalesCheckInStatus(int userId)
+        {
+             var user = await _context.Users
+                .Include(u => u.Employee)
+                .FirstOrDefaultAsync(u => u.UserId == userId);
+
+             if (user == null || user.Role != "Sales") return "Error";
+             
+
+             if (user.Employee == null) return "None"; // No employee record, treated as fresh
+
+             var today = DateOnly.FromDateTime(DateTime.Now);
+
+             // Check active session
+             var activeSession = await _context.TimeAttendances
+                .OrderByDescending(t => t.AttendanceId)
+                .FirstOrDefaultAsync(t => 
+                    t.EmployeeId == user.Employee.EmployeeId && 
+                    t.Date == today &&
+                    t.CheckOutTime == null);
+
+             if (activeSession != null) return activeSession.Status ?? "Present";
+
+             // Check last Closed session today
+             var lastSession = await _context.TimeAttendances
+                .Where(t => t.EmployeeId == user.Employee.EmployeeId && t.Date == today)
+                 .OrderByDescending(t => t.CheckOutTime)
+                .FirstOrDefaultAsync();
+             
+             if (lastSession != null) return lastSession.Status ?? "checked-out";
+
+             return "None";
         }
 
         public async Task<User?> ValidateUser(string username, string password)
@@ -106,8 +146,29 @@ namespace Sales_Management.Services
                 .Include(u => u.Employee)
                 .FirstOrDefaultAsync(u => u.UserId == userId);
 
-            if (user == null || user.Role != "Sales" || user.Employee == null)
-                return;
+            if (user == null || user.Role != "Sales") return;
+
+            // Auto-create Employee if missing
+            if (user.Employee == null)
+            {
+                var newEmp = new Employee
+                {
+                    UserId = user.UserId,
+                    Position = "Sales Staff",
+                    BasicSalary = 5000000,
+                    ContractType = "FullTime",
+                    StartWorkingDate = DateOnly.FromDateTime(DateTime.Now),
+                    Department = "Sales",
+                    IsDeleted = false
+                };
+                _context.Employees.Add(newEmp);
+                await _context.SaveChangesAsync();
+
+                // Manually attach if possible, or reload
+                user.Employee = newEmp;
+            }
+
+            if (user.Employee == null) return;
 
             var today = DateOnly.FromDateTime(DateTime.Now);
             
@@ -120,12 +181,26 @@ namespace Sales_Management.Services
 
             if (activeSession == null)
             {
+                // Determine Shift
+                int? shiftId = user.Employee.ShiftId;
+                
+                // If no assigned shift, try to find a matching one
+                if (shiftId == null)
+                {
+                    // Fallback: Find shift that covers current time
+                    var timeNow = DateTime.Now.TimeOfDay;
+                    var matchedShift = await _context.Shifts
+                        .FirstOrDefaultAsync(s => s.StartTime <= timeNow && s.EndTime >= timeNow);
+                    shiftId = matchedShift?.ShiftId;
+                }
+
                 var attendance = new TimeAttendance
                 {
                     EmployeeId = user.Employee.EmployeeId,
+                    ShiftId = shiftId, 
                     Date = today,
                     CheckInTime = DateTime.Now,
-                    Status = "Present",
+                    Status = "Checked in",
                     Platform = "Web"
                 };
                 _context.TimeAttendances.Add(attendance);
@@ -155,18 +230,59 @@ namespace Sales_Management.Services
             {
                 activeSession.CheckOutTime = DateTime.Now;
                 
-                if (string.IsNullOrWhiteSpace(reason))
+                // Rule (2): Early logout verification
+                Shift? shift = null;
+                if (activeSession.ShiftId != null)
                 {
-                    activeSession.Status = "Check-out"; // As per requirement for no reason provided
-                    activeSession.Notes = "No reason provided";
+                    shift = await _context.Shifts.FindAsync(activeSession.ShiftId);
+                }
+                
+                bool isEarly = false;
+                if (shift != null)
+                {
+                    var timeNow = DateTime.Now.TimeOfDay;
+                    // If current time is strictly before end time
+                    if (timeNow < shift.EndTime)
+                    {
+                        isEarly = true;
+                    }
+                }
+
+                if (isEarly && string.IsNullOrWhiteSpace(reason))
+                {
+                    activeSession.Status = "Early shift end without reason";
+                    activeSession.Notes = "Automatic detection: Early Logout";
+                    
+                    // Real-time notification
+                    await _hubContext.Clients.All.SendAsync("ReceiveUpdate", 
+                        $"ALERT: Employee {user.FullName} ({user.Username}) ended shift early at {DateTime.Now:HH:mm} without reason!");
                 }
                 else
                 {
+                    activeSession.Status = "CheckedOut";
                     activeSession.Notes = reason;
                 }
                 
                 await _context.SaveChangesAsync();
             }
+        }
+
+
+        public async Task<List<TimeAttendance>> GetRecentAttendance(int userId, int count)
+        {
+            var user = await _context.Users
+                .Include(u => u.Employee)
+                .FirstOrDefaultAsync(u => u.UserId == userId);
+
+            if (user == null || user.Employee == null)
+                return new List<TimeAttendance>();
+
+            return await _context.TimeAttendances
+                .Where(t => t.EmployeeId == user.Employee.EmployeeId)
+                .OrderByDescending(t => t.Date)
+                .ThenByDescending(t => t.CheckInTime)
+                .Take(count)
+                .ToListAsync();
         }
     }
 }

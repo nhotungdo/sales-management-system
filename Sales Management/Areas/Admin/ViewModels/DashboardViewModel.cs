@@ -15,5 +15,7 @@ namespace Sales_Management.Areas.Admin.ViewModels
         public List<int> RevenueData { get; set; } = new List<int>(); // 12 months
         public List<string> CategoryLabels { get; set; } = new List<string>();
         public List<int> CategoryData { get; set; } = new List<int>();
+        
+        public List<TimeAttendance> PendingReloginRequests { get; set; } = new List<TimeAttendance>();
     }
 }

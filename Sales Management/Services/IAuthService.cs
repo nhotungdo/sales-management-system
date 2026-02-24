@@ -8,5 +8,8 @@ namespace Sales_Management.Services
         Task<User?> RegisterUser(string username, string email, string password, string? fullName, string? phoneNumber);
         Task CheckInSalesEmployee(int userId);
         Task CheckOutSalesEmployee(int userId, string reason);
+
+        Task<string> GetSalesCheckInStatus(int userId);
+        Task<List<TimeAttendance>> GetRecentAttendance(int userId, int count);
     }
 }

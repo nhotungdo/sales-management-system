@@ -24,7 +24,7 @@
         </p>
 
         <h4 class="text-danger">
-            @((Model.SellingPrice / 10).ToString("N0", new System.Globalization.CultureInfo("vi-VN")) ?? "0") xu
+            @((Model.SellingPrice / 10).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) đ
         </h4>
         @if (Model.CoinPrice.HasValue)
         {
@@ -50,7 +50,10 @@
             ⭐⭐⭐☆☆ (3.6/5)
         </div>
 
-        <a href="@ViewBag.ReturnUrl" class="btn btn-secondary mt-4">
+        <a asp-area="Sale"
+           asp-controller="Products"
+           asp-action="Index"
+           class="btn btn-secondary mt-4">
             Back
         </a>
     </div>

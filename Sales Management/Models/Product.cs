@@ -18,6 +18,8 @@ public partial class Product
 
     public int CategoryId { get; set; }
 
+    [Required(ErrorMessage = "Giá nhập là bắt buộc")]
+    [Range(0.01, double.MaxValue, ErrorMessage = "Giá nhập phải lớn hơn 0")]
     public decimal? ImportPrice { get; set; }
 
     [Required]
