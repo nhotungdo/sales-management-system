@@ -114,15 +114,48 @@ namespace Sales_Management.Controllers
         [Authorize]
         public async Task<IActionResult> Logout(string? reason = null)
         {
-            if (User.IsInRole("Sales"))
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+                // 1. XỬ LÝ GIỎ HÀNG TRƯỚC KHI LOGOUT
+                var cartItems = await _context.CartItems
+                    .Include(c => c.Product)
+                    .Where(c => c.Id == userId)
+                    .ToListAsync();
+
+                if (cartItems.Any())
+                {
+                    foreach (var item in cartItems)
+                    {
+                        if (item.Product != null)
+                        {
+                            // Hoàn tồn kho
+                            item.Product.StockQuantity += item.Quantity;
+
+                            // Ghi lịch sử kho (Type = "Logout-Release")
+                            _context.InventoryTransactions.Add(new Models.InventoryTransaction
+                            {
+                                ProductId = item.ProductId,
+                                Quantity = item.Quantity,
+                                Type = "Logout-Release",
+                                CreatedDate = DateTime.Now,
+                                CreatedBy = userId // ID của người logout
+                            });
+                        }
+                    }
+                    // Xóa toàn bộ giỏ hàng của user
+                    _context.CartItems.RemoveRange(cartItems);
+                    await _context.SaveChangesAsync();
+                }
+
+                // 2. XỬ LÝ LOGIC CHECKOUT SALES (Giữ nguyên của bạn)
+                if (User.IsInRole("Sales"))
                 {
                     await _authService.CheckOutSalesEmployee(userId, reason ?? "");
                 }
             }
 
+            // 3. ĐĂNG XUẤT KHỎI COOKIE
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");
         }
