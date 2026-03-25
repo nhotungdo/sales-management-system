@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
 
-namespace Sales_Management.Hubs
+namespace SalesManagement.Web.Hubs
 {
     public class SystemHub : Hub
     {

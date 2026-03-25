@@ -1,19 +1,16 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace Sales_Management.ViewModels
+namespace SalesManagement.Web.ViewModels
 {
     public class LoginViewModel
     {
         [Required(ErrorMessage = "Vui lòng nhập tên đăng nhập")]
-        [Display(Name = "Tên đăng nhập")]
-        public string Username { get; set; } = null!;
+        public string Username { get; set; }
 
         [Required(ErrorMessage = "Vui lòng nhập mật khẩu")]
         [DataType(DataType.Password)]
-        [Display(Name = "Mật khẩu")]
-        public string Password { get; set; } = null!;
+        public string Password { get; set; }
 
-        [Display(Name = "Ghi nhớ đăng nhập")]
         public bool RememberMe { get; set; }
     }
 }

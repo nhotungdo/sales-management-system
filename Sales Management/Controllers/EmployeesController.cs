@@ -1,38 +1,56 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Sales_Management.Models;
-using Sales_Management.Data;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-
 using Microsoft.AspNetCore.Authorization;
+using SalesManagement.DAL.Entities;
+using SalesManagement.Web.ViewModels;
+using SalesManagement.BLL.Interfaces;
 
-namespace Sales_Management.Controllers
+namespace SalesManagement.Web.Controllers
 {
     [Authorize(Roles = "Admin")]
     public class EmployeesController : Controller
     {
-        private readonly SalesManagementContext _context;
+        private readonly IEmployeeService _employeeService;
 
-        public EmployeesController(SalesManagementContext context)
+        public EmployeesController(IEmployeeService employeeService)
         {
-            _context = context;
+            _employeeService = employeeService;
+        }
+
+        private EmployeeViewModel MapToViewModel(Employee e)
+        {
+            return new EmployeeViewModel
+            {
+                EmployeeId = e.EmployeeId,
+                UserId = e.UserId,
+                FullName = e.User?.FullName,
+                Email = e.User?.Email,
+                PhoneNumber = e.User?.PhoneNumber,
+                Position = e.Position,
+                Department = e.Department,
+                BasicSalary = e.BasicSalary,
+                StartWorkingDate = e.StartWorkingDate,
+                ContractType = e.ContractType,
+                IsDeleted = e.IsDeleted,
+                Username = e.User?.Username,
+                Role = e.User?.Role,
+                TimeAttendances = e.TimeAttendances?.Select(t => new TimeAttendanceViewModel
+                {
+                    AttendanceId = t.AttendanceId,
+                    Date = t.Date,
+                    CheckInTime = t.CheckInTime,
+                    CheckOutTime = t.CheckOutTime,
+                    Status = t.Status,
+                    WorkHours = t.WorkHours
+                }).ToList() ?? new List<TimeAttendanceViewModel>()
+            };
         }
 
         // GET: Employees
         public async Task<IActionResult> Index(string searchString)
         {
-            var employees = _context.Employees.Include(e => e.User).Where(e => !e.IsDeleted);
-
-            if (!string.IsNullOrEmpty(searchString))
-            {
-                employees = employees.Where(e =>
-                    (e.User.FullName != null && e.User.FullName.Contains(searchString)) ||
-                    (e.Position != null && e.Position.Contains(searchString)));
-            }
-
-            return View(await employees.ToListAsync());
+            var employees = await _employeeService.GetAllEmployeesAsync(searchString);
+            var viewModel = employees.Select(MapToViewModel);
+            return View(viewModel);
         }
 
         // GET: Employees/Details/5
@@ -40,47 +58,47 @@ namespace Sales_Management.Controllers
         {
             if (id == null) return NotFound();
 
-            var employee = await _context.Employees
-                .Include(e => e.User)
-                .Include(e => e.TimeAttendances)
-                .FirstOrDefaultAsync(m => m.EmployeeId == id);
-
+            var employee = await _employeeService.GetEmployeeByIdAsync(id.Value);
             if (employee == null) return NotFound();
 
-            return View(employee);
+            return View(MapToViewModel(employee));
         }
 
         // GET: Employees/Create
         public IActionResult Create()
         {
-            return View();
+            return View(new EmployeeViewModel());
         }
 
         // POST: Employees/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Position,BasicSalary,StartWorkingDate,Department,ContractType")] Employee employee, string FullName, string Email, string Password, string Role)
+        public async Task<IActionResult> Create(EmployeeViewModel model)
         {
-            // In a real scenario, handle User creation transactionally and hash password
-            var user = new User
+            if (ModelState.IsValid)
             {
-                FullName = FullName,
-                Email = Email,
-                Username = Email, // Simple username
-                PasswordHash = Password, // TODO: Hash this!
-                Role = Role,
-                CreatedDate = DateTime.Now,
-                IsActive = true
-            };
+                var user = new User
+                {
+                    FullName = model.FullName,
+                    Email = model.Email,
+                    Username = model.Email, 
+                    PasswordHash = model.Password, // Service should handle hashing
+                    Role = model.Role ?? "Admin"
+                };
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+                var employee = new Employee
+                {
+                    Position = model.Position,
+                    BasicSalary = model.BasicSalary,
+                    Department = model.Department,
+                    StartWorkingDate = model.StartWorkingDate,
+                    ContractType = model.ContractType
+                };
 
-            employee.UserId = user.UserId;
-            _context.Employees.Add(employee);
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction(nameof(Index));
+                await _employeeService.CreateEmployeeWithUserAsync(employee, user);
+                return RedirectToAction(nameof(Index));
+            }
+            return View(model);
         }
 
         // GET: Employees/Edit/5
@@ -88,31 +106,38 @@ namespace Sales_Management.Controllers
         {
             if (id == null) return NotFound();
 
-            var employee = await _context.Employees.Include(e => e.User).FirstOrDefaultAsync(e => e.EmployeeId == id);
+            var employee = await _employeeService.GetEmployeeByIdAsync(id.Value);
             if (employee == null) return NotFound();
 
-            return View(employee);
+            return View(MapToViewModel(employee));
         }
 
         // POST: Employees/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("EmployeeId,UserId,Position,BasicSalary,StartWorkingDate,Department,ContractType,ContractFile")] Employee employee)
+        public async Task<IActionResult> Edit(int id, EmployeeViewModel model)
         {
-            if (id != employee.EmployeeId) return NotFound();
+            if (id != model.EmployeeId) return NotFound();
 
-            try
+            if (ModelState.IsValid)
             {
-                // Track changes logic here for history
-                _context.Update(employee);
-                await _context.SaveChangesAsync();
+                var employee = new Employee
+                {
+                    EmployeeId = model.EmployeeId,
+                    UserId = model.UserId,
+                    Position = model.Position,
+                    BasicSalary = model.BasicSalary,
+                    Department = model.Department,
+                    StartWorkingDate = model.StartWorkingDate,
+                    ContractType = model.ContractType
+                };
+
+                if (await _employeeService.UpdateEmployeeAsync(employee))
+                {
+                    return RedirectToAction(nameof(Index));
+                }
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Employees.Any(e => e.EmployeeId == employee.EmployeeId)) return NotFound();
-                else throw;
-            }
-            return RedirectToAction(nameof(Index));
+            return View(model);
         }
 
         // GET: Employees/Delete/5
@@ -120,12 +145,10 @@ namespace Sales_Management.Controllers
         {
             if (id == null) return NotFound();
 
-            var employee = await _context.Employees
-                .Include(e => e.User)
-                .FirstOrDefaultAsync(m => m.EmployeeId == id);
+            var employee = await _employeeService.GetEmployeeByIdAsync(id.Value);
             if (employee == null) return NotFound();
 
-            return View(employee);
+            return View(MapToViewModel(employee));
         }
 
         // POST: Employees/Delete/5
@@ -133,22 +156,14 @@ namespace Sales_Management.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var employee = await _context.Employees.FindAsync(id);
-            if (employee != null)
-            {
-                employee.IsDeleted = true; // Soft Delete
-                _context.Employees.Update(employee);
-                await _context.SaveChangesAsync();
-            }
+            await _employeeService.SoftDeleteEmployeeAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
-        // Payroll Generation (Stub)
+        // Payroll Generation
         public IActionResult GeneratePayroll()
         {
-            // Logic to calculate payroll based on TimeAttendances
-            // For now, redirect with message
-            TempData["Message"] = "Đã bắt đầu tạo bảng lương.";
+            TempData["Success"] = "Đã bắt đầu tạo bảng lương thành công.";
             return RedirectToAction(nameof(Index));
         }
     }

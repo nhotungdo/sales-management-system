@@ -1,7 +1,7 @@
-﻿@model Sales_Management.Models.Invoice
+@model SalesManagement.DAL.Entities.Invoice
 @{
     ViewData["Title"] = "Invoice Details";
-    var payments = ViewBag.Payments as List<Sales_Management.Models.WalletTransaction>;
+    var payments = ViewBag.Payments as List<SalesManagement.DAL.Entities.WalletTransaction>;
 }
 
 <div class="card mb-4">
@@ -40,15 +40,15 @@
                     <tr>
                         <td>@item.Product.Name</td>
                         <td>@item.Quantity</td>
-                        <td>@item.UnitPrice.ToString("N0") đ</td>
-                        <td>@(item.Quantity * item.UnitPrice).ToString("N0") đ</td>
+                        <td>@item.UnitPrice.ToString("N0") d</td>
+                        <td>@(item.Quantity * item.UnitPrice).ToString("N0") d</td>
                     </tr>
                 }
             </tbody>
         </table>
 
         <h5 class="text-end text-danger fw-bold">
-            Total: @Model.Amount.ToString("N0") đ
+            Total: @Model.Amount.ToString("N0") d
         </h5>
     </div>
 </div>
@@ -81,7 +81,7 @@
                         <tr>
                             <td>@p.CreatedDate?.ToString("dd/MM/yyyy HH:mm")</td>
                             <td>@p.Method</td>
-                            <td>@p.Amount.ToString("N0") đ</td>
+                            <td>@p.Amount.ToString("N0") d</td>
                             <td>
                                 <span class="badge bg-info">
                                     @p.Status
@@ -97,7 +97,7 @@
            asp-action="Export"
            asp-route-invoiceId="@Model.InvoiceId"
            class="btn btn-danger">
-            📄 Export PDF
+            ?? Export PDF
         </a>
 
         <a asp-action="Index" class="btn btn-secondary mt-3">

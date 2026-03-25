@@ -1,6 +1,6 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace Sales_Management.ViewModels
+namespace SalesManagement.Web.ViewModels
 {
     public class RegisterViewModel
     {

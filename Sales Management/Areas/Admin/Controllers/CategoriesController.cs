@@ -1,61 +1,39 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Sales_Management.Data;
-using Sales_Management.Models;
+using SalesManagement.DAL.Entities;
+using System.IO;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using System;
+using SalesManagement.BLL.Interfaces;
 
-namespace Sales_Management.Areas.Admin.Controllers
+namespace SalesManagement.Web.Areas.Admin.Controllers
 {
     [Area("Admin")]
     [Authorize(Roles = "Admin")]
     public class CategoriesController : Controller
     {
-        private readonly SalesManagementContext _context;
+        private readonly ICategoryService _categoryService;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public CategoriesController(SalesManagementContext context, IWebHostEnvironment webHostEnvironment)
+        public CategoriesController(ICategoryService categoryService, IWebHostEnvironment webHostEnvironment)
         {
-            _context = context;
+            _categoryService = categoryService;
             _webHostEnvironment = webHostEnvironment;
         }
 
         // GET: Admin/Categories (Lấy danh sách danh mục, hỗ trợ tìm kiếm và lọc)
         public async Task<IActionResult> Index(string searchString, string statusFilter, string sortOrder)
         {
-            var categories = _context.Categories.Where(c => !c.IsDeleted).AsQueryable();
-
-            if (!string.IsNullOrEmpty(searchString))
-            {
-                categories = categories.Where(c => c.Name.Contains(searchString) || (c.Description != null && c.Description.Contains(searchString)));
-            }
-
-            if (!string.IsNullOrEmpty(statusFilter))
-            {
-                categories = categories.Where(c => c.Status == statusFilter);
-            }
+            var categories = await _categoryService.GetAdminCategoriesAsync(searchString, statusFilter, sortOrder);
 
             ViewData["NameSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
             ViewData["OrderSortParm"] = sortOrder == "order" ? "order_desc" : "order";
             ViewData["CurrentFilter"] = searchString;
             ViewData["CurrentStatus"] = statusFilter;
 
-            switch (sortOrder)
-            {
-                case "name_desc":
-                    categories = categories.OrderByDescending(c => c.Name);
-                    break;
-                case "order":
-                    categories = categories.OrderBy(c => c.DisplayOrder);
-                    break;
-                case "order_desc":
-                    categories = categories.OrderByDescending(c => c.DisplayOrder);
-                    break;
-                default:
-                    categories = categories.OrderBy(c => c.DisplayOrder).ThenBy(c => c.Name);
-                    break;
-            }
-
-            return View(await categories.ToListAsync());
+            return View(categories);
         }
 
         // GET: Admin/Categories/Details/5 (Xem chi tiết danh mục)
@@ -63,8 +41,7 @@ namespace Sales_Management.Areas.Admin.Controllers
         {
             if (id == null) return NotFound();
 
-            var category = await _context.Categories
-                .FirstOrDefaultAsync(m => m.CategoryId == id);
+            var category = await _categoryService.GetCategoryByIdAsync(id.Value);
             if (category == null || category.IsDeleted) return NotFound();
 
             return View(category);
@@ -98,13 +75,11 @@ namespace Sales_Management.Areas.Admin.Controllers
                     category.ImageUrl = "/images/categories/" + uniqueFileName;
                 }
 
-                category.CreatedDate = DateTime.Now;
-                category.UpdatedDate = DateTime.Now;
-                category.IsDeleted = false;
-
-                _context.Add(category);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                var result = await _categoryService.AddCategoryAsync(category);
+                if (result)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
             }
             return View(category);
         }
@@ -114,7 +89,7 @@ namespace Sales_Management.Areas.Admin.Controllers
         {
             if (id == null) return NotFound();
 
-            var category = await _context.Categories.FindAsync(id);
+            var category = await _categoryService.GetCategoryByIdAsync(id.Value);
             if (category == null || category.IsDeleted) return NotFound();
             return View(category);
         }
@@ -128,33 +103,26 @@ namespace Sales_Management.Areas.Admin.Controllers
 
             if (ModelState.IsValid)
             {
-                try
+                if (imageFile != null && imageFile.Length > 0)
                 {
-                    if (imageFile != null && imageFile.Length > 0)
+                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images/categories");
+                    if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+                    
+                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
+                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
                     {
-                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images/categories");
-                        if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-                        
-                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
-                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                        using (var fileStream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await imageFile.CopyToAsync(fileStream);
-                        }
-                        category.ImageUrl = "/images/categories/" + uniqueFileName;
+                        await imageFile.CopyToAsync(fileStream);
                     }
+                    category.ImageUrl = "/images/categories/" + uniqueFileName;
+                }
 
-                    category.UpdatedDate = DateTime.Now;
-                    _context.Update(category);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
+                var result = await _categoryService.UpdateCategoryAsync(category);
+                if (result)
                 {
-                    if (!CategoryExists(category.CategoryId)) return NotFound();
-                    else throw;
+                    return RedirectToAction(nameof(Index));
                 }
-                return RedirectToAction(nameof(Index));
             }
             return View(category);
         }
@@ -164,8 +132,7 @@ namespace Sales_Management.Areas.Admin.Controllers
         {
             if (id == null) return NotFound();
 
-            var category = await _context.Categories
-                .FirstOrDefaultAsync(m => m.CategoryId == id);
+            var category = await _categoryService.GetCategoryByIdAsync(id.Value);
             if (category == null || category.IsDeleted) return NotFound();
 
             return View(category);
@@ -176,19 +143,12 @@ namespace Sales_Management.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var category = await _context.Categories.FindAsync(id);
-            if (category != null)
+            var result = await _categoryService.DeleteCategoryAsync(id);
+            if (result)
             {
-                category.IsDeleted = true;
-                _context.Update(category);
-                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
             }
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool CategoryExists(int id)
-        {
-            return _context.Categories.Any(e => e.CategoryId == id);
+            return NotFound();
         }
     }
 }

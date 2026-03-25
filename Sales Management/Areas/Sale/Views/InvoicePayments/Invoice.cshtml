@@ -1,6 +1,6 @@
-﻿@model IEnumerable<Sales_Management.Models.WalletTransaction>
+@model IEnumerable<SalesManagement.DAL.Entities.WalletTransaction>
 @{
-    var invoice = ViewBag.Invoice as Sales_Management.Models.Invoice;
+    var invoice = ViewBag.Invoice as SalesManagement.DAL.Entities.Invoice;
 }
 
 <h2>Payment History</h2>
@@ -12,7 +12,7 @@
         <p>
             <strong>Total:</strong>
             <span class="text-danger fw-bold">
-                @invoice.Amount.ToString("N0") ₫
+                @invoice.Amount.ToString("N0") ?
             </span>
         </p>
         <p><strong>Status:</strong> @invoice.Status</p>
@@ -48,7 +48,7 @@
                     <td>@t.Wallet.Customer.FullName</td>
                     <td>@t.Method</td>
                     <td class="text-success fw-bold">
-                        @t.Amount.ToString("N0") ₫
+                        @t.Amount.ToString("N0") ?
                     </td>
                     <td>@t.Status</td>
                     <td>@t.Description</td>

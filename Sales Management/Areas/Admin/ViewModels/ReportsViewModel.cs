@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
-namespace Sales_Management.Areas.Admin.ViewModels
+namespace SalesManagement.Web.Areas.Admin.ViewModels
 {
     public class RevenueReportViewModel
     {

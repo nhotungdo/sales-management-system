@@ -1,20 +1,20 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Sales_Management.Data;
-using Sales_Management.Models;
+using SalesManagement.DAL.Data;
+using SalesManagement.DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
-using Sales_Management.Areas.Sale.Models;
+using SalesManagement.Web.Areas.Sale.Models;
 
-namespace Sales_Management.Areas.Sale.Controllers
+namespace SalesManagement.Web.Areas.Sale.Controllers
 {
     [Area("Sale")]
     [Authorize(Roles = "Sales, Admin")]
     public class ProductController : Controller
     {
-        private readonly SalesManagementContext _context;
+        private readonly AppDbContext _context;
 
-        public ProductController(SalesManagementContext context)
+        public ProductController(AppDbContext context)
         {
             _context = context;
         }
@@ -64,7 +64,7 @@ namespace Sales_Management.Areas.Sale.Controllers
                 // Basic validation for duplicate code
                 if (await _context.Products.AnyAsync(p => p.Code == product.Code))
                 {
-                    ModelState.AddModelError("Code", "Mã sản phẩm đã tồn tại.");
+                    ModelState.AddModelError("Code", "MÃ£ sáº£n pháº©m Ä‘Ã£ tá»“n táº¡i.");
                     ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "Name", product.CategoryId);
                     return View(product);
                 }

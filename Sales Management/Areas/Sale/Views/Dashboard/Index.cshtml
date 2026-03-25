@@ -2,7 +2,7 @@
     ViewData["Title"] = "Tổng quan bán hàng";
     Layout = "_SaleLayout";
     
-    var recentOrders = ViewBag.RecentOrders as List<Sales_Management.Models.Order>;
+    var recentOrders = ViewBag.RecentOrders as List<SalesManagement.DAL.Entities.Order>;
     var topProducts = ViewBag.TopProducts as dynamic; 
 }
 
@@ -17,7 +17,7 @@
                 <span class="badge bg-success bg-opacity-10 text-success">+12%</span>
             </div>
             <h6 class="text-muted mb-1">Doanh thu tổng</h6>
-            <h3 class="fw-bold mb-0">@ViewBag.TotalRevenue?.ToString("N0") ₫</h3>
+            <h3 class="fw-bold mb-0">@ViewBag.TotalRevenue?.ToString("N0") xu</h3>
         </div>
     </div>
     <div class="col-md-4">
@@ -64,7 +64,7 @@
                     <table class="table table-hover align-middle mb-0">
                         <thead class="bg-light">
                             <tr>
-                                <th class="ps-4">Mã đơn</th>
+                                <th class="ps-4">Mã Đơn</th>
                                 <th>Khách hàng</th>
                                 <th>Tổng tiền</th>
                                 <th>Trạng thái</th>
@@ -86,7 +86,7 @@
                                                 <span>@order.Customer?.FullName</span>
                                             </div>
                                         </td>
-                                        <td class="fw-bold">@order.TotalAmount?.ToString("N0") ₫</td>
+                                        <td class="fw-bold">@order.TotalAmount?.ToString("N0") xu</td>
                                         <td>
                                             @{
                                                 var badgeClass = order.Status switch
@@ -131,14 +131,14 @@
                         <div class="d-flex align-items-center mb-4">
                            <div class="me-3" style="width: 48px; height: 48px; position: relative;">
                                 @* Assuming first image or placeholder *@
-                                <img src="/images/product-placeholder.png" onerror="this.src='https://placehold.co/48'" class="rounded" style="width: 100%; height: 100%; object-fit: cover;" />
+                                <img src="/images/product-placeholder.png" onerror="this.src='https://placehold.co/43'" class="rounded" style="width: 100%; height: 100%; object-fit: cover;" />
                            </div>
                            <div class="flex-grow-1">
                                <h6 class="mb-0 text-truncate" style="max-width: 150px;">@item.Product.Name</h6>
                                <small class="text-muted">Đã bán: @item.TotalSold</small>
                            </div>
                            <div class="text-end">
-                               <span class="fw-bold d-block">@(((decimal)item.Revenue).ToString("N0")) ₫</span>
+                               <span class="fw-bold d-block">@(((decimal)item.Revenue).ToString("N0")) xu</span>
                            </div>
                         </div>
                     }

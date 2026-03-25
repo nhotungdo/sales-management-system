@@ -1,15 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Sales_Management.Data;
+using SalesManagement.DAL.Data;
 
-namespace Sales_Management.Areas.Sale.Controllers
+namespace SalesManagement.Web.Areas.Sale.Controllers
 {
     [Area("Sale")]
     public class InvoicePaymentsController : Controller
     {
-        private readonly SalesManagementContext _context;
+        private readonly AppDbContext _context;
 
-        public InvoicePaymentsController(SalesManagementContext context)
+        public InvoicePaymentsController(AppDbContext context)
         {
             _context = context;
         }

@@ -1,7 +1,7 @@
 using System.Security.Claims;
-using Sales_Management.Services;
+using SalesManagement.BLL.Interfaces;
 
-namespace Sales_Management.Middleware
+namespace SalesManagement.Web.Middleware
 {
     public class SalesSessionMiddleware
     {
@@ -21,8 +21,8 @@ namespace Sales_Management.Middleware
 
             _logger.LogInformation($"Processing request: {path} User: {user.Identity?.Name} Role: {(user.IsInRole("Sales") ? "Sales" : "Other")}");
 
-            // Bỏ qua các trang Account, logoff, static files
-            if (!user.Identity.IsAuthenticated || 
+            // Bá» qua cÃ¡c trang Account, logoff, static files
+            if (user.Identity == null || !user.Identity.IsAuthenticated || 
                 !user.IsInRole("Sales") || 
                 path.StartsWith("/account") || 
                 path.StartsWith("/lib") || 
@@ -34,8 +34,8 @@ namespace Sales_Management.Middleware
                 return;
             }
 
-            // Logic kiểm tra Check-in có thể được thêm ở đây
-            // Hiện tại pass-through để đảm bảo không chặn request hợp lệ
+            // Logic kiá»ƒm tra Check-in cÃ³ thá»ƒ Ä‘Æ°á»£c thÃªm á»Ÿ Ä‘Ã¢y
+            // Hiá»‡n táº¡i pass-through Ä‘á»ƒ Ä‘áº£m báº£o khÃ´ng cháº·n request há»£p lá»‡
             await _next(context);
         }
     }

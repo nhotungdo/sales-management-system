@@ -1,10 +1,8 @@
-using Sales_Management.Models;
-
-namespace Sales_Management.ViewModels
+﻿namespace SalesManagement.Web.ViewModels
 {
     public class HomeProductViewModel
     {
-        public IEnumerable<Product> Products { get; set; } = new List<Product>();
+        public IEnumerable<ProductViewModel> Products { get; set; } = new List<ProductViewModel>();
         public int CurrentPage { get; set; }
         public int TotalPages { get; set; }
         public string? SearchString { get; set; }

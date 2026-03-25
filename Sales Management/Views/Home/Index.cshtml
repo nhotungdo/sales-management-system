@@ -1,4 +1,4 @@
-﻿@model Sales_Management.ViewModels.HomeProductViewModel
+@model SalesManagement.Web.ViewModels.HomeProductViewModel
 @{
     ViewData["Title"] = "Quản Lý Bán Hàng Hiện Đại";
     ViewData["HideHeaderSpacer"] = true;
@@ -105,10 +105,10 @@
                     <div class="col-md-3 col-sm-6">
                         <div class="card h-100 card-modern product-card">
                             <div class="position-relative overflow-hidden">
-                                @if (item.ProductImages != null && item.ProductImages.Any())
+                                @if (!string.IsNullOrEmpty(item.PrimaryImageUrl))
                                 {
                                      <a asp-action="Details" asp-route-id="@item.ProductId" class="d-block">
-                                         <img src="@item.ProductImages.First().ImageUrl" class="card-img-top product-img" alt="@item.Name">
+                                         <img src="@item.PrimaryImageUrl" class="card-img-top product-img" alt="@item.Name">
                                      </a>
                                 }
                                 else
@@ -120,7 +120,7 @@
                                      </a>
                                 }
                                 <div class="position-absolute top-0 end-0 p-2">
-                                    <span class="badge bg-white text-primary shadow-sm">@item.Category?.Name</span>
+                                    <span class="badge bg-white text-primary shadow-sm">@item.CategoryName</span>
                                 </div>
                                 <div class="product-overlay">
                                     <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-light rounded-circle shadow-sm"><i class="bi bi-eye"></i></a>
@@ -193,7 +193,7 @@
 <section class="py-5" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);">
     <div class="container text-center text-white py-5">
         <h2 class="fw-bold mb-3 display-5">Bạn đã tìm thấy món đồ ưng ý?</h2>
-        <p class="lead mb-4 op-8">Đăng ký ngay để bắt đầu mua sắm và nhận những ưu đãi độc quyền.</p>
+        <p class="lead mb-4 op-8">Đăng ký ngay để bắt đầu mua sắm và nhận những ưu đãi đặc quyền.</p>
         <div class="d-flex justify-content-center gap-3">
             <a asp-controller="Account" asp-action="Register" class="btn btn-light btn-lg rounded-pill fw-bold text-primary px-5">
                 Tạo Tài Khoản

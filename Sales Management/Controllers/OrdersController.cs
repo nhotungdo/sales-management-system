@@ -1,44 +1,26 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Sales_Management.Models;
-using Sales_Management.Data;
-using Microsoft.AspNetCore.Authorization; // Assuming Admin access
-using System.Data;
+using SalesManagement.DAL.Entities;
+using Microsoft.AspNetCore.Authorization;
+using System.Threading.Tasks;
+using SalesManagement.BLL.Interfaces;
 
-namespace Sales_Management.Controllers
+namespace SalesManagement.Web.Controllers
 {
     [Authorize(Roles = "Admin,Manager")]
     public class OrdersController : Controller
     {
-        private readonly SalesManagementContext _context;
+        private readonly IOrderService _orderService;
 
-        public OrdersController(SalesManagementContext context)
+        public OrdersController(IOrderService orderService)
         {
-            _context = context;
+            _orderService = orderService;
         }
 
         // GET: Orders
         public async Task<IActionResult> Index(string searchString, string statusFilter, int? pageNumber)
         {
-            var orders = _context.Orders
-                .Include(o => o.Customer)
-                .Include(o => o.CreatedByNavigation)
-                .OrderByDescending(o => o.OrderDate)
-                .AsQueryable();
-
-            if (!string.IsNullOrEmpty(searchString))
-            {
-                orders = orders.Where(o => o.OrderId.ToString().Contains(searchString) || 
-                                           o.Customer.FullName.Contains(searchString));
-            }
-
-            if (!string.IsNullOrEmpty(statusFilter))
-            {
-                orders = orders.Where(o => o.Status == statusFilter);
-            }
-
-            // Simple pagination or just return list for now
-            return View(await orders.ToListAsync());
+            var orders = await _orderService.GetOrdersOverviewAsync(searchString, statusFilter);
+            return View(orders);
         }
 
         // GET: Orders/Details/5
@@ -46,13 +28,7 @@ namespace Sales_Management.Controllers
         {
             if (id == null) return NotFound();
 
-            var order = await _context.Orders
-                .Include(o => o.Customer)
-                .Include(o => o.CreatedByNavigation)
-                .Include(o => o.OrderDetails)
-                .ThenInclude(od => od.Product)
-                .FirstOrDefaultAsync(m => m.OrderId == id);
-
+            var order = await _orderService.GetOrderDetailsAsync(id.Value);
             if (order == null) return NotFound();
 
             return View(order);
@@ -63,12 +39,8 @@ namespace Sales_Management.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateStatus(int id, string status)
         {
-            var order = await _context.Orders.FindAsync(id);
-            if (order == null) return NotFound();
-
-            order.Status = status;
-            _context.Update(order);
-            await _context.SaveChangesAsync();
+            var success = await _orderService.UpdateOrderStatusAsync(id, status);
+            if (!success) return NotFound();
 
             return RedirectToAction(nameof(Details), new { id = id });
         }

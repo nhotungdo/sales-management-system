@@ -1,25 +1,25 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Sales_Management.Data;
-using Sales_Management.Models;
+using SalesManagement.DAL.Data;
+using SalesManagement.DAL.Entities;
 using System.Security.Claims;
 using Microsoft.Extensions.Configuration;
 
-namespace Sales_Management.Controllers
+namespace SalesManagement.Web.Controllers
 {
     [Authorize]
     public class WalletController : Controller
     {
-        private readonly SalesManagementContext _context;
+        private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
         private const decimal COIN_RATE = 1000; // 1 Coin = 1000 VND
 
-        public WalletController(SalesManagementContext context, IConfiguration configuration)
+        public WalletController(AppDbContext context, IConfiguration configuration)
         {
             _context = context;
             _configuration = configuration;
@@ -27,7 +27,9 @@ namespace Sales_Management.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr)) return RedirectToAction("Login", "Account");
+            var userId = int.Parse(userIdStr);
             var customer = await _context.Customers
                 .Include(c => c.Wallet)
                 .ThenInclude(w => w.WalletTransactions)
@@ -81,11 +83,13 @@ namespace Sales_Management.Controllers
         {
             if (coinAmount <= 0)
             {
-                TempData["Error"] = "Số lượng coin phải lớn hơn 0";
+                TempData["Error"] = "Sá»‘ lÆ°á»£ng coin pháº£i lá»›n hÆ¡n 0";
                 return RedirectToAction(nameof(Index));
             }
 
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr)) return RedirectToAction("Login", "Account");
+            var userId = int.Parse(userIdStr);
             var customer = await _context.Customers
                 .Include(c => c.Wallet)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
@@ -104,7 +108,7 @@ namespace Sales_Management.Controllers
                 Method = "System", // Changed from "VietQR" to match DB constraint ('VNPay', 'System')
                 Status = "Pending",
                 TransactionCode = transactionCode,
-                Description = $"Nạp {coinAmount:N0} coin (VietQR)",
+                Description = $"Náº¡p {coinAmount:N0} coin (VietQR)",
                 CreatedDate = DateTime.Now
             };
 
@@ -146,14 +150,16 @@ namespace Sales_Management.Controllers
                 .Include(t => t.Wallet)
                 .FirstOrDefaultAsync(t => t.TransactionId == id);
 
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr)) return RedirectToAction("Login", "Account");
+            var userId = int.Parse(userIdStr);
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
 
-            if (transaction != null && transaction.Status == "Pending" && transaction.Wallet.CustomerId == customer.CustomerId)
+            if (transaction != null && transaction.Status == "Pending" && customer != null && transaction.Wallet.CustomerId == customer.CustomerId)
             {
                 transaction.Status = "Cancelled";
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "Đã hủy giao dịch";
+                TempData["Success"] = "ÄÃ£ há»§y giao dá»‹ch";
             }
 
             return RedirectToAction(nameof(Index));

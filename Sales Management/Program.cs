@@ -1,9 +1,11 @@
-
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
-using Sales_Management.Data;
-using Sales_Management.Services;
-using Sales_Management.Hubs;
+using SalesManagement.DAL.Data;
+using SalesManagement.DAL.Interfaces;
+using SalesManagement.DAL.Repositories;
+using SalesManagement.BLL.Interfaces;
+using SalesManagement.BLL.Services;
+using SalesManagement.Web.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,36 +13,56 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 
-builder.Services.AddDbContext<SalesManagementContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DBDefault")));
+// 1. Dependency Injection: DbContext (from DAL)
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DBDefault"),
+        b => b.MigrationsAssembly("SalesManagement.DAL")));
 
+// 2. Dependency Injection: Repositories (DAL)
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+
+// 3. Dependency Injection: Services (BLL)
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICoinService, CoinService>();
+builder.Services.AddScoped<IPayrollService, PayrollService>();
+builder.Services.AddScoped<ICurrencyService, CurrencyService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IPromotionService, PromotionService>();
+builder.Services.AddScoped<ISettingService, SettingService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IVipPackageService, VipPackageService>();
+builder.Services.AddScoped<IWalletService, WalletService>();
+builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
+builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+
+// Authentication & Session Configuration
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.LoginPath = "/Account/Login";
         options.LogoutPath = "/Account/Logout";
         options.AccessDeniedPath = "/";
-        options.ExpireTimeSpan = TimeSpan.FromHours(1);
+        options.ExpireTimeSpan = TimeSpan.FromHours(10);
         options.SlidingExpiration = true;
     });
 
-// Register AuthService
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ICoinService, CoinService>();
-builder.Services.AddScoped<IPayrollService, PayrollService>();
-builder.Services.AddScoped<ICurrencyService, CurrencyService>();
-builder.Services.AddScoped<ITimeProvider, SystemTimeProvider>();
-
-// Add Session
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.IdleTimeout = TimeSpan.FromMinutes(60);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
-
-// Background Services
-builder.Services.AddHostedService<VoucherExpirationService>();
 
 var app = builder.Build();
 
@@ -48,7 +70,6 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -57,20 +78,17 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// Authentication & Authorization (THỨ TỰ QUAN TRỌNG!)
+// Order is important!
 app.UseAuthentication();
 app.UseAuthorization();
-
-// Middleware kiểm tra Session cho Sales
-app.UseMiddleware<Sales_Management.Middleware.SalesSessionMiddleware>();
-
-// Session
 app.UseSession();
+
+// Custom Middlewares
+app.UseMiddleware<SalesManagement.Web.Middleware.SalesSessionMiddleware>();
 
 app.MapControllerRoute(
     name: "areas",
-    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}"
-);
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
 app.MapHub<SystemHub>("/systemHub");
 

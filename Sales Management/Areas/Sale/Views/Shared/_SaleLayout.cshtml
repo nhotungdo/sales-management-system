@@ -1,4 +1,4 @@
-﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Identity
 
 <!DOCTYPE html>
 <html lang="en">
@@ -230,11 +230,6 @@
                     {
                         <li><a class="dropdown-item" asp-area="" asp-controller="Wallet" asp-action="Index"><i class="bi bi-wallet2 me-2"></i> Ví của tôi</a></li>
                     }
-                     <li>
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#timekeepingHistoryModal" onclick="loadTimekeepingHistory()">
-                            <i class="bi bi-clock-history me-2"></i> Lịch sử chấm công
-                        </a>
-                    </li>
                     <li><hr class="dropdown-divider"></li>
                      <li>
                         <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#logoutModal">
@@ -248,61 +243,31 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <div id="attendance-alert-container"></div>
         <div class="container-fluid p-4">
             @RenderBody()
         </div>
     </div>
     
-     <!-- Logout Modal -->
     <div class="modal fade" id="logoutModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Kết thúc làm việc</h5>
+            <h5 class="modal-title">Đăng xuất</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
               <div class="modal-body">
-                <p>Vui lòng nhập lý do đăng xuất (bắt buộc nếu không phải hết ca):</p>
-                <div class="mb-3">
-                  <label for="logoutReason" class="form-label">Lý do / Ghi chú</label>
-                  <textarea class="form-control" id="logoutReason" name="reason" rows="3" placeholder="Ví dụ: Hết ca làm, Có việc riêng..."></textarea>
-                </div>
-                <!-- Requirement: "if they log out without providing a reason, automatically record it as check-out" -->
-                <div class="alert alert-info small">
-                   <i class="bi bi-info-circle"></i> Nếu để trống, hệ thống sẽ ghi nhận trạng thái là "Check-out".
-                </div>
+                <p>Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?</p>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="submit" class="btn btn-danger">Đăng xuất & Check-out</button>
+                <button type="submit" class="btn btn-danger">Đăng xuất</button>
               </div>
           </form>
         </div>
       </div>
     </div>
 
-    <!-- Timekeeping History Modal -->
-    <div class="modal fade" id="timekeepingHistoryModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Lịch sử chấm công</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div id="timekeepingSummary" class="mb-3 p-3 bg-danger-subtle text-danger rounded fw-bold border border-danger d-none"></div>
-            <div id="timekeepingList">
-                Đang tải dữ liệu...
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
@@ -312,91 +277,6 @@
             document.getElementById('sidebar').classList.toggle('active');
         });
         
-        async function checkAttendanceSummary() {
-             try {
-                const response = await fetch('/api/sales/timekeeping/summary');
-                if (!response.ok) return;
-                const data = await response.json();
-                
-                // Show Banner if late today
-                if (data.isLateToday) {
-                    const container = document.getElementById('attendance-alert-container');
-                    if(container) {
-                        container.innerHTML = `
-                        <div class="alert alert-warning alert-dismissible fade show m-3 shadow-sm border-warning" role="alert">
-                             <h5 class="alert-heading fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i> Cảnh báo đi trễ!</h5>
-                             <p class="mb-0">Bạn đã đến muộn <strong>${data.minutesLateToday} phút</strong> hôm nay.</p>
-                             ${data.minutesLateToday > 10 ? '<hr><p class="mb-0 text-danger fw-bold">Khoản phạt dự kiến: 20,000 VND</p>' : ''}
-                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>`;
-                    }
-                }
-
-                // Store summary for modal access
-                window.attendanceSummary = data;
-            } catch (e) { console.error(e); }
-        }
-        
-        document.addEventListener('DOMContentLoaded', checkAttendanceSummary);
-        
-        async function loadTimekeepingHistory() {
-            const list = document.getElementById('timekeepingList');
-            const summaryDiv = document.getElementById('timekeepingSummary');
-            
-            list.innerHTML = '<div class="text-center py-3"><div class="spinner-border" role="status"></div></div>';
-            
-            // Try to refresh summary if needed, or use cached
-            if (!window.attendanceSummary) await checkAttendanceSummary();
-            if (window.attendanceSummary) {
-                const s = window.attendanceSummary;
-                summaryDiv.innerHTML = `<i class="bi bi-wallet2 me-2"></i> Tổng phạt đi trễ tháng này: ${s.totalDeduction.toLocaleString('vi-VN')} VND`;
-                summaryDiv.classList.remove('d-none');
-            }
-
-            try {
-                const response = await fetch('/api/sales/timekeeping/my-history');
-                if (!response.ok) throw new Error('Failed to load');
-                const data = await response.json();
-                
-                if (data.length === 0) {
-                    list.innerHTML = '<p class="text-center text-muted py-3">Chưa có dữ liệu chấm công.</p>';
-                    return;
-                }
-                
-                let html = '<div class="table-responsive"><table class="table table-sm table-hover align-middle">';
-                html += '<thead class="table-light"><tr><th>Ngày</th><th>Vào</th><th>Ra</th><th>Muộn (phút)</th><th>Phạt</th><th>Trạng thái</th></tr></thead><tbody>';
-                
-                data.forEach(item => {
-                    const date = new Date(item.date).toLocaleDateString('vi-VN');
-                    const checkIn = item.checkInTime ? new Date(item.checkInTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}) : '-';
-                    const checkOut = item.checkOutTime ? new Date(item.checkOutTime).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}) : '-';
-                    const minutesLate = item.minutesLate > 0 ? `<span class="text-danger fw-bold">${item.minutesLate}</span>` : '0';
-                    const deduction = item.deduction > 0 ? `<span class="text-danger fw-bold">${item.deduction.toLocaleString()}</span>` : '0';
-                    const notes = item.notes ? `<div class="small text-muted" style="font-size:0.8em">${item.notes}</div>` : '';
-                    
-                    let statusBadge = '';
-                    if(item.status && item.status.includes('Late')) statusBadge = `<span class="badge bg-warning text-dark">${item.status}</span>`;
-                    else if(item.status === 'Present') statusBadge = '<span class="badge bg-success">Đang làm việc</span>';
-                    else if(item.status === 'CheckedOut') statusBadge = '<span class="badge bg-primary">Đã về</span>';
-                    else statusBadge = `<span class="badge bg-secondary">${item.status || ''}</span>`;
-
-                    html += `<tr>
-                        <td>${date}</td>
-                        <td>${checkIn}</td>
-                        <td>${checkOut}</td>
-                        <td>${minutesLate}</td>
-                         <td>${deduction}</td>
-                        <td>${statusBadge} ${notes}</td>
-                    </tr>`;
-                });
-                html += '</tbody></table></div>';
-                list.innerHTML = html;
-                
-            } catch (e) {
-                console.error(e);
-                list.innerHTML = '<p class="text-danger text-center py-3">Không thể tải dữ liệu lịch sử.</p>';
-            }
-        }
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

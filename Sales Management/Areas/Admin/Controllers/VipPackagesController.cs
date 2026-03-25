@@ -1,28 +1,26 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Sales_Management.Data;
-using Sales_Management.Models;
+using SalesManagement.BLL.Interfaces;
+using SalesManagement.DAL.Entities;
+using System.Threading.Tasks;
 
-namespace Sales_Management.Areas.Admin.Controllers
+namespace SalesManagement.Web.Areas.Admin.Controllers
 {
     [Area("Admin")]
     [Authorize(Roles = "Admin")]
     public class VipPackagesController : Controller
     {
-        private readonly SalesManagementContext _context;
+        private readonly IVipPackageService _packageService;
 
-        public VipPackagesController(SalesManagementContext context)
+        public VipPackagesController(IVipPackageService packageService)
         {
-            _context = context;
+            _packageService = packageService;
         }
 
         // Lấy danh sách gói VIP
         public async Task<IActionResult> Index()
         {
-            var packages = await _context.VipPackages
-                .OrderBy(p => p.Price)
-                .ToListAsync();
+            var packages = await _packageService.GetAllPackagesAsync();
             return View(packages);
         }
 
@@ -39,9 +37,11 @@ namespace Sales_Management.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(vipPackage);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                var result = await _packageService.AddPackageAsync(vipPackage);
+                if (result)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
             }
             return View(vipPackage);
         }
@@ -49,16 +49,11 @@ namespace Sales_Management.Areas.Admin.Controllers
         // GET: Admin/VipPackages/Edit/5 (Form sửa gói VIP)
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var vipPackage = await _context.VipPackages.FindAsync(id);
-            if (vipPackage == null)
-            {
-                return NotFound();
-            }
+            var vipPackage = await _packageService.GetPackageByIdAsync(id.Value);
+            if (vipPackage == null) return NotFound();
+
             return View(vipPackage);
         }
 
@@ -67,30 +62,15 @@ namespace Sales_Management.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, VipPackage vipPackage)
         {
-            if (id != vipPackage.VipPackageId)
-            {
-                return NotFound();
-            }
+            if (id != vipPackage.VipPackageId) return NotFound();
 
             if (ModelState.IsValid)
             {
-                try
+                var result = await _packageService.UpdatePackageAsync(vipPackage);
+                if (result)
                 {
-                    _context.Update(vipPackage);
-                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!VipPackageExists(vipPackage.VipPackageId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
             }
             return View(vipPackage);
         }
@@ -98,17 +78,10 @@ namespace Sales_Management.Areas.Admin.Controllers
         // GET: Admin/VipPackages/Delete/5 (Xác nhận xóa)
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var vipPackage = await _context.VipPackages
-                .FirstOrDefaultAsync(m => m.VipPackageId == id);
-            if (vipPackage == null)
-            {
-                return NotFound();
-            }
+            var vipPackage = await _packageService.GetPackageByIdAsync(id.Value);
+            if (vipPackage == null) return NotFound();
 
             return View(vipPackage);
         }
@@ -118,18 +91,12 @@ namespace Sales_Management.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var vipPackage = await _context.VipPackages.FindAsync(id);
-            if (vipPackage != null)
+            var result = await _packageService.DeletePackageAsync(id);
+            if (result)
             {
-                _context.VipPackages.Remove(vipPackage);
-                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
             }
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool VipPackageExists(int id)
-        {
-            return _context.VipPackages.Any(e => e.VipPackageId == id);
+            return NotFound();
         }
     }
 }

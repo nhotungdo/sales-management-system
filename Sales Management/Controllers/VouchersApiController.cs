@@ -1,21 +1,21 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Sales_Management.Data;
-using Sales_Management.Models;
+using SalesManagement.DAL.Data;
+using SalesManagement.DAL.Entities;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Sales_Management.Controllers.Api
+namespace SalesManagement.Web.Controllers.Api
 {
     [Route("api/vouchers")]
     [ApiController]
     public class VouchersApiController : ControllerBase
     {
-        private readonly SalesManagementContext _context;
+        private readonly AppDbContext _context;
         private readonly ILogger<VouchersApiController> _logger;
 
-        public VouchersApiController(SalesManagementContext context, ILogger<VouchersApiController> logger)
+        public VouchersApiController(AppDbContext context, ILogger<VouchersApiController> logger)
         {
             _context = context;
             _logger = logger;

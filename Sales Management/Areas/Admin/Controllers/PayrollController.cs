@@ -1,23 +1,20 @@
+using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Sales_Management.Data;
-using Sales_Management.Services;
+using SalesManagement.BLL.Interfaces;
 
-namespace Sales_Management.Areas.Admin.Controllers
+namespace SalesManagement.Web.Areas.Admin.Controllers
 {
     [Area("Admin")]
     [Authorize(Roles = "Admin")]
     public class PayrollController : Controller
     {
         private readonly IPayrollService _payrollService;
-        private readonly SalesManagementContext _context;
 
-        public PayrollController(IPayrollService payrollService, SalesManagementContext context)
+        public PayrollController(IPayrollService payrollService)
         {
             _payrollService = payrollService;
-            _context = context;
         }
 
         public async Task<IActionResult> Index(int? month, int? year)
@@ -25,15 +22,9 @@ namespace Sales_Management.Areas.Admin.Controllers
             var m = month ?? DateTime.Now.Month;
             var y = year ?? DateTime.Now.Year;
 
-            var payrolls = await _context.Payrolls
-                .Include(p => p.Employee)
-                .ThenInclude(e => e.User)
-                .Where(p => p.Month == m && p.Year == y)
-                .ToListAsync();
-
+            var payrolls = await _payrollService.GetPayrollsAsync(m, y);
             ViewBag.Month = m;
             ViewBag.Year = y;
-
             return View(payrolls);
         }
 
@@ -47,13 +38,8 @@ namespace Sales_Management.Areas.Admin.Controllers
 
         public async Task<IActionResult> Details(int id)
         {
-            var payroll = await _context.Payrolls
-                .Include(p => p.Employee)
-                .ThenInclude(e => e.User)
-                .FirstOrDefaultAsync(p => p.PayrollId == id);
-            
+            var payroll = await _payrollService.GetPayrollByIdAsync(id);
             if (payroll == null) return NotFound();
-
             return View(payroll);
         }
     }

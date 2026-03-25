@@ -1,4 +1,4 @@
-@model Sales_Management.Models.Product
+@model SalesManagement.Web.ViewModels.ProductViewModel
 
 @{
     ViewData["Title"] = "Xóa sản phẩm";
@@ -12,13 +12,13 @@
     <hr />
     <dl class="row">
         <dt class = "col-sm-2">Mã sản phẩm</dt>
-        <dd class = "col-sm-10">@Html.DisplayFor(model => model.Code)</dd>
+        <dd class = "col-sm-10">@Model.Code</dd>
         
         <dt class = "col-sm-2">Danh mục</dt>
-        <dd class = "col-sm-10">@Html.DisplayFor(model => model.Category.Name)</dd>
+        <dd class = "col-sm-10">@Model.CategoryName</dd>
 
         <dt class = "col-sm-2">Giá bán</dt>
-        <dd class = "col-sm-10">@((Model.CoinPrice ?? 0).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu</dd>
+        <dd class = "col-sm-10">@Model.SellingPrice.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) VNĐ</dd>
         
         <dt class = "col-sm-2">Tồn kho</dt>
         <dd class = "col-sm-10">@Model.StockQuantity</dd>

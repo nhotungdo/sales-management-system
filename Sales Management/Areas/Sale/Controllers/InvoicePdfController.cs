@@ -4,16 +4,16 @@ using iText.Kernel.Pdf;
 using iText.Layout;
 using iText.Layout.Element;
 using iText.Layout.Properties;
-using Sales_Management.Data;
+using SalesManagement.DAL.Data;
 
-namespace Sales_Management.Areas.Sale.Controllers
+namespace SalesManagement.Web.Areas.Sale.Controllers
 {
     [Area("Sale")]
     public class InvoicePdfController : Controller
     {
-        private readonly SalesManagementContext _context;
+        private readonly AppDbContext _context;
 
-        public InvoicePdfController(SalesManagementContext context)
+        public InvoicePdfController(AppDbContext context)
         {
             _context = context;
         }
@@ -72,7 +72,7 @@ namespace Sales_Management.Areas.Sale.Controllers
 
             document.Add(table);
 
-            document.Add(new Paragraph($"\nTotal Amount: {invoice.Amount:N0} ₫"));
+            document.Add(new Paragraph($"\nTotal Amount: {invoice.Amount:N0} ?"));
 
             // ===== PAYMENT HISTORY =====
             document.Add(new Paragraph("\nPayment History").SetFontSize(14));

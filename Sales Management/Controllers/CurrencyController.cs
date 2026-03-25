@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
-using Sales_Management.Services;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using System;
+using SalesManagement.BLL.Interfaces;
 
-namespace Sales_Management.Controllers
+namespace SalesManagement.Web.Controllers
 {
     public class CurrencyController : Controller
     {
@@ -31,18 +31,18 @@ namespace Sales_Management.Controllers
             try
             {
                 var cents = _currencyService.ConvertVndToCents(request.VndAmount);
-                await _currencyService.LogConversionAsync(request.VndAmount, cents, ipAddress, true, "Success");
+                await _currencyService.LogConversionAsync(request.VndAmount, cents, ipAddress ?? "Unknown", true, "Success");
                 return Json(new { success = true, cents = cents });
             }
             catch (ArgumentException ex)
             {
                 // We log the failed attempt
-                await _currencyService.LogConversionAsync(request.VndAmount, 0, ipAddress, false, ex.Message);
+                await _currencyService.LogConversionAsync(request.VndAmount, 0, ipAddress ?? "Unknown", false, ex.Message);
                 return Json(new { success = false, message = ex.Message });
             }
             catch (Exception ex)
             {
-                await _currencyService.LogConversionAsync(request.VndAmount, 0, ipAddress, false, ex.Message);
+                await _currencyService.LogConversionAsync(request.VndAmount, 0, ipAddress ?? "Unknown", false, ex.Message);
                 return Json(new { success = false, message = "An unexpected error occurred." });
             }
         }

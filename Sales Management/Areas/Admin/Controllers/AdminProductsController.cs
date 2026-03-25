@@ -1,32 +1,28 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Sales_Management.Data;
-using Sales_Management.Models;
-using Sales_Management.Services;
+using SalesManagement.DAL.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.IO;
 using Microsoft.AspNetCore.Http;
+using SalesManagement.BLL.Interfaces;
 
-namespace Sales_Management.Areas.Admin.Controllers
+namespace SalesManagement.Web.Areas.Admin.Controllers
 {
     [Area("Admin")]
     [Authorize(Roles = "Admin")]
     public class AdminProductsController : Controller
     {
-        private readonly SalesManagementContext _context;
-        private readonly ICoinService _coinService;
-        private readonly ICurrencyService _currencyService;
+        private readonly IProductService _productService;
+        private readonly ICategoryService _categoryService;
 
-        public AdminProductsController(SalesManagementContext context, ICoinService coinService, ICurrencyService currencyService)
+        public AdminProductsController(IProductService productService, ICategoryService categoryService)
         {
-            _context = context;
-            _coinService = coinService;
-            _currencyService = currencyService;
+            _productService = productService;
+            _categoryService = categoryService;
         }
 
         // GET: Admin/Products (Danh sách sản phẩm, quản lý tìm kiếm, sắp xếp và phân trang)
@@ -38,50 +34,18 @@ namespace Sales_Management.Areas.Admin.Controllers
             ViewData["DateSortParm"] = sortOrder == "Date" ? "date_desc" : "Date";
             ViewData["CurrentFilter"] = searchString;
 
-            var products = _context.Products.Include(p => p.Category).Include(p => p.ProductImages).Where(p => p.Status != "Deleted").AsQueryable();
-
-            if (!String.IsNullOrEmpty(searchString))
-            {
-                products = products.Where(s => s.Name.Contains(searchString) || s.Code.Contains(searchString));
-            }
-
-            switch (sortOrder)
-            {
-                case "name_desc":
-                    products = products.OrderByDescending(s => s.Name);
-                    break;
-                case "Price":
-                    products = products.OrderBy(s => s.SellingPrice);
-                    break;
-                case "price_desc":
-                    products = products.OrderByDescending(s => s.SellingPrice);
-                    break;
-                case "Date":
-                    products = products.OrderBy(s => s.CreatedDate);
-                    break;
-                case "date_desc":
-                    products = products.OrderByDescending(s => s.CreatedDate);
-                    break;
-                default:
-                    products = products.OrderByDescending(s => s.CreatedDate); // Default sort
-                    break;
-            }
-
             int pageSize = 10;
-            int pageNumber = (page ?? 1);
-            
-            // Sử dụng ToListAsync tạm thời, trong thực tế nên dùng PagedList<T>
-            // Phân trang thủ công đơn giản theo yêu cầu
-            var count = await products.CountAsync();
-            var items = await products.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+            int pageNumber = page ?? 1;
+
+            var products = await _productService.GetPagedProductsAsync(pageNumber, pageSize, searchString, sortOrder);
+            var count = await _productService.GetTotalProductCountAsync(searchString);
 
             ViewBag.TotalPages = (int)Math.Ceiling(count / (double)pageSize);
             ViewBag.CurrentPage = pageNumber;
-            // Pass search string and sort order to view for persistence
             ViewBag.SearchString = searchString;
             ViewBag.SortOrder = sortOrder;
             
-            return View(items);
+            return View(products);
         }
 
         // GET: Admin/Products/Details/5 (Xem chi tiết sản phẩm)
@@ -89,21 +53,17 @@ namespace Sales_Management.Areas.Admin.Controllers
         {
             if (id == null) return NotFound();
 
-            var product = await _context.Products
-                .Include(p => p.Category)
-                .Include(p => p.ProductImages)
-                .Include(p => p.CreatedByNavigation)
-                .FirstOrDefaultAsync(m => m.ProductId == id);
-
+            var product = await _productService.GetProductDetailsAsync(id.Value);
             if (product == null) return NotFound();
 
             return View(product);
         }
 
         // GET: Admin/Products/Create (Form tạo sản phẩm mới)
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "Name");
+            var categories = await _categoryService.GetAllCategoriesAsync();
+            ViewData["CategoryId"] = new SelectList(categories, "CategoryId", "Name");
             return View();
         }
 
@@ -111,70 +71,59 @@ namespace Sales_Management.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Code,Name,Description,CategoryId,ImportPrice,SellingPrice,Vatrate,StockQuantity,Status")] Product product, List<IFormFile> imageFiles)
         {
-            if (await _context.Products.AnyAsync(p => p.Code == product.Code))
-            {
-                ModelState.AddModelError("Code", "Product code already exists.");
-            }
-
             if (ModelState.IsValid)
             {
-                product.CreatedDate = DateTime.Now;
-                product.UpdatedDate = DateTime.Now;
-                
-                // Lấy ID người dùng hiện tại (giả định thiết lập User Identity chuẩn)
-                // Nếu dùng auth tùy chỉnh, hãy điều chỉnh cho phù hợp.
-                var userName = User.Identity?.Name;
-                if (!string.IsNullOrEmpty(userName))
-                {
-                    var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == userName);
-                    if (user != null) product.CreatedBy = user.UserId;
-                }
-
-                // Tính toán Giá Coin
-                product.CoinPrice = _coinService.CalculateCoin(product.SellingPrice);
-                
-                // Tính toán Giá Cents (1000 VND = 1 Cent)
-                product.PriceCents = _currencyService.ConvertVndToCents(product.SellingPrice);
-
-                _context.Add(product);
-                await _context.SaveChangesAsync();
-
-                // Xử lý Hình ảnh
+                // Xử lý Hình ảnh (Logic trong Web Layer là chấp nhận được để tránh Web-specific dependency trong BLL)
                 if (imageFiles != null && imageFiles.Count > 0)
                 {
                     bool isFirst = true;
+                    if (product.ProductImages == null) product.ProductImages = new List<ProductImage>();
+
                     foreach (var file in imageFiles)
                     {
                         if (file.Length > 0)
                         {
                             var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-                            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images", fileName);
+                            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
+                            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+                            
+                            var filePath = Path.Combine(uploadsFolder, fileName);
                             
                             using (var stream = new FileStream(filePath, FileMode.Create))
                             {
                                 await file.CopyToAsync(stream);
                             }
 
-                            var productImage = new ProductImage
+                            product.ProductImages.Add(new ProductImage
                             {
-                                ProductId = product.ProductId,
                                 ImageUrl = "/images/" + fileName,
                                 IsPrimary = isFirst, 
                                 CreatedDate = DateTime.Now
-                            };
-                            _context.ProductImages.Add(productImage);
-                            
-                            // Chỉ ảnh hợp lệ đầu tiên được đặt làm ảnh chính (Primary)
+                            });
                             isFirst = false; 
                         }
                     }
-                    await _context.SaveChangesAsync();
                 }
 
-                TempData["SuccessMessage"] = "Product created successfully!";
-                return RedirectToAction(nameof(Index));
+                // Gán người tạo từ Claims
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (int.TryParse(userIdClaim, out int userId))
+                {
+                    product.CreatedBy = userId;
+                }
+
+                var result = await _productService.AddProductAsync(product);
+                if (result)
+                {
+                    TempData["SuccessMessage"] = "Product created successfully!";
+                    return RedirectToAction(nameof(Index));
+                }
+                
+                ModelState.AddModelError("Code", "Product code already exists.");
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "Name", product.CategoryId);
+            
+            var categories = await _categoryService.GetAllCategoriesAsync();
+            ViewData["CategoryId"] = new SelectList(categories, "CategoryId", "Name", product.CategoryId);
             return View(product);
         }
 
@@ -183,10 +132,11 @@ namespace Sales_Management.Areas.Admin.Controllers
         {
             if (id == null) return NotFound();
 
-            var product = await _context.Products.FindAsync(id);
+            var product = await _productService.GetProductByIdAsync(id.Value);
             if (product == null) return NotFound();
             
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "Name", product.CategoryId);
+            var categories = await _categoryService.GetAllCategoriesAsync();
+            ViewData["CategoryId"] = new SelectList(categories, "CategoryId", "Name", product.CategoryId);
             return View(product);
         }
 
@@ -197,64 +147,44 @@ namespace Sales_Management.Areas.Admin.Controllers
         {
             if (id != product.ProductId) return NotFound();
 
-            if (await _context.Products.AnyAsync(p => p.Code == product.Code && p.ProductId != id))
-            {
-                ModelState.AddModelError("Code", "Product code already exists.");
-            }
-
             if (ModelState.IsValid)
             {
-                try
+                // Xử lý ảnh mới nếu có
+                if (imageFile != null && imageFile.Length > 0)
                 {
-                    var existingProduct = await _context.Products.AsNoTracking().FirstOrDefaultAsync(p => p.ProductId == id);
-                    if (existingProduct == null) return NotFound();
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
+                    if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
 
-                    product.UpdatedDate = DateTime.Now;
-                    // Giữ nguyên thông tin người tạo nếu không được truyền vào đúng (logic cập nhật đơn giản)
-                    
-                    // Tính lại Giá Coin
-                    product.CoinPrice = _coinService.CalculateCoin(product.SellingPrice);
-                    
-                    // Tính lại Giá Cents (1000 VND = 1 Cent)
-                    product.PriceCents = _currencyService.ConvertVndToCents(product.SellingPrice);
-
-                    _context.Update(product);
-                    await _context.SaveChangesAsync();
-
-                    if (imageFile != null && imageFile.Length > 0)
+                    var filePath = Path.Combine(uploadsFolder, fileName);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
                     {
-                        // Xử lý ảnh: Thêm ảnh mới làm ảnh chính, hạ cấp ảnh cũ
-                        var userImages = _context.ProductImages.Where(pi => pi.ProductId == id);
-                        foreach(var img in userImages) { img.IsPrimary = false; } // Demote others (or delete, user requirement vague, keeping history is safer usually but let's just add new one)
-                        
-                        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
-                        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images", fileName);
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await imageFile.CopyToAsync(stream);
-                        }
-
-                        var productImage = new ProductImage
-                        {
-                            ProductId = product.ProductId,
-                            ImageUrl = "/images/" + fileName,
-                            IsPrimary = true,
-                            CreatedDate = DateTime.Now
-                        };
-                        _context.ProductImages.Add(productImage);
-                        await _context.SaveChangesAsync();
+                        await imageFile.CopyToAsync(stream);
                     }
+
+                    if (product.ProductImages == null) product.ProductImages = new List<ProductImage>();
                     
-                    TempData["SuccessMessage"] = "Product updated successfully!";
+                    product.ProductImages.Add(new ProductImage
+                    {
+                        ProductId = product.ProductId,
+                        ImageUrl = "/images/" + fileName,
+                        IsPrimary = true,
+                        CreatedDate = DateTime.Now
+                    });
                 }
-                catch (DbUpdateConcurrencyException)
+
+                var result = await _productService.UpdateProductAsync(product);
+                if (result)
                 {
-                    if (!ProductExists(product.ProductId)) return NotFound();
-                    else throw;
+                    TempData["SuccessMessage"] = "Product updated successfully!";
+                    return RedirectToAction(nameof(Index));
                 }
-                return RedirectToAction(nameof(Index));
+                
+                ModelState.AddModelError("Code", "Product code already exists.");
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "CategoryId", "Name", product.CategoryId);
+            
+            var categories = await _categoryService.GetAllCategoriesAsync();
+            ViewData["CategoryId"] = new SelectList(categories, "CategoryId", "Name", product.CategoryId);
             return View(product);
         }
 
@@ -263,9 +193,7 @@ namespace Sales_Management.Areas.Admin.Controllers
         {
             if (id == null) return NotFound();
 
-            var product = await _context.Products
-                .Include(p => p.Category)
-                .FirstOrDefaultAsync(m => m.ProductId == id);
+            var product = await _productService.GetProductDetailsAsync(id.Value);
             if (product == null) return NotFound();
 
             return View(product);
@@ -276,23 +204,16 @@ namespace Sales_Management.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var product = await _context.Products.FindAsync(id);
-            if (product != null)
+            var result = await _productService.DeleteProductAsync(id);
+            if (result)
             {
-                // Lưu ý: Sử dụng Status = "Deleted" để xóa mềm theo yêu cầu
-                
-                product.Status = "Deleted"; // Soft Delete
-                product.UpdatedDate = DateTime.Now;
-                _context.Update(product);
-                await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Product deleted successfully (Soft Delete).";
             }
+            else
+            {
+                TempData["ErrorMessage"] = "Could not delete product.";
+            }
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool ProductExists(int id)
-        {
-            return _context.Products.Any(e => e.ProductId == id);
         }
     }
 }

@@ -1,4 +1,4 @@
-@model Sales_Management.Models.Product
+@model SalesManagement.Web.ViewModels.ProductViewModel
 
 @{
     ViewData["Title"] = "Chi tiết sản phẩm";
@@ -19,29 +19,10 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-5 mb-4 mb-md-0">
-                     @if (Model.ProductImages != null && Model.ProductImages.Any())
+                     @if (!string.IsNullOrEmpty(Model.PrimaryImageUrl))
                     {
-                        <div id="productCarousel" class="carousel slide border rounded shadow-sm overflow-hidden" data-bs-ride="carousel">
-                          <div class="carousel-inner">
-                            @{ int i = 0; }
-                            @foreach(var img in Model.ProductImages)
-                            {
-                                <div class="carousel-item @(i==0 ? "active" : "")">
-                                  <img src="@img.ImageUrl" class="d-block w-100 object-fit-cover" style="height: 400px;" alt="Product Image">
-                                </div>
-                                i++;
-                            }
-                          </div>
-                          @if(Model.ProductImages.Count > 1) {
-                              <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
-                                <span class="carousel-control-prev-icon bg-dark rounded-circle p-2" aria-hidden="true"></span>
-                                <span class="visually-hidden">Trước</span>
-                              </button>
-                              <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
-                                <span class="carousel-control-next-icon bg-dark rounded-circle p-2" aria-hidden="true"></span>
-                                <span class="visually-hidden">Sau</span>
-                              </button>
-                          }
+                        <div class="border rounded shadow-sm overflow-hidden">
+                             <img src="@Model.PrimaryImageUrl" class="d-block w-100 object-fit-cover" style="height: 400px;" alt="Product Image">
                         </div>
                     }
                     else
@@ -55,21 +36,18 @@
                             <h5 class="card-title border-bottom pb-2">Thông tin chi tiết</h5>
                             <dl class="row mt-3">
                                 <dt class = "col-sm-4 text-muted">Mã sản phẩm</dt>
-                                <dd class = "col-sm-8 fw-bold text-dark">@Html.DisplayFor(model => model.Code)</dd>
+                                <dd class = "col-sm-8 fw-bold text-dark">@Model.Code</dd>
                                 
                                 <dt class = "col-sm-4 text-muted">Danh mục</dt>
                                 <dd class = "col-sm-8">
-                                    <span class="badge bg-info text-dark">@Html.DisplayFor(model => model.Category.Name)</span>
+                                    <span class="badge bg-info text-dark">@Model.CategoryName</span>
                                 </dd>
 
-                                <dt class = "col-sm-4 text-muted">Giá nhập</dt>
-                                <dd class = "col-sm-8">@(Model.ImportPrice.HasValue ? Model.ImportPrice.Value.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) + " VNĐ" : "")</dd>
-
-                                <dt class = "col-sm-4 text-muted">Giá bán</dt>
+                                <dt class = "col-sm-4 text-muted">Giá bán (Coin)</dt>
                                 <dd class = "col-sm-8 text-primary fw-bold fs-5">@((Model.CoinPrice ?? 0).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu</dd>
-                                
-                                <dt class = "col-sm-4 text-muted">Thuế VAT</dt>
-                                <dd class = "col-sm-8">@Model.Vatrate%</dd>
+
+                                <dt class = "col-sm-4 text-muted">Giá bán (VNĐ)</dt>
+                                <dd class = "col-sm-8 text-success fw-bold">@Model.SellingPrice.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) VNĐ</dd>
                                 
                                 <dt class = "col-sm-4 text-muted">Tồn kho</dt>
                                 <dd class = "col-sm-8">
@@ -86,17 +64,13 @@
                                         @(Model.Status == "Active" ? "Hoạt động" : Model.Status)
                                     </span>
                                 </dd>
-                                
-                                <dt class = "col-sm-4 text-muted">Ngày tạo</dt>
-                                <dd class = "col-sm-8">@(Model.CreatedDate.HasValue ? Model.CreatedDate.Value.ToString("dd/MM/yyyy") : "")</dd>
 
                                 <dt class = "col-sm-4 text-muted">Mô tả</dt>
-                                <dd class = "col-sm-8">@Html.DisplayFor(model => model.Description)</dd>
+                                <dd class = "col-sm-8">@Model.Description</dd>
                             </dl>
                         </div>
                     </div>
                      <div class="mt-4">
-                        <!-- Edit button removed -->
                         <a asp-action="Index" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left"></i> Quay lại danh sách
                         </a>

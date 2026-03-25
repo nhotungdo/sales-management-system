@@ -1,4 +1,4 @@
-@model IEnumerable<Sales_Management.Models.Employee>
+@model IEnumerable<SalesManagement.DAL.Entities.Employee>
 
 @{
     ViewData["Title"] = "Quản lý nhân viên";
@@ -58,7 +58,6 @@
                     <th>Phòng ban</th>
                     <th>Loại hợp đồng</th>
                     <th>Ngày vào làm</th>
-                    <th>Tình trạng làm việc</th>
                     <th>Trạng thái TK</th>
                     <th class="text-center">Hành động</th>
                 </tr>
@@ -98,20 +97,6 @@
                             <span class="badge-modern @contractClass text-nowrap">@contractText</span>
                         </td>
                         <td>@item.StartWorkingDate?.ToString("dd/MM/yyyy")</td>
-                        <td>
-                             @{
-                                var today = DateOnly.FromDateTime(DateTime.Now);
-                                var isWorking = item.TimeAttendances.Any(t => t.Date == today && t.CheckOutTime == null);
-                            }
-                            @if(isWorking)
-                            {
-                                <span class="badge-modern badge-success-modern"><i class="bi bi-circle-fill" style="font-size: 8px; margin-right: 4px; vertical-align: middle;"></i> Đang làm việc</span>
-                            }
-                            else
-                            {
-                                 <span class="badge-modern badge-secondary"><i class="bi bi-circle" style="font-size: 8px; margin-right: 4px; vertical-align: middle;"></i> Đã về / Nghỉ</span>
-                            }
-                        </td>
                         <td>
                             @if (!item.IsDeleted)
                             {

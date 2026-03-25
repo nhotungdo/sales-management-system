@@ -1,4 +1,4 @@
-@model Sales_Management.ViewModels.HomeProductViewModel
+@model SalesManagement.Web.ViewModels.HomeProductViewModel
 
 @{
     ViewData["Title"] = "Danh sách sản phẩm";
@@ -45,10 +45,10 @@
                 <div class="col-md-3 col-sm-6">
                     <div class="card h-100 card-modern product-card border-0 shadow-sm">
                         <div class="position-relative overflow-hidden rounded-top">
-                            @if (item.ProductImages != null && item.ProductImages.Any())
+                            @if (!string.IsNullOrEmpty(item.PrimaryImageUrl))
                             {
                                 <a asp-action="Details" asp-route-id="@item.ProductId" class="d-block ratio ratio-1x1">
-                                    <img src="@item.ProductImages.First().ImageUrl" class="card-img-top product-img object-fit-cover" alt="@item.Name">
+                                    <img src="@item.PrimaryImageUrl" class="card-img-top product-img object-fit-cover" alt="@item.Name">
                                 </a>
                             }
                             else
@@ -60,7 +60,7 @@
                                 </a>
                             }
                             <div class="position-absolute top-0 end-0 p-3">
-                                <span class="badge bg-white text-primary shadow-sm rounded-pill px-3 py-2">@item.Category?.Name</span>
+                                <span class="badge bg-white text-primary shadow-sm rounded-pill px-3 py-2">@item.CategoryName</span>
                             </div>
                             
                             <!-- Overlay Actions -->

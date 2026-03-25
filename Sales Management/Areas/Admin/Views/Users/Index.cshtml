@@ -1,4 +1,4 @@
-@model IEnumerable<Sales_Management.Models.User>
+@model IEnumerable<SalesManagement.DAL.Entities.User>
 @{
     ViewData["Title"] = "Quản lý người dùng";
 }
@@ -115,7 +115,7 @@
     
     <!-- Simplified Pagination info (Optional) -->
     <div class="mt-4 text-center text-muted small">
-        Hiển thị @Model.Count() kết quả
+        Hiển thị @(Model?.Count() ?? 0) kết quả
     </div>
 </div>
 

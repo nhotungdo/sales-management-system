@@ -1,19 +1,19 @@
-using Microsoft.EntityFrameworkCore;
-using Sales_Management.Data;
-using Sales_Management.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using SalesManagement.DAL.Data;
+using SalesManagement.DAL.Entities;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
-namespace Sales_Management.Areas.Sale.Controllers
+namespace SalesManagement.Web.Areas.Sale.Controllers
 {
     [Area("Sale")]
     [Authorize(Roles = "Sales, Admin")]
     public class DashboardController : Controller
     {
-        private readonly SalesManagementContext _context;
+        private readonly AppDbContext _context;
 
-        public DashboardController(SalesManagementContext context)
+        public DashboardController(AppDbContext context)
         {
             _context = context;
         }

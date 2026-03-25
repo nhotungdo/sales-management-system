@@ -1,15 +1,15 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Sales_Management.Data;
+using SalesManagement.DAL.Data;
 using System.Security.Claims;
 
-namespace Sales_Management.ViewComponents
+namespace SalesManagement.Web.ViewComponents
 {
     public class WalletBalanceViewComponent : ViewComponent
     {
-        private readonly SalesManagementContext _context;
+        private readonly AppDbContext _context;
 
-        public WalletBalanceViewComponent(SalesManagementContext context)
+        public WalletBalanceViewComponent(AppDbContext context)
         {
             _context = context;
         }

@@ -1,110 +1,55 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Sales_Management.Data;
-using Sales_Management.Models;
+using Microsoft.AspNetCore.Mvc;
+using SalesManagement.BLL.Interfaces;
+using SalesManagement.DAL.Entities;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace Sales_Management.Areas.Sale.Controllers
+namespace SalesManagement.Web.Areas.Sale.Controllers
 {
     [Area("Sale")]
     public class OrdersController : Controller
     {
-        private readonly SalesManagementContext _context;
+        private readonly IOrderService _orderService;
+        private readonly ICustomerService _customerService;
+        private readonly IProductService _productService;
 
-        public OrdersController(SalesManagementContext context)
+        public OrdersController(IOrderService orderService, ICustomerService customerService, IProductService productService)
         {
-            _context = context;
+            _orderService = orderService;
+            _customerService = customerService;
+            _productService = productService;
         }
 
         public async Task<IActionResult> Index()
         {
-            var orders = _context.Orders
-                .Include(o => o.Customer)
-                .Include(o => o.OrderDetails);
-
-            return View(await orders.ToListAsync());
+            var orders = await _orderService.GetOrdersOverviewAsync(null, null);
+            return View(orders);
         }
 
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewBag.Customers = _context.Customers.ToList();
-            ViewBag.Products = _context.Products
-                .Where(p => p.StockQuantity > 0)
-                .ToList();
-
+            ViewBag.Customers = await _customerService.GetAllCustomersAsync(null);
+            var products = await _productService.GetAllProductsAsync();
+            ViewBag.Products = products.Where(p => (p.StockQuantity ?? 0) > 0).ToList();
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(
-            int customerId,
-            List<int> productIds,
-            List<int> quantities
-        )
+        public async Task<IActionResult> Create(int customerId, List<int> productIds, List<int> quantities)
         {
-            if (productIds.Count != quantities.Count)
+            if (productIds == null || quantities == null || productIds.Count != quantities.Count)
             {
                 ModelState.AddModelError("", "Dữ liệu sản phẩm không hợp lệ");
-            }
-
-            if (!ModelState.IsValid)
-            {
                 return RedirectToAction(nameof(Create));
             }
 
-            var order = new Order
+            var order = await _orderService.CreateOrderAsync(customerId, productIds, quantities);
+            if (order == null)
             {
-                CustomerId = customerId,
-                OrderDate = DateTime.Now,
-                Status = "Completed",
-                PaymentStatus = "Unpaid",
-                CreatedBy = 1
-            };
-
-            decimal subTotal = 0;
-
-            _context.Orders.Add(order);
-            await _context.SaveChangesAsync(); // lấy OrderId
-
-            for (int i = 0; i < productIds.Count; i++)
-            {
-                var product = await _context.Products.FindAsync(productIds[i]);
-                if (product == null) continue;
-
-                if (quantities[i] <= 0 || quantities[i] > product.StockQuantity)
-                    continue;
-
-                var detail = new OrderDetail
-                {
-                    OrderId = order.OrderId,
-                    ProductId = product.ProductId,
-                    Quantity = quantities[i],
-                    UnitPrice = product.SellingPrice,
-                    Total = quantities[i] * product.SellingPrice
-                };
-
-                subTotal += detail.Total ?? 0;
-                product.StockQuantity -= quantities[i];
-
-                _context.OrderDetails.Add(detail);
+                ModelState.AddModelError("", "Lỗi trong quá trình tạo đơn hàng.");
+                return RedirectToAction(nameof(Create));
             }
-
-            order.SubTotal = subTotal;
-            order.TaxAmount = subTotal * 0.1m;
-            order.TotalAmount = order.SubTotal + order.TaxAmount;
-
-            // ✅ AUTO CREATE INVOICE
-            var invoice = new Invoice
-            {
-                OrderId = order.OrderId,
-                InvoiceDate = DateTime.Now,
-                Amount = (decimal)order.TotalAmount,
-                Status = "Unpaid"
-            };
-
-            _context.Invoices.Add(invoice);
-
-            await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
         }

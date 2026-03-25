@@ -1,95 +1,48 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using Sales_Management.Models;
-using Sales_Management.Data;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using SalesManagement.BLL.Interfaces;
+using SalesManagement.DAL.Entities;
+using SalesManagement.Web.ViewModels;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 
-using Microsoft.AspNetCore.Authorization;
-
-namespace Sales_Management.Controllers
+namespace SalesManagement.Web.Controllers
 {
-    // [Authorize(Roles = "Admin")] - Removed to allow public/sales access as regular users
     public class ProductsController : Controller
     {
-        private readonly SalesManagementContext _context;
-        private readonly IWebHostEnvironment _hostEnvironment;
+        private readonly IProductService _productService;
 
-        public ProductsController(SalesManagementContext context, IWebHostEnvironment hostEnvironment)
+        public ProductsController(IProductService productService)
         {
-            _context = context;
-            _hostEnvironment = hostEnvironment;
+            _productService = productService;
         }
 
         // GET: Products
-        public async Task<IActionResult> Index(string sortOrder, string currentFilter, string searchString, int? pageNumber)
+        public async Task<IActionResult> Index(string searchString, string sortOrder, int? pageNumber)
         {
-            ViewData["CurrentSort"] = sortOrder;
-            ViewData["NameSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
-            ViewData["PriceSortParm"] = sortOrder == "Price" ? "price_desc" : "Price";
-            ViewData["DateSortParm"] = sortOrder == "Date" ? "date_desc" : "Date";
-
-            if (searchString != null)
-            {
-                pageNumber = 1;
-            }
-            else
-            {
-                searchString = currentFilter;
-            }
-
-            ViewData["CurrentFilter"] = searchString;
-
-            var products = from s in _context.Products.Include(p => p.Category).Include(p => p.ProductImages)
-                           where s.Status == "Active" // Ensure only active products are shown like regular users
-                           select s;
-
-            if (!String.IsNullOrEmpty(searchString))
-            {
-                products = products.Where(s => s.Name.Contains(searchString) || s.Code.Contains(searchString));
-            }
-
-            switch (sortOrder)
-            {
-                case "name_desc":
-                    products = products.OrderByDescending(s => s.Name);
-                    break;
-                case "Price":
-                    products = products.OrderBy(s => s.SellingPrice);
-                    break;
-                case "price_desc":
-                    products = products.OrderByDescending(s => s.SellingPrice);
-                    break;
-                case "Date":
-                    products = products.OrderBy(s => s.CreatedDate);
-                    break;
-                case "date_desc":
-                    products = products.OrderByDescending(s => s.CreatedDate);
-                    break;
-                default:
-                    products = products.OrderByDescending(s => s.CreatedDate);
-                    break;
-            }
-
             int pageSize = 12;
-            int pageIndex = (pageNumber ?? 1);
-            int count = await products.CountAsync();
-            
-            if (pageIndex < 1) pageIndex = 1;
-            int totalPages = (int)Math.Ceiling(count / (double)pageSize);
-            if (pageIndex > totalPages && totalPages > 0) pageIndex = totalPages;
+            int page = pageNumber ?? 1;
 
-            var items = await products.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+            var products = await _productService.GetPagedProductsAsync(page, pageSize, searchString, sortOrder);
+            int totalProducts = await _productService.GetTotalProductCountAsync(searchString);
+            int totalPages = (int)Math.Ceiling(totalProducts / (double)pageSize);
 
-            var viewModel = new Sales_Management.ViewModels.HomeProductViewModel
+            var viewModel = new HomeProductViewModel
             {
-                Products = items,
-                CurrentPage = pageIndex,
+                Products = products.Select(p => new ProductViewModel
+                {
+                    ProductId = p.ProductId,
+                    Code = p.Code,
+                    Name = p.Name,
+                    Description = p.Description,
+                    CategoryId = p.CategoryId,
+                    CategoryName = p.Category?.Name,
+                    SellingPrice = p.SellingPrice,
+                    CoinPrice = p.CoinPrice,
+                    StockQuantity = p.StockQuantity,
+                    Status = p.Status,
+                    PrimaryImageUrl = p.ProductImages.FirstOrDefault(i => i.IsPrimary == true)?.ImageUrl 
+                                    ?? p.ProductImages.FirstOrDefault()?.ImageUrl
+                }).ToList(),
+                CurrentPage = page,
                 TotalPages = totalPages,
                 SearchString = searchString,
                 SortOrder = sortOrder
@@ -101,21 +54,143 @@ namespace Sales_Management.Controllers
         // GET: Products/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var product = await _context.Products
-                .Include(p => p.Category)
-                .Include(p => p.ProductImages)
-                .FirstOrDefaultAsync(m => m.ProductId == id);
-            if (product == null || product.Status == "Deleted")
-            {
-                return NotFound();
-            }
+            var product = await _productService.GetProductByIdAsync(id.Value);
+            if (product == null) return NotFound();
 
-            return View(product);
+            var viewModel = new ProductViewModel
+            {
+                ProductId = product.ProductId,
+                Code = product.Code,
+                Name = product.Name,
+                Description = product.Description,
+                CategoryId = product.CategoryId,
+                CategoryName = product.Category?.Name,
+                SellingPrice = product.SellingPrice,
+                StockQuantity = product.StockQuantity,
+                Status = product.Status,
+                PrimaryImageUrl = product.ProductImages.FirstOrDefault(i => i.IsPrimary == true)?.ImageUrl 
+                                ?? product.ProductImages.FirstOrDefault()?.ImageUrl
+            };
+
+            return View(viewModel);
+        }
+
+        // GET: Products/Create
+        public IActionResult Create()
+        {
+            return View(new ProductViewModel());
+        }
+
+        // POST: Products/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(ProductViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var product = new Product
+                {
+                    Code = model.Code,
+                    Name = model.Name,
+                    Description = model.Description,
+                    SellingPrice = model.SellingPrice,
+                    StockQuantity = model.StockQuantity,
+                    CategoryId = model.CategoryId > 0 ? model.CategoryId : 1
+                };
+
+                var result = await _productService.AddProductAsync(product);
+                if (result)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                ModelState.AddModelError("Code", "Sản phẩm với mã này đã tồn tại.");
+            }
+            return View(model);
+        }
+
+        // GET: Products/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var product = await _productService.GetProductByIdAsync(id.Value);
+            if (product == null) return NotFound();
+
+            var viewModel = new ProductViewModel
+            {
+                ProductId = product.ProductId,
+                Code = product.Code,
+                Name = product.Name,
+                Description = product.Description,
+                CategoryId = product.CategoryId,
+                SellingPrice = product.SellingPrice,
+                StockQuantity = product.StockQuantity,
+                Status = product.Status
+            };
+
+            return View(viewModel);
+        }
+
+        // POST: Products/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, ProductViewModel model)
+        {
+            if (id != model.ProductId) return NotFound();
+
+            if (ModelState.IsValid)
+            {
+                var product = new Product
+                {
+                    ProductId = model.ProductId,
+                    Code = model.Code,
+                    Name = model.Name,
+                    Description = model.Description,
+                    SellingPrice = model.SellingPrice,
+                    StockQuantity = model.StockQuantity,
+                    CategoryId = model.CategoryId
+                };
+
+                var result = await _productService.UpdateProductAsync(product);
+                if (result)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                ModelState.AddModelError("", "Không thể cập nhật sản phẩm. Vui lòng thử lại.");
+            }
+            return View(model);
+        }
+
+        // GET: Products/Delete/5
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var product = await _productService.GetProductByIdAsync(id.Value);
+            if (product == null) return NotFound();
+
+            var viewModel = new ProductViewModel
+            {
+                ProductId = product.ProductId,
+                Code = product.Code,
+                Name = product.Name,
+                CategoryName = product.Category?.Name,
+                SellingPrice = product.SellingPrice,
+                StockQuantity = product.StockQuantity
+            };
+
+            return View(viewModel);
+        }
+
+        // POST: Products/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            await _productService.DeleteProductAsync(id);
+            return RedirectToAction(nameof(Index));
         }
     }
 }

@@ -1,88 +1,53 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Sales_Management.Models;
-using Sales_Management.Data;
-using Sales_Management.ViewModels;
+using SalesManagement.Web.ViewModels;
+using SalesManagement.BLL.Interfaces;
+using SalesManagement.Web.Models;
 
-namespace Sales_Management.Controllers
+namespace SalesManagement.Web.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly SalesManagementContext _context;
+        private readonly IProductService _productService;
 
-        public HomeController(ILogger<HomeController> logger, SalesManagementContext context)
+        public HomeController(ILogger<HomeController> logger, IProductService productService)
         {
             _logger = logger;
-            _context = context;
+            _productService = productService;
         }
 
         public async Task<IActionResult> Index(string sortOrder, string currentFilter, string searchString, int? page)
         {
-            ViewData["CurrentSort"] = sortOrder;
-            ViewData["NameSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
-            ViewData["PriceSortParm"] = sortOrder == "Price" ? "price_desc" : "Price";
-            ViewData["DateSortParm"] = sortOrder == "Date" ? "date_desc" : "Date";
-
-            if (searchString != null)
-            {
-                page = 1;
-            }
-            else
-            {
-                searchString = currentFilter;
-            }
-
-            ViewData["CurrentFilter"] = searchString;
-
-            var products = from s in _context.Products
-                                     .Include(p => p.ProductImages)
-                                     .Include(p => p.Category)
-                           where s.Status == "Active"
-                           select s;
-
-            if (!String.IsNullOrEmpty(searchString))
-            {
-                products = products.Where(s => s.Name.Contains(searchString) || (s.Description != null && s.Description.Contains(searchString)));
-            }
-
-            switch (sortOrder)
-            {
-                case "name_desc":
-                    products = products.OrderByDescending(s => s.Name);
-                    break;
-                case "Price":
-                    products = products.OrderBy(s => s.SellingPrice);
-                    break;
-                case "price_desc":
-                    products = products.OrderByDescending(s => s.SellingPrice);
-                    break;
-                case "Date":
-                    products = products.OrderBy(s => s.CreatedDate);
-                    break;
-                case "date_desc":
-                    products = products.OrderByDescending(s => s.CreatedDate);
-                    break;
-                default:
-                    products = products.OrderByDescending(s => s.CreatedDate);
-                    break;
-            }
-
             int pageSize = 12;
-            int pageNumber = (page ?? 1);
-            int count = await products.CountAsync();
-            
-            // Ensure page number is valid
-            if (pageNumber < 1) pageNumber = 1;
-            int totalPages = (int)Math.Ceiling(count / (double)pageSize);
-            if (pageNumber > totalPages && totalPages > 0) pageNumber = totalPages;
+            int pageNumber = page ?? 1;
 
-            var items = await products.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+            _logger.LogInformation("HomeController.Index: Fetching products...");
+            var products = await _productService.GetPagedProductsAsync(pageNumber, pageSize, searchString, sortOrder);
+            _logger.LogInformation($"HomeController.Index: Found {products.Count()} products.");
+            
+            var count = await _productService.GetTotalProductCountAsync(searchString);
+            _logger.LogInformation($"HomeController.Index: Total count: {count}");
+            
+            int totalPages = (int)Math.Ceiling(count / (double)pageSize);
 
             var viewModel = new HomeProductViewModel
             {
-                Products = items,
+                Products = products.Select(p => new ProductViewModel
+                {
+                    ProductId = p.ProductId,
+                    Code = p.Code,
+                    Name = p.Name,
+                    Description = p.Description,
+                    CategoryId = p.CategoryId,
+                    CategoryName = p.Category?.Name,
+                    SellingPrice = p.SellingPrice,
+                    CoinPrice = p.CoinPrice,
+                    StockQuantity = p.StockQuantity,
+                    Status = p.Status,
+                    PrimaryImageUrl = p.ProductImages.FirstOrDefault(i => i.IsPrimary == true)?.ImageUrl 
+                                    ?? p.ProductImages.FirstOrDefault()?.ImageUrl
+                }).ToList(),
                 CurrentPage = pageNumber,
                 TotalPages = totalPages,
                 SearchString = searchString,
@@ -94,22 +59,31 @@ namespace Sales_Management.Controllers
 
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var product = await _context.Products
-                .Include(p => p.Category)
-                .Include(p => p.ProductImages)
-                .FirstOrDefaultAsync(m => m.ProductId == id);
+            var product = await _productService.GetProductByIdAsync(id.Value);
 
             if (product == null || product.Status == "Deleted")
             {
                 return NotFound();
             }
 
-            return View(product);
+            var viewModel = new ProductViewModel
+            {
+                ProductId = product.ProductId,
+                Code = product.Code,
+                Name = product.Name,
+                Description = product.Description,
+                CategoryId = product.CategoryId,
+                CategoryName = product.Category?.Name,
+                SellingPrice = product.SellingPrice,
+                StockQuantity = product.StockQuantity,
+                Status = product.Status,
+                PrimaryImageUrl = product.ProductImages.FirstOrDefault(i => i.IsPrimary == true)?.ImageUrl 
+                                ?? product.ProductImages.FirstOrDefault()?.ImageUrl
+            };
+
+            return View(viewModel);
         }
 
         public IActionResult Privacy()

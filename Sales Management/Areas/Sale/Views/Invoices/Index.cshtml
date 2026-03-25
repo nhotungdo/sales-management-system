@@ -1,4 +1,4 @@
-﻿@model List<Sales_Management.Models.Invoice>
+﻿@model List<SalesManagement.DAL.Entities.Invoice>
 
 @{
     ViewData["Title"] = "Invoices";
@@ -37,7 +37,7 @@
                         <td>@item.Order.Customer.FullName</td>
                         <td>@item.InvoiceDate?.ToString("dd/MM/yyyy")</td>
                         <td class="text-danger fw-bold">
-                            @item.Amount.ToString("N0") đ
+                            @item.Amount.ToString("N0") d
                         </td>
                         <td>
                             <span class="badge bg-info">

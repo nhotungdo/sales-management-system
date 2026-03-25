@@ -1,49 +1,38 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Sales_Management.Data;
+using Microsoft.AspNetCore.Mvc;
+using SalesManagement.BLL.Interfaces;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace Sales_Management.Areas.Sale.Controllers
+namespace SalesManagement.Web.Areas.Sale.Controllers
 {
     [Area("Sale")]
     public class InvoicesController : Controller
     {
-        private readonly SalesManagementContext _context;
+        private readonly IInvoiceService _invoiceService;
+        private readonly IWalletService _walletService;
 
-        public InvoicesController(SalesManagementContext context)
+        public InvoicesController(IInvoiceService invoiceService, IWalletService walletService)
         {
-            _context = context;
+            _invoiceService = invoiceService;
+            _walletService = walletService;
         }
 
         public async Task<IActionResult> Index()
         {
-            var invoices = await _context.Invoices
-                .Include(i => i.Order)
-                    .ThenInclude(o => o.Customer)
-                .OrderByDescending(i => i.InvoiceDate)
-                .ToListAsync();
-
+            var invoices = await _invoiceService.GetAllInvoicesAsync();
             return View(invoices);
         }
 
         public async Task<IActionResult> Details(int id)
         {
-            var invoice = await _context.Invoices
-                .Include(i => i.Order)
-                    .ThenInclude(o => o.Customer)
-                .Include(i => i.Order)
-                    .ThenInclude(o => o.OrderDetails)
-                        .ThenInclude(d => d.Product)
-                .FirstOrDefaultAsync(i => i.InvoiceId == id);
-
+            var invoice = await _invoiceService.GetInvoiceDetailsAsync(id);
             if (invoice == null) return NotFound();
 
-            var payments = await _context.WalletTransactions
-                .Where(t => t.TransactionCode == $"INV-{id}")
-                .OrderByDescending(t => t.CreatedDate)
-                .ToListAsync();
+            var payments = await _walletService.GetTransactionsAsync(null, null, null);
+            // Re-filtering based on invoice convention
+            var invoicePayments = payments.Where(t => t.Description != null && t.Description.Contains($"INV-{id}"));
 
-            ViewBag.Payments = payments;
-
+            ViewBag.Payments = invoicePayments;
             return View(invoice);
         }
     }

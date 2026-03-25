@@ -2,11 +2,14 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Sales_Management.Services;
-using Sales_Management.ViewModels;
+using SalesManagement.Web.ViewModels;
 using System.Security.Claims;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using SalesManagement.BLL.Interfaces;
 
-namespace Sales_Management.Controllers
+namespace SalesManagement.Web.Controllers
 {
     public class AccountController : Controller
     {
@@ -62,14 +65,9 @@ namespace Sales_Management.Controllers
                     IsPersistent = model.RememberMe,
                     ExpiresUtc = model.RememberMe 
                         ? DateTimeOffset.UtcNow.AddDays(30) 
-                        : DateTimeOffset.UtcNow.AddHours(1)
+                        : DateTimeOffset.UtcNow.AddHours(10)
                 });
 
-            // Auto Check-in for Sales
-            if (user.Role == "Sales")
-            {
-                await _authService.CheckInSalesEmployee(user.UserId);
-            }
 
             // Redirect theo role
             if (user.Role == "Admin")
@@ -119,16 +117,6 @@ namespace Sales_Management.Controllers
         [Authorize]
         public async Task<IActionResult> Logout(string? reason = null)
         {
-            // Auto Check-out for Sales
-            if (User.IsInRole("Sales"))
-            {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
-                {
-                    await _authService.CheckOutSalesEmployee(userId, reason ?? "");
-                }
-            }
-
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");
         }

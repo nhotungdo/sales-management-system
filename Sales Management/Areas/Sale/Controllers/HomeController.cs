@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Sales_Management.Data;
-using Sales_Management.Models;
+using SalesManagement.DAL.Data;
+using SalesManagement.DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 
 namespace SaleManagement.Areas.Sale.Controllers
@@ -10,9 +10,9 @@ namespace SaleManagement.Areas.Sale.Controllers
     [Authorize(Roles = "Sales")]
     public class HomeController : Controller
     {
-        private readonly SalesManagementContext _context;
+        private readonly AppDbContext _context;
 
-        public HomeController(SalesManagementContext context)
+        public HomeController(AppDbContext context)
         {
             _context = context;
         }

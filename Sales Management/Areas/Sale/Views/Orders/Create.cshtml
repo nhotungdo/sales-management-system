@@ -1,7 +1,7 @@
-﻿@{
+@{
     ViewData["Title"] = "Create Order";
-    var customers = ViewBag.Customers as List<Sales_Management.Models.Customer>;
-    var products = ViewBag.Products as List<Sales_Management.Models.Product>;
+    var customers = ViewBag.Customers as List<SalesManagement.DAL.Entities.Customer>;
+    var products = ViewBag.Products as List<SalesManagement.DAL.Entities.Product>;
 }
 
 <h2 class="mb-4">Create Order</h2>
@@ -51,7 +51,7 @@
                     </td>
 
                     <td class="text-danger fw-bold">
-                        @products[i].SellingPrice.ToString("N0") ₫
+                        @products[i].SellingPrice.ToString("N0") ?
                     </td>
 
                     <td>

@@ -1,26 +1,25 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Sales_Management.Models;
-using Sales_Management.Data;
-using System.Linq;
+using SalesManagement.BLL.Interfaces;
+using SalesManagement.DAL.Entities;
 using System.Threading.Tasks;
 
-namespace Sales_Management.Controllers
+namespace SalesManagement.Web.Controllers
 {
     [Authorize(Roles = "Admin")]
     public class CategoriesController : Controller
     {
-        private readonly SalesManagementContext _context;
+        private readonly ICategoryService _categoryService;
 
-        public CategoriesController(SalesManagementContext context)
+        public CategoriesController(ICategoryService categoryService)
         {
-            _context = context;
+            _categoryService = categoryService;
         }
 
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Categories.ToListAsync());
+            var categories = await _categoryService.GetAllCategoriesAsync();
+            return View(categories);
         }
 
         public IActionResult Create()
@@ -30,74 +29,56 @@ namespace Sales_Management.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name,Description")] Category category)
+        public async Task<IActionResult> Create(Category category)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(category);
-                await _context.SaveChangesAsync();
+                await _categoryService.AddCategoryAsync(category);
                 return RedirectToAction(nameof(Index));
             }
             return View(category);
         }
 
-        // GET: Categories/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
 
-            var category = await _context.Categories.FindAsync(id);
+            var category = await _categoryService.GetCategoryByIdAsync(id.Value);
             if (category == null) return NotFound();
             return View(category);
         }
 
-        // POST: Categories/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("CategoryId,Name,Description")] Category category)
+        public async Task<IActionResult> Edit(int id, Category category)
         {
             if (id != category.CategoryId) return NotFound();
 
             if (ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(category);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!_context.Categories.Any(e => e.CategoryId == category.CategoryId)) return NotFound();
-                    else throw;
-                }
-                return RedirectToAction(nameof(Index));
+                var success = await _categoryService.UpdateCategoryAsync(category);
+                if (success) return RedirectToAction(nameof(Index));
+                
+                ModelState.AddModelError("", "Unable to update category.");
             }
             return View(category);
         }
 
-        // GET: Categories/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
 
-            var category = await _context.Categories
-                .FirstOrDefaultAsync(m => m.CategoryId == id);
+            var category = await _categoryService.GetCategoryByIdAsync(id.Value);
             if (category == null) return NotFound();
 
             return View(category);
         }
 
-        // POST: Categories/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var category = await _context.Categories.FindAsync(id);
-            if (category != null)
-            {
-                _context.Categories.Remove(category);
-                await _context.SaveChangesAsync();
-            }
+            await _categoryService.DeleteCategoryAsync(id);
             return RedirectToAction(nameof(Index));
         }
     }
