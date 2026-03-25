@@ -3,10 +3,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Authorization;
 using SalesManagement.BLL.Interfaces;
 using SalesManagement.DAL.Entities;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace SalesManagement.Web.Areas.Sale.Controllers
 {
@@ -26,7 +22,7 @@ namespace SalesManagement.Web.Areas.Sale.Controllers
         // GET: Sale/Products
         public async Task<IActionResult> Index()
         {
-            var products = await _productService.GetAllProductsAsync();
+            var products = await _productService.GetPagedProductsAsync(1, 1000, null, null);
             return View(products.Where(p => p.Status != "Deleted"));
         }
 
@@ -52,7 +48,6 @@ namespace SalesManagement.Web.Areas.Sale.Controllers
                 var result = await _productService.AddProductAsync(product);
                 if (result)
                 {
-                    // Xử lý ảnh (UI concern - saving to physical path)
                     if (imageFile != null && imageFile.Length > 0)
                     {
                         var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");

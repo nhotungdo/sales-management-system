@@ -1,13 +1,101 @@
-public async Task<IActionResult>
-    Details(int id)
-    {
-    var order = await _context.Orders
-    .Include(o => o.Customer)
-    .Include(o => o.OrderDetails)
-    .ThenInclude(d => d.Product)
-    .FirstOrDefaultAsync(o => o.OrderId == id);
+@model SalesManagement.DAL.Entities.Order
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng";
+    Layout = "_SaleLayout";
+}
 
-    if (order == null) return NotFound();
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-primary">
+                        <i class="bi bi-receipt me-2"></i> Chi tiết đơn hàng #@Model.OrderId
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-success rounded-pill px-3 py-2">@Model.Status</span>
+                        <a asp-action="Index" class="btn btn-outline-secondary btn-sm px-3 border">Quay lại</a>
+                    </div>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <div class="row g-4 mb-5">
+                        <div class="col-md-6">
+                            <h6 class="text-muted small text-uppercase fw-bold mb-3 ls-1">Thông tin khách hàng</h6>
+                            <div class="card bg-light border-0 p-3 rounded-4">
+                                <h5 class="fw-bold mb-1">@Model.Customer?.FullName</h5>
+                                <div class="text-muted small"><i class="bi bi-telephone me-2"></i> @Model.Customer?.PhoneNumber</div>
+                                <div class="text-muted small"><i class="bi bi-envelope me-2"></i> @Model.Customer?.Email</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted small text-uppercase fw-bold mb-3 ls-1">Thông tin đơn hàng</h6>
+                            <div class="card bg-light border-0 p-3 rounded-4">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Ngày đặt:</span>
+                                    <span class="fw-bold">@Model.OrderDate?.ToString("dd/MM/yyyy HH:mm")</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted">Phương thức:</span>
+                                    <span class="badge bg-white text-dark border">@Model.PaymentMethod</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-    return View(order);
-    }
+                    <h6 class="text-muted small text-uppercase fw-bold mb-3 ls-1">Danh sách sản phẩm</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table align-middle">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-3">Sản phẩm</th>
+                                    <th class="text-center">Số lượng</th>
+                                    <th class="text-end">Đơn giá</th>
+                                    <th class="text-end pe-3">Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var detail in Model.OrderDetails)
+                                {
+                                    <tr>
+                                        <td class="ps-3">
+                                            <div class="fw-bold">@detail.Product?.Name</div>
+                                            <small class="text-muted">Mã: @detail.Product?.Code</small>
+                                        </td>
+                                        <td class="text-center">@detail.Quantity</td>
+                                        <td class="text-end">@detail.UnitPrice.ToString("N0") xu</td>
+                                        <td class="text-end pe-3 fw-bold">@detail.Total?.ToString("N0") xu</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="row justify-content-end">
+                        <div class="col-md-5">
+                            <div class="card border-0 bg-primary bg-opacity-10 p-4 rounded-4">
+                                <div class="d-flex justify-content-between mb-2 text-muted">
+                                    <span>Tạm tính:</span>
+                                    <span>@Model.TotalAmount?.ToString("N0") xu</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 text-muted">
+                                    <span>Giảm giá:</span>
+                                    <span>-0 xu</span>
+                                </div>
+                                <hr />
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="fw-bold mb-0">Tổng thanh toán:</h5>
+                                    <h4 class="fw-bold mb-0 text-primary">@Model.TotalAmount?.ToString("N0") xu</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ls-1 { letter-spacing: 1px; }
+    .table thead th { border-bottom: none; font-size: 0.8rem; }
+</style>

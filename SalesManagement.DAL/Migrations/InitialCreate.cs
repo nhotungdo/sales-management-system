@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -608,12 +608,12 @@ namespace SalesManagement.DAL.Migrations
                 columns: new[] { "CategoryId", "Description", "DisplayOrder", "ImageUrl", "Name", "ParentId", "Status" },
                 values: new object[,]
                 {
-                    { 1, null, null, null, "Ð? u?ng", null, "Active" },
-                    { 2, null, null, null, "Ð? an v?t", null, "Active" },
-                    { 3, null, null, null, "Th?c ph?m", null, "Active" },
-                    { 4, null, null, null, "Ði?n t?", null, "Active" },
-                    { 5, null, null, null, "Th?i trang", null, "Active" },
-                    { 6, null, null, null, "Ð? gia d?ng", null, "Active" },
+                    { 1, null, null, null, "Đồ uống", null, "Active" },
+                    { 2, null, null, null, "Đồ ăn vặt", null, "Active" },
+                    { 3, null, null, null, "Thực phẩm", null, "Active" },
+                    { 4, null, null, null, "Điện tử", null, "Active" },
+                    { 5, null, null, null, "Thời trang", null, "Active" },
+                    { 6, null, null, null, "Đồ gia dụng", null, "Active" },
                     { 7, null, null, null, "Sách", null, "Active" }
                 });
 

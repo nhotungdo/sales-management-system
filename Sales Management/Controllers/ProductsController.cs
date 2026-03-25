@@ -52,29 +52,11 @@ namespace SalesManagement.Web.Controllers
         }
 
         // GET: Products/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // Redirect tới trang chi tiết đầy đủ của Home
+        public IActionResult Details(int? id)
         {
             if (id == null) return NotFound();
-
-            var product = await _productService.GetProductByIdAsync(id.Value);
-            if (product == null) return NotFound();
-
-            var viewModel = new ProductViewModel
-            {
-                ProductId = product.ProductId,
-                Code = product.Code,
-                Name = product.Name,
-                Description = product.Description,
-                CategoryId = product.CategoryId,
-                CategoryName = product.Category?.Name,
-                SellingPrice = product.SellingPrice,
-                StockQuantity = product.StockQuantity,
-                Status = product.Status,
-                PrimaryImageUrl = product.ProductImages.FirstOrDefault(i => i.IsPrimary == true)?.ImageUrl 
-                                ?? product.ProductImages.FirstOrDefault()?.ImageUrl
-            };
-
-            return View(viewModel);
+            return RedirectToAction("Details", "Home", new { id });
         }
 
         // GET: Products/Create

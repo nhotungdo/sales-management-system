@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using SalesManagement.BLL.Interfaces;
 using SalesManagement.BLL.Models;
 using SalesManagement.DAL.Data;
-using SalesManagement.DAL.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,92 +14,321 @@ namespace SalesManagement.BLL.Services
     public class ReportService : IReportService
     {
         private readonly AppDbContext _context;
+        private readonly IMemoryCache _cache;
+        private readonly ILogger<ReportService> _logger;
 
-        public ReportService(AppDbContext context)
+        // TTL for report cache entries
+        private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(5);
+
+        public ReportService(AppDbContext context, IMemoryCache cache, ILogger<ReportService> logger)
         {
             _context = context;
+            _cache = cache;
+            _logger = logger;
         }
 
-        public async Task<RevenueReportDTO> GetRevenueReportAsync(string timeframe, DateTime? startDate, DateTime? endDate)
+        // ─── Revenue Report ────────────────────────────────────────────────────
+        public async Task<RevenueReportDTO> GetRevenueReportAsync(
+            string timeframe, DateTime? startDate, DateTime? endDate)
         {
             var range = GetDateRange(timeframe, startDate, endDate);
-            var start = range.Start;
-            var end = range.End;
+            var cacheKey = $"Report_Revenue_{range.Start:yyyyMMdd}_{range.End:yyyyMMdd}";
 
-            var currentOrders = await _context.Orders
+            if (_cache.TryGetValue(cacheKey, out RevenueReportDTO? cached) && cached != null)
+                return cached;
+
+            var result = await BuildRevenueReportAsync(range.Start, range.End, timeframe);
+            _cache.Set(cacheKey, result, CacheTtl);
+            return result;
+        }
+
+        private async Task<RevenueReportDTO> BuildRevenueReportAsync(
+            DateTime start, DateTime end, string timeframe)
+        {
+            // ── 1. Current-period stats (all aggregated in DB) ────────────────
+            var currentStats = await _context.Orders
+                .AsNoTracking()
                 .Where(o => o.OrderDate >= start && o.OrderDate <= end)
-                .ToListAsync();
+                .GroupBy(_ => 1)
+                .Select(g => new
+                {
+                    TotalOrders    = g.Count(),
+                    TotalRevenue   = g.Where(o => o.Status == "Completed" || o.PaymentStatus == "Paid")
+                                      .Sum(o => o.TotalAmount) ?? 0m,
+                    CompletedCount = g.Count(o => o.Status == "Completed" || o.PaymentStatus == "Paid"),
+                    CancelledCount = g.Count(o => o.Status == "Cancelled"  || o.Status == "Returned")
+                })
+                .FirstOrDefaultAsync();
 
-            var duration = end - start;
+            // ── 2. Previous-period stats ──────────────────────────────────────
+            var duration  = end - start;
             var prevStart = start.Subtract(duration);
-            var prevEnd = start.AddSeconds(-1);
-            var prevOrders = await _context.Orders
-                .Where(o => o.OrderDate >= prevStart && o.OrderDate <= prevEnd)
-                .ToListAsync();
+            var prevEnd   = start.AddSeconds(-1);
 
-            var currentRevenue = currentOrders.Where(o => o.Status == "Completed" || o.PaymentStatus == "Paid").Sum(o => o.TotalAmount ?? 0);
-            var prevRevenue = prevOrders.Where(o => o.Status == "Completed" || o.PaymentStatus == "Paid").Sum(o => o.TotalAmount ?? 0);
+            var prevStats = await _context.Orders
+                .AsNoTracking()
+                .Where(o => o.OrderDate >= prevStart && o.OrderDate <= prevEnd)
+                .GroupBy(_ => 1)
+                .Select(g => new
+                {
+                    TotalOrders  = g.Count(),
+                    TotalRevenue = g.Where(o => o.Status == "Completed" || o.PaymentStatus == "Paid")
+                                    .Sum(o => o.TotalAmount) ?? 0m
+                })
+                .FirstOrDefaultAsync();
+
+            // ── 3. Chart data — aggregated by day or month entirely in the DB ─
+            List<ChartPoint> chartPoints;
+
+            if (timeframe == "year")
+            {
+                // Group by month number
+                var monthlyData = await _context.Orders
+                    .AsNoTracking()
+                    .Where(o => o.OrderDate >= start && o.OrderDate <= end)
+                    .GroupBy(o => o.OrderDate!.Value.Month)
+                    .Select(g => new
+                    {
+                        Month   = g.Key,
+                        Revenue = g.Where(o => o.Status == "Completed" || o.PaymentStatus == "Paid")
+                                   .Sum(o => o.TotalAmount) ?? 0m,
+                        Orders  = g.Count()
+                    })
+                    .ToListAsync();
+
+                chartPoints = Enumerable.Range(1, 12).Select(m =>
+                {
+                    var d = monthlyData.FirstOrDefault(x => x.Month == m);
+                    return new ChartPoint { Label = $"T{m}", Revenue = d?.Revenue ?? 0, Orders = d?.Orders ?? 0 };
+                }).ToList();
+            }
+            else
+            {
+                // Group by day — let DB do the heavy lifting
+                var dailyData = await _context.Orders
+                    .AsNoTracking()
+                    .Where(o => o.OrderDate >= start && o.OrderDate <= end)
+                    .GroupBy(o => o.OrderDate!.Value.Date)
+                    .Select(g => new
+                    {
+                        Day     = g.Key,
+                        Revenue = g.Where(o => o.Status == "Completed" || o.PaymentStatus == "Paid")
+                                   .Sum(o => o.TotalAmount) ?? 0m,
+                        Orders  = g.Count()
+                    })
+                    .OrderBy(x => x.Day)
+                    .ToListAsync();
+
+                // Build a complete date-series (days with no orders get zero)
+                var lookup = dailyData.ToDictionary(x => x.Day.Date);
+                chartPoints = new List<ChartPoint>();
+                for (var day = start.Date; day <= end.Date; day = day.AddDays(1))
+                {
+                    lookup.TryGetValue(day, out var d);
+                    chartPoints.Add(new ChartPoint
+                    {
+                        Label   = day.ToString("dd/MM"),
+                        Revenue = d?.Revenue ?? 0,
+                        Orders  = d?.Orders  ?? 0
+                    });
+                }
+            }
 
             return new RevenueReportDTO
             {
-                Start = start, End = end,
-                CurrentOrders = currentOrders,
-                TotalRevenue = currentRevenue,
-                PrevRevenue = prevRevenue,
-                PrevOrdersCount = prevOrders.Count
+                Start              = start,
+                End                = end,
+                TotalRevenue       = currentStats?.TotalRevenue   ?? 0,
+                CurrentOrdersCount = currentStats?.TotalOrders    ?? 0,
+                CompletedCount     = currentStats?.CompletedCount ?? 0,
+                CancelledCount     = currentStats?.CancelledCount ?? 0,
+                PrevRevenue        = prevStats?.TotalRevenue   ?? 0,
+                PrevOrdersCount    = prevStats?.TotalOrders    ?? 0,
+                ChartData          = chartPoints
             };
         }
 
-        public async Task<ProductReportDTO> GetProductReportAsync(DateTime? startDate, DateTime? endDate)
+        // ─── Product Report ────────────────────────────────────────────────────
+        public async Task<ProductReportDTO> GetProductReportAsync(
+            DateTime? startDate, DateTime? endDate)
         {
-            var end = endDate ?? DateTime.Now;
+            var end   = endDate   ?? DateTime.Now;
             var start = startDate ?? new DateTime(end.Year, end.Month, 1);
+            var cacheKey = $"Report_Product_{start:yyyyMMdd}_{end:yyyyMMdd}";
 
+            if (_cache.TryGetValue(cacheKey, out ProductReportDTO? cached) && cached != null)
+                return cached;
+
+            var result = await BuildProductReportAsync(start, end);
+            _cache.Set(cacheKey, result, CacheTtl);
+            return result;
+        }
+
+        private async Task<ProductReportDTO> BuildProductReportAsync(DateTime start, DateTime end)
+        {
+            // ── Top-selling products — full GROUP BY in DB ────────────────────
             var topSelling = await _context.OrderDetails
-                .Include(od => od.Product)
-                .Include(od => od.Order)
-                .Where(od => od.Order.OrderDate >= start && od.Order.OrderDate <= end && (od.Order.Status == "Completed" || od.Order.PaymentStatus == "Paid"))
+                .AsNoTracking()
+                .Where(od =>
+                    od.Order.OrderDate >= start &&
+                    od.Order.OrderDate <= end &&
+                    (od.Order.Status == "Completed" || od.Order.PaymentStatus == "Paid"))
+                .GroupBy(od => new { od.ProductId, od.Product.Name, od.Product.Code })
+                .Select(g => new TopProductDTO
+                {
+                    ProductId       = g.Key.ProductId,
+                    ProductName     = g.Key.Name,
+                    ProductCode     = g.Key.Code,
+                    UnitsSold       = g.Sum(od => od.Quantity),
+                    RevenueGenerated = g.Sum(od => od.Total) ?? 0m
+                })
+                .OrderByDescending(x => x.UnitsSold)
+                .Take(10)
                 .ToListAsync();
 
-            var allProducts = await _context.Products.ToListAsync();
+            // ── Low-stock products — only fetch what we need ──────────────────
+            var lowStock = await _context.Products
+                .AsNoTracking()
+                .Where(p => (p.StockQuantity ?? 0) < 10 && p.Status != "Deleted")
+                .OrderBy(p => p.StockQuantity)
+                .Take(20)
+                .Select(p => new LowStockProductDTO
+                {
+                    ProductId     = p.ProductId,
+                    Name          = p.Name,
+                    Code          = p.Code,
+                    StockQuantity = p.StockQuantity ?? 0,
+                    Value         = (p.StockQuantity ?? 0) * p.SellingPrice
+                })
+                .ToListAsync();
+
+            // ── Inventory summary — aggregate in DB ───────────────────────────
+            var inventorySummary = await _context.Products
+                .AsNoTracking()
+                .Where(p => p.Status != "Deleted")
+                .GroupBy(_ => 1)
+                .Select(g => new
+                {
+                    TotalItems = g.Count(),
+                    TotalValue = g.Sum(p => (p.StockQuantity ?? 0) * p.SellingPrice)
+                })
+                .FirstOrDefaultAsync();
 
             return new ProductReportDTO
             {
-                Start = start, End = end,
-                TopSellingRaw = topSelling,
-                AllProducts = allProducts
+                Start               = start,
+                End                 = end,
+                TopSelling          = topSelling,
+                LowStock            = lowStock,
+                TotalItemsInStock   = inventorySummary?.TotalItems ?? 0,
+                TotalInventoryValue = inventorySummary?.TotalValue  ?? 0m
             };
         }
 
-        public async Task<FinancialReportDTO> GetFinancialReportAsync(DateTime? startDate, DateTime? endDate)
+        // ─── Financial Report ──────────────────────────────────────────────────
+        public async Task<FinancialReportDTO> GetFinancialReportAsync(
+            DateTime? startDate, DateTime? endDate)
         {
-             var end = endDate ?? DateTime.Now;
-             var start = startDate ?? new DateTime(end.Year, end.Month, 1);
+            var end   = endDate   ?? DateTime.Now;
+            var start = startDate ?? new DateTime(end.Year, end.Month, 1);
+            var cacheKey = $"Report_Financial_{start:yyyyMMdd}_{end:yyyyMMdd}";
 
-             var orders = await _context.Orders
-                .Where(o => o.OrderDate >= start && o.OrderDate <= end)
-                .ToListAsync();
+            if (_cache.TryGetValue(cacheKey, out FinancialReportDTO? cached) && cached != null)
+                return cached;
 
-             var walletTrans = await _context.WalletTransactions
-                .Where(w => w.CreatedDate >= start && w.CreatedDate <= end && w.Status == "Success")
-                .ToListAsync();
-
-             return new FinancialReportDTO
-             {
-                 Start = start, End = end,
-                 Orders = orders,
-                 WalletTransactions = walletTrans
-             };
+            var result = await BuildFinancialReportAsync(start, end);
+            _cache.Set(cacheKey, result, CacheTtl);
+            return result;
         }
 
-        private (DateTime Start, DateTime End) GetDateRange(string timeframe, DateTime? start, DateTime? end)
+        private async Task<FinancialReportDTO> BuildFinancialReportAsync(DateTime start, DateTime end)
+        {
+            // ── 1. Invoice stats — one GROUP-BY query in DB ───────────────────
+            var invoiceStats = await _context.Orders
+                .AsNoTracking()
+                .Where(o => o.OrderDate >= start && o.OrderDate <= end)
+                .GroupBy(_ => 1)
+                .Select(g => new
+                {
+                    PaidRevenue    = g.Where(o => o.Status == "Completed" || o.PaymentStatus == "Paid").Sum(o => o.TotalAmount) ?? 0m,
+                    PaidCount      = g.Count(o => o.Status == "Completed" || o.PaymentStatus == "Paid"),
+                    PendingRevenue = g.Where(o => o.PaymentStatus == "Pending").Sum(o => o.TotalAmount) ?? 0m,
+                    PendingCount   = g.Count(o => o.PaymentStatus == "Pending"),
+                    RefundRevenue  = g.Where(o => o.Status == "Returned").Sum(o => o.TotalAmount) ?? 0m,
+                    RefundCount    = g.Count(o => o.Status == "Returned")
+                })
+                .FirstOrDefaultAsync();
+
+            // ── 2. Wallet totals — one GROUP-BY query ─────────────────────────
+            var walletTotals = await _context.WalletTransactions
+                .AsNoTracking()
+                .Where(w => w.CreatedDate >= start && w.CreatedDate <= end && w.Status == "Success")
+                .GroupBy(_ => 1)
+                .Select(g => new
+                {
+                    CashIn  = g.Where(w => w.Amount > 0).Sum(w => w.Amount),
+                    CashOut = g.Where(w => w.Amount < 0).Sum(w => -w.Amount)
+                })
+                .FirstOrDefaultAsync();
+
+            // ── 3. Daily cash-flow chart — GROUP BY date in DB ────────────────
+            var dailyFlow = await _context.WalletTransactions
+                .AsNoTracking()
+                .Where(w => w.CreatedDate >= start && w.CreatedDate <= end && w.Status == "Success")
+                .GroupBy(w => w.CreatedDate!.Value.Date)
+                .Select(g => new
+                {
+                    Day     = g.Key,
+                    CashIn  = g.Where(w => w.Amount > 0).Sum(w => w.Amount),
+                    CashOut = g.Where(w => w.Amount < 0).Sum(w => -w.Amount)
+                })
+                .OrderBy(x => x.Day)
+                .ToListAsync();
+
+            // Fill complete date-series (no O(n²) loop)
+            var flowLookup = dailyFlow.ToDictionary(x => x.Day.Date);
+            var cashFlowPoints = new List<CashFlowPoint>();
+            for (var day = start.Date; day <= end.Date; day = day.AddDays(1))
+            {
+                flowLookup.TryGetValue(day, out var d);
+                cashFlowPoints.Add(new CashFlowPoint
+                {
+                    Label   = day.ToString("dd/MM"),
+                    CashIn  = d?.CashIn  ?? 0m,
+                    CashOut = d?.CashOut ?? 0m
+                });
+            }
+
+            return new FinancialReportDTO
+            {
+                Start           = start,
+                End             = end,
+                PaidRevenue     = invoiceStats?.PaidRevenue    ?? 0m,
+                PaidCount       = invoiceStats?.PaidCount      ?? 0,
+                PendingRevenue  = invoiceStats?.PendingRevenue ?? 0m,
+                PendingCount    = invoiceStats?.PendingCount   ?? 0,
+                RefundedRevenue = invoiceStats?.RefundRevenue  ?? 0m,
+                RefundedCount   = invoiceStats?.RefundCount    ?? 0,
+                TotalCashIn     = walletTotals?.CashIn  ?? 0m,
+                TotalCashOut    = walletTotals?.CashOut ?? 0m,
+                DailyCashFlow   = cashFlowPoints
+            };
+        }
+
+        // ─── Helpers ───────────────────────────────────────────────────────────
+        private static (DateTime Start, DateTime End) GetDateRange(
+            string timeframe, DateTime? start, DateTime? end)
         {
             if (start.HasValue && end.HasValue) return (start.Value, end.Value);
             var now = DateTime.Now;
-            if (timeframe == "week") return (now.AddDays(-7), now);
-            if (timeframe == "year") return (new DateTime(now.Year, 1, 1), new DateTime(now.Year, 12, 31));
-            if (timeframe == "all") return (DateTime.MinValue, DateTime.MaxValue);
-            return (new DateTime(now.Year, now.Month, 1), new DateTime(now.Year, now.Month, 1).AddMonths(1).AddDays(-1));
+            return timeframe switch
+            {
+                "week" => (now.AddDays(-7), now),
+                "year" => (new DateTime(now.Year, 1, 1), new DateTime(now.Year, 12, 31)),
+                "all"  => (new DateTime(2000, 1, 1), now),
+                _      => (new DateTime(now.Year, now.Month, 1),
+                           new DateTime(now.Year, now.Month, 1).AddMonths(1).AddDays(-1))
+            };
         }
     }
 }

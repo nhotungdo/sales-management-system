@@ -44,8 +44,8 @@
                             </td>
                             <td><span class="badge bg-light text-dark border">@item.Code</span></td>
                             <td class="fw-bold">@item.Name</td>
-                            <td class="text-muted">@item.ImportPrice?.ToString("N0")</td>
-                            <td class="text-primary fw-bold">@item.SellingPrice.ToString("N0")</td>
+                            <td class="text-muted">@((item.ImportPrice ?? 0m).ToString("N0"))</td>
+                            <td class="text-primary fw-bold">@(item.SellingPrice.ToString("N0"))</td>
                             <td>
                                 @if(item.StockQuantity < 10)
                                 {

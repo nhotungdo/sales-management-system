@@ -2,10 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SalesManagement.Web.Areas.Admin.ViewModels;
 using SalesManagement.BLL.Interfaces;
-using SalesManagement.DAL.Entities;
-using SalesManagement.BLL.Models;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,152 +20,136 @@ namespace SalesManagement.Web.Areas.Admin.Controllers
             _reportService = reportService;
         }
 
-        public async Task<IActionResult> Index(string timeframe = "month", DateTime? startDate = null, DateTime? endDate = null)
+        // GET: /Admin/Reports/Index
+        public async Task<IActionResult> Index(
+            string timeframe = "month",
+            DateTime? startDate = null,
+            DateTime? endDate = null)
         {
-            var data = await _reportService.GetRevenueReportAsync(timeframe, startDate, endDate);
-            
-            DateTime start = data.Start;
-            DateTime end = data.End;
-            List<Order> currentOrders = data.CurrentOrders ?? new List<Order>();
-            decimal currentRevenue = data.TotalRevenue;
-            decimal prevRevenue = data.PrevRevenue;
-            int prevOrdersCount = data.PrevOrdersCount;
+            var dto = await _reportService.GetRevenueReportAsync(timeframe, startDate, endDate);
 
-            var revenueGrowth = prevRevenue > 0 ? ((currentRevenue - prevRevenue) / prevRevenue) * 100 : 100;
-            decimal ordersGrowth = prevOrdersCount > 0 ? (decimal)(((double)(currentOrders.Count - prevOrdersCount) / prevOrdersCount) * 100) : 100;
+            var revenueGrowth = dto.PrevRevenue > 0
+                ? Math.Round(((dto.TotalRevenue - dto.PrevRevenue) / dto.PrevRevenue) * 100, 1)
+                : (dto.TotalRevenue > 0 ? 100m : 0m);
+
+            var ordersGrowth = dto.PrevOrdersCount > 0
+                ? Math.Round((decimal)(dto.CurrentOrdersCount - dto.PrevOrdersCount) / dto.PrevOrdersCount * 100, 1)
+                : (dto.CurrentOrdersCount > 0 ? 100m : 0m);
 
             var model = new RevenueReportViewModel
             {
-                Timeframe = timeframe,
-                StartDate = start,
-                EndDate = end,
-                TotalOrders = currentOrders.Count,
-                TotalRevenue = currentRevenue,
-                AverageOrderValue = currentOrders.Count > 0 ? currentRevenue / currentOrders.Count : 0,
-                CompletionRate = currentOrders.Count > 0 ? (double)currentOrders.Count(o => o.Status == "Completed" || o.PaymentStatus == "Paid") / currentOrders.Count * 100 : 0,
-                CancellationRate = currentOrders.Count > 0 ? (double)currentOrders.Count(o => o.Status == "Cancelled" || o.Status == "Returned") / currentOrders.Count * 100 : 0,
-                RevenueGrowth = Math.Round(revenueGrowth, 1),
-                OrdersGrowth = Math.Round(ordersGrowth, 1)
+                Timeframe        = timeframe,
+                StartDate        = dto.Start,
+                EndDate          = dto.End,
+                TotalRevenue     = dto.TotalRevenue,
+                TotalOrders      = dto.CurrentOrdersCount,
+                AverageOrderValue = dto.CurrentOrdersCount > 0
+                    ? dto.TotalRevenue / dto.CurrentOrdersCount : 0,
+                CompletionRate   = dto.CurrentOrdersCount > 0
+                    ? Math.Round((double)dto.CompletedCount / dto.CurrentOrdersCount * 100, 1) : 0,
+                CancellationRate = dto.CurrentOrdersCount > 0
+                    ? Math.Round((double)dto.CancelledCount / dto.CurrentOrdersCount * 100, 1) : 0,
+                RevenueGrowth    = revenueGrowth,
+                OrdersGrowth     = ordersGrowth,
+                // Chart data comes pre-built from service
+                ChartLabels      = dto.ChartData.Select(p => p.Label).ToList(),
+                RevenueChartData = dto.ChartData.Select(p => p.Revenue).ToList(),
+                OrdersChartData  = dto.ChartData.Select(p => p.Orders).ToList()
             };
 
-            PrepareRevenueChartData(model, currentOrders, timeframe, start, end);
             return View(model);
         }
 
-        public async Task<IActionResult> Products(DateTime? startDate = null, DateTime? endDate = null)
+        // GET: /Admin/Reports/Products
+        public async Task<IActionResult> Products(
+            DateTime? startDate = null,
+            DateTime? endDate = null)
         {
-            var data = await _reportService.GetProductReportAsync(startDate, endDate);
-            
-            DateTime start = data.Start;
-            DateTime end = data.End;
-            List<OrderDetail> topSellingQuery = data.TopSellingRaw ?? new List<OrderDetail>();
-            List<Product> allProducts = data.AllProducts ?? new List<Product>();
+            var dto = await _reportService.GetProductReportAsync(startDate, endDate);
 
             var model = new ProductReportViewModel
             {
-                StartDate = start,
-                EndDate = end,
-                TopSellingProducts = topSellingQuery
-                    .GroupBy(od => new { od.ProductId, od.Product.Name, od.Product.Code })
-                    .Select(g => new TopProductViewModel
-                    {
-                        ProductName = g.Key.Name,
-                        ProductCode = g.Key.Code,
-                        UnitsSold = g.Sum(x => x.Quantity),
-                        RevenueGenerated = g.Sum(x => x.Total ?? 0)
-                    })
-                    .OrderByDescending(x => x.UnitsSold)
-                    .Take(10)
-                    .ToList(),
-                LowStockProducts = allProducts.Where(p => (p.StockQuantity ?? 0) < 10)
-                    .Select(p => new ProductInventoryViewModel { ProductId = p.ProductId, Name = p.Name, Code = p.Code, StockQuantity = p.StockQuantity ?? 0, Value = (p.StockQuantity ?? 0) * p.SellingPrice })
-                    .OrderBy(p => p.StockQuantity).ToList(),
-                TotalItemsInStock = allProducts.Count,
-                TotalInventoryValue = allProducts.Sum(p => (p.StockQuantity ?? 0) * p.SellingPrice)
+                StartDate           = dto.Start,
+                EndDate             = dto.End,
+                TotalItemsInStock   = dto.TotalItemsInStock,
+                TotalInventoryValue = dto.TotalInventoryValue,
+                TopSellingProducts  = dto.TopSelling.Select(x => new TopProductViewModel
+                {
+                    ProductName      = x.ProductName,
+                    ProductCode      = x.ProductCode,
+                    UnitsSold        = x.UnitsSold,
+                    RevenueGenerated = x.RevenueGenerated
+                }).ToList(),
+                LowStockProducts = dto.LowStock.Select(p => new ProductInventoryViewModel
+                {
+                    ProductId     = p.ProductId,
+                    Name          = p.Name,
+                    Code          = p.Code,
+                    StockQuantity = p.StockQuantity,
+                    Value         = p.Value
+                }).ToList()
             };
 
             return View(model);
         }
 
-        public async Task<IActionResult> Financials(DateTime? startDate = null, DateTime? endDate = null)
+        // GET: /Admin/Reports/Financials
+        public async Task<IActionResult> Financials(
+            DateTime? startDate = null,
+            DateTime? endDate = null)
         {
-            var data = await _reportService.GetFinancialReportAsync(startDate, endDate);
-            DateTime start = data.Start;
-            DateTime end = data.End;
-            List<Order> orders = data.Orders ?? new List<Order>();
-            List<WalletTransaction> walletTrans = data.WalletTransactions ?? new List<WalletTransaction>();
+            var dto = await _reportService.GetFinancialReportAsync(startDate, endDate);
 
             var model = new FinancialReportViewModel
             {
-                StartDate = start,
-                EndDate = end,
-                InvoiceStats = new List<InvoiceStatViewModel>
+                StartDate    = dto.Start,
+                EndDate      = dto.End,
+                TotalCashIn  = dto.TotalCashIn,
+                TotalCashOut = dto.TotalCashOut,
+                NetRevenue   = dto.PaidRevenue,
+                InvoiceStats = new System.Collections.Generic.List<InvoiceStatViewModel>
                 {
-                    new InvoiceStatViewModel { Status = "Paid", Count = orders.Count(o => o.Status == "Completed" || o.PaymentStatus == "Paid"), TotalAmount = orders.Where(o => o.Status == "Completed" || o.PaymentStatus == "Paid").Sum(o => o.TotalAmount ?? 0) },
-                    new InvoiceStatViewModel { Status = "Pending", Count = orders.Count(o => o.PaymentStatus == "Pending"), TotalAmount = orders.Where(o => o.PaymentStatus == "Pending").Sum(o => o.TotalAmount ?? 0) },
-                    new InvoiceStatViewModel { Status = "Refunded", Count = orders.Count(o => o.Status == "Returned"), TotalAmount = orders.Where(o => o.Status == "Returned").Sum(o => o.TotalAmount ?? 0) }
+                    new() { Status = "Paid",     Count = dto.PaidCount,     TotalAmount = dto.PaidRevenue    },
+                    new() { Status = "Pending",  Count = dto.PendingCount,  TotalAmount = dto.PendingRevenue },
+                    new() { Status = "Refunded", Count = dto.RefundedCount, TotalAmount = dto.RefundedRevenue }
                 },
-                TotalCashIn = walletTrans.Where(w => w.Amount > 0).Sum(w => w.Amount),
-                TotalCashOut = walletTrans.Where(w => w.Amount < 0).Sum(w => Math.Abs(w.Amount))
+                // Chart data pre-built in service
+                ChartLabels      = dto.DailyCashFlow.Select(p => p.Label).ToList(),
+                CashInChartData  = dto.DailyCashFlow.Select(p => p.CashIn).ToList(),
+                CashOutChartData = dto.DailyCashFlow.Select(p => p.CashOut).ToList()
             };
-            model.NetRevenue = model.InvoiceStats.FirstOrDefault(x => x.Status == "Paid")?.TotalAmount ?? 0;
-
-            for (var day = start.Date; day <= end.Date; day = day.AddDays(1))
-            {
-                model.ChartLabels.Add(day.ToString("dd/MM"));
-                model.CashInChartData.Add(walletTrans.Where(w => w.CreatedDate.HasValue && w.CreatedDate.Value.Date == day && w.Amount > 0).Sum(w => w.Amount));
-                model.CashOutChartData.Add(Math.Abs(walletTrans.Where(w => w.CreatedDate.HasValue && w.CreatedDate.Value.Date == day && w.Amount < 0).Sum(w => w.Amount)));
-            }
 
             return View(model);
         }
 
-        public async Task<IActionResult> ExportRevenue(string timeframe)
+        // GET: /Admin/Reports/ExportRevenue
+        public async Task<IActionResult> ExportRevenue(string timeframe = "month")
         {
-            var data = await _reportService.GetRevenueReportAsync(timeframe, null, null);
-            List<Order> orders = data.CurrentOrders ?? new List<Order>();
-
+            var dto = await _reportService.GetRevenueReportAsync(timeframe, null, null);
             var csv = new StringBuilder();
-            csv.AppendLine("OrderId,Date,Amount,Status");
-            foreach (var o in orders) csv.AppendLine($"{o.OrderId},{o.OrderDate},{o.TotalAmount},{o.Status}");
+            csv.AppendLine("Ngay,DonHang,DoanhThu");
+            foreach (var p in dto.ChartData)
+                csv.AppendLine($"{p.Label},{p.Orders},{p.Revenue}");
 
-            return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", $"RevenueReport_{DateTime.Now:yyyyMMdd}.csv");
+            return File(
+                Encoding.UTF8.GetBytes(csv.ToString()),
+                "text/csv",
+                $"RevenueReport_{DateTime.Now:yyyyMMdd}.csv");
         }
 
+        // GET: /Admin/Reports/ExportProducts
         public async Task<IActionResult> ExportProducts()
         {
-            var data = await _reportService.GetProductReportAsync(null, null);
-            List<Product> allProducts = data.AllProducts ?? new List<Product>();
-
+            var dto = await _reportService.GetProductReportAsync(null, null);
             var csv = new StringBuilder();
-            csv.AppendLine("Id,Code,Name,Stock,Price,Value");
-            foreach (var p in allProducts) csv.AppendLine($"{p.ProductId},{p.Code},{p.Name},{p.StockQuantity},{p.SellingPrice},{p.StockQuantity * p.SellingPrice}");
-            
-            return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", $"InventoryReport_{DateTime.Now:yyyyMMdd}.csv");
-        }
+            csv.AppendLine("Id,Code,Name,Stock,Value");
+            foreach (var p in dto.LowStock)
+                csv.AppendLine($"{p.ProductId},{p.Code},{p.Name},{p.StockQuantity},{p.Value}");
 
-        private void PrepareRevenueChartData(RevenueReportViewModel model, List<Order> orders, string timeframe, DateTime start, DateTime end)
-        {
-            if (timeframe == "year")
-            {
-                for (int i = 1; i <= 12; i++)
-                {
-                    model.ChartLabels.Add($"T{i}");
-                    var monthOrders = orders.Where(o => o.OrderDate.HasValue && o.OrderDate.Value.Month == i).ToList();
-                    model.OrdersChartData.Add(monthOrders.Count);
-                    model.RevenueChartData.Add(monthOrders.Where(o => o.Status == "Completed" || o.PaymentStatus == "Paid").Sum(o => o.TotalAmount ?? 0));
-                }
-            }
-            else
-            {
-                for (var day = start.Date; day <= end.Date; day = day.AddDays(1))
-                {
-                    model.ChartLabels.Add(day.ToString("dd/MM"));
-                    var dayOrders = orders.Where(o => o.OrderDate.HasValue && o.OrderDate.Value.Date == day).ToList();
-                    model.OrdersChartData.Add(dayOrders.Count);
-                    model.RevenueChartData.Add(dayOrders.Where(o => o.Status == "Completed" || o.PaymentStatus == "Paid").Sum(o => o.TotalAmount ?? 0));
-                }
-            }
+            return File(
+                Encoding.UTF8.GetBytes(csv.ToString()),
+                "text/csv",
+                $"InventoryReport_{DateTime.Now:yyyyMMdd}.csv");
         }
     }
 }

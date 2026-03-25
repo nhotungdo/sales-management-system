@@ -6,6 +6,8 @@ using SalesManagement.BLL.Interfaces;
 using SalesManagement.DAL.Entities;
 using System.Linq;
 
+using SalesManagement.Web.Filters;
+
 namespace SalesManagement.Web.Areas.Admin.Controllers
 {
     [Area("Admin")]
@@ -19,6 +21,7 @@ namespace SalesManagement.Web.Areas.Admin.Controllers
             _dashboardService = dashboardService;
         }
 
+        [PreventDuplicateSubmission(500)]
         public async Task<IActionResult> Index()
         {
             var stats = await _dashboardService.GetDashboardStatsAsync();

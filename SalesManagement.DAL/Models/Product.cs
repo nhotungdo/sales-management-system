@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
@@ -8,10 +8,10 @@ namespace SalesManagement.DAL.Entities
     {
         public int ProductId { get; set; }
 
-        [Required(ErrorMessage = "MÃ£ sáº£n pháº©m lÃ  báº¯t buá»™c")]
+        [Required(ErrorMessage = "Mã sản phẩm là bắt buộc")]
         public string Code { get; set; } = null!;
 
-        [Required(ErrorMessage = "TÃªn sáº£n pháº©m lÃ  báº¯t buá»™c")]
+        [Required(ErrorMessage = "Tên sản phẩm là bắt buộc")]
         public string Name { get; set; } = null!;
 
         public string? Description { get; set; }
@@ -21,7 +21,7 @@ namespace SalesManagement.DAL.Entities
         public decimal? ImportPrice { get; set; }
 
         [Required]
-        [Range(0.01, double.MaxValue, ErrorMessage = "GiÃ¡ bÃ¡n pháº£i lá»›n hÆ¡n 0")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Giá bán phải lớn hơn 0")]
         public decimal SellingPrice { get; set; }
 
         public int? CoinPrice { get; set; }
@@ -31,7 +31,7 @@ namespace SalesManagement.DAL.Entities
         public decimal? Vatrate { get; set; }
 
         [Required]
-        [Range(1, int.MaxValue, ErrorMessage = "Sá»‘ lÆ°á»£ng sáº£n pháº©m khÃ´ng Ä‘Æ°á»£c Ã¢m")]
+        [Range(1, int.MaxValue, ErrorMessage = "Số lượng sản phẩm không được âm")]
         public int? StockQuantity { get; set; }
 
         public string? Status { get; set; }

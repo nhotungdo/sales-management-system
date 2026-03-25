@@ -1,4 +1,4 @@
-﻿using SalesManagement.DAL.Entities;
+using SalesManagement.DAL.Entities;
 
 namespace SalesManagement.Web.Areas.Admin.ViewModels
 {

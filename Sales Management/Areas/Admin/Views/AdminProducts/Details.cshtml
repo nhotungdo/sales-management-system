@@ -50,7 +50,7 @@
                         <dd class="col-sm-9 text-success fw-bold">@((Model.CoinPrice ?? 0).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu</dd>
 
                         <dt class="col-sm-3">Coin Price</dt>
-                        <dd class="col-sm-9 text-warning">@(Model.CoinPrice?.ToString("N0") ?? "0") Coins</dd>
+                        <dd class="col-sm-9 text-warning">@((Model.CoinPrice ?? 0).ToString("N0") ?? "0") Coins</dd>
 
                         <dt class="col-sm-3">Import Price</dt>
                         <dd class="col-sm-9">@((Model.ImportPrice ?? 0).ToString("N0")) VNĐ</dd>

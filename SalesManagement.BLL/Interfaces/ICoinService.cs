@@ -1,7 +1,10 @@
-﻿namespace SalesManagement.BLL.Interfaces
+using System.Threading.Tasks;
+
+namespace SalesManagement.BLL.Interfaces
 {
     public interface ICoinService
     {
-        int CalculateCoin(decimal price);
+        Task<(bool Success, string Message)> UseCoins(string userId, decimal amount);
+        decimal CalculateCoin(decimal price);
     }
 }

@@ -4,9 +4,6 @@ using SalesManagement.DAL.Entities;
 using SalesManagement.Web.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
-using System;
-using System.Linq;
 using SalesManagement.BLL.Interfaces;
 
 namespace SalesManagement.Web.Areas.Admin.Controllers

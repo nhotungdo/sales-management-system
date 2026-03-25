@@ -10,5 +10,7 @@ namespace SalesManagement.BLL.Interfaces
         Task<Order?> GetOrderDetailsAsync(int id);
         Task<bool> UpdateOrderStatusAsync(int id, string status);
         Task<Order?> CreateOrderAsync(int customerId, List<int> productIds, List<int> quantities);
+        Task<(bool Success, string Message, int OrderId)> CheckoutAsync(int userId, int productId, int quantity);
+        Task<IEnumerable<Order>> GetMyOrdersAsync(int userId);
     }
 }

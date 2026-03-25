@@ -1,63 +1,104 @@
 @model SalesManagement.DAL.Entities.Product
+@{
+    ViewData["Title"] = "Chỉnh sửa sản phẩm";
+    Layout = "_SaleLayout";
+}
 
-<h2>Edit Product</h2>
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card-header bg-primary text-white py-3 border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-pencil-square me-2"></i> Chỉnh sửa: @Model.Name</h5>
+                    <span class="badge bg-white text-primary rounded-pill px-3">Mã: @Model.Code</span>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3" role="alert"></div>
+                        <input type="hidden" asp-for="ProductId" />
+                        <input type="hidden" asp-for="Code" />
+                        <input type="hidden" asp-for="CreatedDate" />
+                        <input type="hidden" asp-for="CreatedBy" />
 
-<form asp-action="Edit" method="post" enctype="multipart/form-data">
-    <input type="hidden" asp-for="ProductId" />
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label asp-for="CategoryId" class="form-label small fw-bold text-uppercase text-muted">Danh mục</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-folder2-open"></i></span>
+                                    <select asp-for="CategoryId" class="form-select border-start-0 ps-0" asp-items="ViewBag.CategoryId"></select>
+                                </div>
+                                <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                            </div>
 
-    <div class="form-group">
-        <label>Code</label>
-        <input asp-for="Code" class="form-control" />
-        <span asp-validation-for="Code" class="text-danger"></span>
-    </div>
+                            <div class="col-md-6 text-end d-flex align-items-center justify-content-end">
+                                <div class="form-check form-switch card p-3 shadow-sm border-0 bg-light rounded-4">
+                                     <input asp-for="Status" class="form-check-input" type="checkbox" role="switch" id="statusSwitch" value="Active" checked="@(Model.Status == "Active")">
+                                     <label class="form-check-label fw-bold text-primary ms-2" for="statusSwitch">Trạng thái Hoạt động</label>
+                                </div>
+                            </div>
 
-    <div class="form-group">
-        <label>Name</label>
-        <input asp-for="Name" class="form-control" />
-        <span asp-validation-for="Name" class="text-danger"></span>
-    </div>
+                            <div class="col-12">
+                                <label asp-for="Name" class="form-label small fw-bold text-uppercase text-muted">Tên sản phẩm</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-box"></i></span>
+                                    <input asp-for="Name" class="form-control border-start-0 ps-0" placeholder="Tên sản phẩm..." required />
+                                </div>
+                                <span asp-validation-for="Name" class="text-danger small"></span>
+                            </div>
 
-    <div class="form-group">
-        <label>Price (xu)</label>
-        <input asp-for="SellingPrice" type="number" step="0.01" class="form-control" />
-        <span asp-validation-for="SellingPrice" class="text-danger"></span>
-    </div>
+                            <div class="col-12">
+                                <label asp-for="Description" class="form-label small fw-bold text-uppercase text-muted">Mô tả</label>
+                                <textarea asp-for="Description" class="form-control" rows="3" placeholder="Nhập mô tả sản phẩm..."></textarea>
+                                <span asp-validation-for="Description" class="text-danger small"></span>
+                            </div>
 
-    <div class="form-group">
-        <label>Quantity</label>
-        <input asp-for="StockQuantity" type="number" step="1" min="1" class="form-control" />
-        <span asp-validation-for="StockQuantity" class="text-danger"></span>
-    </div>
+                            <div class="col-md-6">
+                                <label asp-for="SellingPrice" class="form-label small fw-bold text-uppercase text-muted">Giá bán (xu)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-coin"></i></span>
+                                    <input asp-for="SellingPrice" class="form-control border-start-0 ps-0" type="number" required />
+                                </div>
+                                <span asp-validation-for="SellingPrice" class="text-danger small"></span>
+                            </div>
 
-    <div class="form-group">
-        <label>Category</label>
-        <select asp-for="CategoryId"
-                asp-items="ViewBag.CategoryId"
-                class="form-control">
-        </select>
-    </div>
+                            <div class="col-md-6">
+                                <label asp-for="StockQuantity" class="form-label small fw-bold text-uppercase text-muted">Số lượng tồn</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-stack"></i></span>
+                                    <input asp-for="StockQuantity" class="form-control border-start-0 ps-0" type="number" required />
+                                </div>
+                                <span asp-validation-for="StockQuantity" class="text-danger small"></span>
+                            </div>
 
-    <div class="form-group">
-        <label>Description</label>
-        <textarea asp-for="Description" class="form-control" rows="4"></textarea>
-    </div>
-
-    @if (Model.ProductImages.Any())
-    {
-        <div class="form-group mt-3">
-            <label>Current Image</label><br />
-            <img src="@Model.ProductImages.First().ImageUrl"
-                 width="200"
-                 class="rounded shadow" />
+                            <div class="col-12 pt-4 d-flex gap-2">
+                                <button type="submit" class="btn btn-primary-modern px-5 py-2 flex-grow-1">
+                                    <i class="bi bi-save me-2"></i> Lưu thay đổi
+                                </button>
+                                <a asp-action="Index" class="btn btn-light px-4 py-2 border">Hủy bỏ</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-    }
-
-    <div class="form-group mt-3">
-        <label>Change Image</label>
-        <input type="file" name="imageFile" class="form-control" />
     </div>
+</div>
 
-    <br/>
-    <button type="submit" class="btn btn-primary">Update</button>
-    <a href="@ViewBag.ReturnUrl" class="btn btn-secondary">Back</a>
-</form>
+<style>
+    .btn-primary-modern {
+        background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    .btn-primary-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        color: white;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: none;
+    }
+</style>

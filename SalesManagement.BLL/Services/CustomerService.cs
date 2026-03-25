@@ -3,9 +3,6 @@ using SalesManagement.BLL.Interfaces;
 using SalesManagement.DAL.Data;
 using SalesManagement.DAL.Entities;
 using SalesManagement.DAL.Interfaces;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace SalesManagement.BLL.Services
 {

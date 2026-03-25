@@ -1,11 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SalesManagement.DAL.Entities;
-using System.IO;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using System;
 using SalesManagement.BLL.Interfaces;
 
 namespace SalesManagement.Web.Areas.Admin.Controllers

@@ -16,6 +16,11 @@ namespace SalesManagement.DAL.Repositories
             _dbSet = _context.Set<T>();
         }
 
+        public virtual IQueryable<T> GetQueryable()
+        {
+            return _dbSet.AsQueryable();
+        }
+
         public virtual async Task<IEnumerable<T>> GetAllAsync()
         {
             return await _dbSet.ToListAsync();

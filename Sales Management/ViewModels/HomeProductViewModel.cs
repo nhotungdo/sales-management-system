@@ -1,4 +1,4 @@
-﻿namespace SalesManagement.Web.ViewModels
+namespace SalesManagement.Web.ViewModels
 {
     public class HomeProductViewModel
     {

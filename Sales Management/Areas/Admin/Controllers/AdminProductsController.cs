@@ -2,13 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using SalesManagement.DAL.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.IO;
-using Microsoft.AspNetCore.Http;
 using SalesManagement.BLL.Interfaces;
+using SalesManagement.Web.Filters;
 
 namespace SalesManagement.Web.Areas.Admin.Controllers
 {
@@ -26,6 +21,7 @@ namespace SalesManagement.Web.Areas.Admin.Controllers
         }
 
         // GET: Admin/Products (Danh sách sản phẩm, quản lý tìm kiếm, sắp xếp và phân trang)
+        [PreventDuplicateSubmission(300)]
         public async Task<IActionResult> Index(string searchString, int? page, string sortOrder)
         {
             ViewData["CurrentSort"] = sortOrder;
@@ -69,6 +65,7 @@ namespace SalesManagement.Web.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [PreventDuplicateSubmission(1000)]
         public async Task<IActionResult> Create([Bind("Code,Name,Description,CategoryId,ImportPrice,SellingPrice,Vatrate,StockQuantity,Status")] Product product, List<IFormFile> imageFiles)
         {
             if (ModelState.IsValid)
@@ -143,6 +140,7 @@ namespace SalesManagement.Web.Areas.Admin.Controllers
         // POST: Admin/Products/Edit/5 (Lưu thay đổi sản phẩm)
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [PreventDuplicateSubmission(1000)]
         public async Task<IActionResult> Edit(int id, [Bind("ProductId,Code,Name,Description,CategoryId,ImportPrice,SellingPrice,Vatrate,StockQuantity,Status,CreatedBy,CreatedDate")] Product product, IFormFile? imageFile)
         {
             if (id != product.ProductId) return NotFound();
@@ -202,6 +200,7 @@ namespace SalesManagement.Web.Areas.Admin.Controllers
         // POST: Admin/Products/Delete/5 (Xử lý xóa mềm)
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [PreventDuplicateSubmission(1000)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var result = await _productService.DeleteProductAsync(id);

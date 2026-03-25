@@ -6,12 +6,22 @@ using SalesManagement.DAL.Repositories;
 using SalesManagement.BLL.Interfaces;
 using SalesManagement.BLL.Services;
 using SalesManagement.Web.Hubs;
+using SalesManagement.Web.Filters;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
+// 1. Add services to the container.
+builder.Services.AddControllersWithViews(options => {
+    options.Filters.Add<PerformanceActionFilter>();
+})
+    .AddViewLocalization()
+    .AddDataAnnotationsLocalization();
 builder.Services.AddSignalR();
+builder.Services.AddMemoryCache();
+
+// Register encoding provider for extra code pages (like Windows-1258 if needed)
+System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
 // 1. Dependency Injection: DbContext (from DAL)
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -66,7 +76,7 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// 2. Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -75,10 +85,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 
-// Order is important!
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
@@ -86,6 +94,7 @@ app.UseSession();
 // Custom Middlewares
 app.UseMiddleware<SalesManagement.Web.Middleware.SalesSessionMiddleware>();
 
+// Cấu hình Routing
 app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");

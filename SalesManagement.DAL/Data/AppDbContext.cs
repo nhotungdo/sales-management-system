@@ -168,6 +168,9 @@ public partial class AppDbContext : DbContext
         {
             entity.HasKey(e => e.OrderId).HasName("PK__Orders__C3905BCF616BF451");
 
+            entity.HasIndex(e => e.OrderDate, "IX_Orders_OrderDate");
+            entity.HasIndex(e => e.Status, "IX_Orders_Status");
+
             entity.Property(e => e.DiscountAmount)
                 .HasDefaultValue(0m)
                 .HasColumnType("decimal(15, 2)");
@@ -206,6 +209,9 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<OrderDetail>(entity =>
         {
             entity.HasKey(e => e.OrderDetailId).HasName("PK__OrderDet__D3B9D36CEFE3A47D");
+
+            // Composite index: speeds up the top-selling products GROUP BY
+            entity.HasIndex(e => new { e.OrderId, e.ProductId }, "IX_OrderDetails_OrderId_ProductId");
 
             entity.Property(e => e.Total).HasColumnType("decimal(15, 2)");
             entity.Property(e => e.UnitPrice).HasColumnType("decimal(15, 2)");
@@ -250,6 +256,8 @@ public partial class AppDbContext : DbContext
             entity.HasKey(e => e.ProductId).HasName("PK__Products__B40CC6CD13EA28AD");
 
             entity.HasIndex(e => e.Code, "UQ__Products__A25C5AA7E59F43F4").IsUnique();
+            entity.HasIndex(e => e.Status, "IX_Products_Status");
+            entity.HasIndex(e => e.CreatedDate, "IX_Products_CreatedDate");
 
             entity.Property(e => e.Code).HasMaxLength(50);
             entity.Property(e => e.CreatedDate)
@@ -374,6 +382,9 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<WalletTransaction>(entity =>
         {
             entity.HasKey(e => e.TransactionId).HasName("PK__WalletTr__55433A6B21E47F13");
+
+            // Composite index: date-range + status filter used in Financial reports
+            entity.HasIndex(e => new { e.CreatedDate, e.Status }, "IX_WalletTransactions_CreatedDate_Status");
 
             entity.Property(e => e.Amount).HasColumnType("decimal(15, 2)");
             entity.Property(e => e.CreatedDate)

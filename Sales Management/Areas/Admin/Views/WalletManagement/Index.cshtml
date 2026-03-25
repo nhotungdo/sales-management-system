@@ -62,7 +62,7 @@
              <div class="card bg-info text-white shadow-sm border-0 h-100">
                 <div class="card-body">
                      <h6 class="text-white-50 text-uppercase small fw-bold">Tổng Doanh Thu</h6>
-                    <h2 class="display-6 fw-bold mb-0">@Model.Where(x => x.Status == "Success").Sum(x => x.AmountMoney)?.ToString("N0") <span class="fs-6">VND</span></h2>
+                    <h2 class="display-6 fw-bold mb-0">@(Model.Where(x => x.Status == "Success").Sum(x => x.AmountMoney)?.ToString("N0") ?? "0") <span class="fs-6">VND</span></h2>
                 </div>
             </div>
         </div>
@@ -109,8 +109,8 @@
                                     <div class="fw-bold">@item.Wallet?.Customer?.FullName</div>
                                     <small class="text-muted">@item.Wallet?.Customer?.PhoneNumber</small>
                                 </td>
-                                <td class="text-end fw-bold text-success">+@item.Amount.ToString("N0")</td>
-                                <td class="text-end fw-bold text-primary">@item.AmountMoney?.ToString("N0")</td>
+                                 <td class="text-end fw-bold text-success">+@(item.Amount.ToString("N0"))</td>
+                                <td class="text-end fw-bold text-primary">@((item.AmountMoney ?? 0m).ToString("N0"))</td>
                                 <td class="text-center">
                                     @if (item.Status == "Success")
                                     {

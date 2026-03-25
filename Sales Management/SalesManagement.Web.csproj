@@ -26,6 +26,7 @@
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
 		<PackageReference Include="itext7" Version="8.0.5" />
+		<PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.5" />
 	</ItemGroup>
 
 </Project>

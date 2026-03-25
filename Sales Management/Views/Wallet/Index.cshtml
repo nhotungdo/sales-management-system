@@ -12,7 +12,7 @@
                 <div class="card-body p-5 text-center position-relative" style="z-index: 1;">
                     <h5 class="card-title text-white-50 text-uppercase ls-1 fw-bold">Số dư hiện tại</h5>
                     <div class="display-3 fw-bold my-4 text-white">
-                        <i class="bi bi-coin text-warning me-2"></i>@Model.Balance?.ToString("N0")
+                        <i class="bi bi-coin text-warning me-2"></i>@((Model.Balance ?? 0m).ToString("N0"))
                     </div>
                     
                     <button class="btn btn-light btn-lg rounded-pill px-5 mt-2 fw-bold text-primary shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#topUpForm" aria-expanded="false" aria-controls="topUpForm">
@@ -85,11 +85,11 @@
                                     <td class="fw-bold fs-5 text-end font-monospace">
                                         @if(item.Amount > 0)
                                         {
-                                            <span class="text-success">+@item.Amount.ToString("N0")</span>
+                                            <span class="text-success">+@(item.Amount.ToString("N0"))</span>
                                         }
                                         else
                                         {
-                                            <span class="text-danger">@item.Amount.ToString("N0")</span>
+                                            <span class="text-danger">@(item.Amount.ToString("N0"))</span>
                                         }
                                     </td>
                                     <td class="text-center">

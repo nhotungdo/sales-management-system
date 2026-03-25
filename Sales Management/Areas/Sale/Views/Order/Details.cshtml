@@ -90,27 +90,27 @@
                                     </div>
                                 </td>
                                 <td class="text-center">@item.Quantity</td>
-                                <td class="text-end">@item.UnitPrice.ToString("N0") ₫</td>
-                                <td class="text-end pe-4 fw-bold">@item.Total?.ToString("N0") ₫</td>
+                                <td class="text-end">@(item.UnitPrice.ToString("N0")) ₫</td>
+                                <td class="text-end pe-4 fw-bold">@((item.Total ?? 0m).ToString("N0")) ₫</td>
                             </tr>
                         }
                     </tbody>
                     <tfoot class="border-top">
                         <tr>
                             <td colspan="3" class="text-end pt-3">Tạm tính:</td>
-                            <td class="text-end pe-4 pt-3">@Model.SubTotal?.ToString("N0") ₫</td>
+                            <td class="text-end pe-4 pt-3">@((Model.SubTotal ?? 0m).ToString("N0")) ₫</td>
                         </tr>
                          <tr>
                             <td colspan="3" class="text-end border-0">Thuế (VAT):</td>
-                            <td class="text-end pe-4 border-0">@Model.TaxAmount?.ToString("N0") ₫</td>
+                            <td class="text-end pe-4 border-0">@((Model.TaxAmount ?? 0m).ToString("N0")) ₫</td>
                         </tr>
                          <tr>
                             <td colspan="3" class="text-end border-0">Giảm giá:</td>
-                            <td class="text-end pe-4 border-0 text-danger">-@Model.DiscountAmount?.ToString("N0") ₫</td>
+                            <td class="text-end pe-4 border-0 text-danger">-@((Model.DiscountAmount ?? 0m).ToString("N0")) ₫</td>
                         </tr>
                         <tr>
                             <td colspan="3" class="text-end border-0 pb-3"><h5 class="fw-bold mb-0">Tổng cộng:</h5></td>
-                            <td class="text-end pe-4 border-0 pb-3"><h5 class="fw-bold text-primary mb-0">@Model.TotalAmount?.ToString("N0") ₫</h5></td>
+                            <td class="text-end pe-4 border-0 pb-3"><h5 class="fw-bold text-primary mb-0">@((Model.TotalAmount ?? 0m).ToString("N0")) ₫</h5></td>
                         </tr>
                     </tfoot>
                 </table>

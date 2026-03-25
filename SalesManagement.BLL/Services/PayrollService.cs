@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using SalesManagement.DAL.Data;
 using SalesManagement.DAL.Entities;
@@ -62,7 +58,6 @@ namespace SalesManagement.BLL.Services
 
             if (employee == null) return null;
 
-            double totalWorkHours = 176; 
             decimal basicSalary = employee.BasicSalary ?? 0;
             decimal hourlyRate = basicSalary / (StandardWorkDays * 8);
             decimal grossEarnings = basicSalary;

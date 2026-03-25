@@ -27,7 +27,7 @@
                         <small class="text-muted">Đơn hàng</small>
                     </div>
                     <div class="col-4 border-end">
-                         <h6 class="fw-bold mb-0">@((Model.Wallet?.Balance ?? 0).ToString("N0")) ₫</h6>
+                         <h6 class="fw-bold mb-0">@((Model.Wallet?.Balance ?? 0m).ToString("N0")) ₫</h6>
                         <small class="text-muted">Ví</small>
                     </div>
                     <div class="col-4">
@@ -97,7 +97,7 @@
                                     <tr>
                                         <td class="ps-4 fw-bold">#@order.OrderId</td>
                                         <td>@order.OrderDate?.ToString("dd/MM/yyyy HH:mm")</td>
-                                        <td class="fw-bold text-primary">@order.TotalAmount?.ToString("N0") ₫</td>
+                                         <td class="fw-bold text-primary">@((order.TotalAmount ?? 0m).ToString("N0")) ₫</td>
                                         <td>
                                             @{
                                                 var badgeClass = order.Status switch

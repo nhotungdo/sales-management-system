@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -83,7 +83,7 @@ namespace SalesManagement.Web.Controllers
         {
             if (coinAmount <= 0)
             {
-                TempData["Error"] = "Sá»‘ lÆ°á»£ng coin pháº£i lá»›n hÆ¡n 0";
+                TempData["Error"] = "Số lượng coin phải lớn hơn 0";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -108,7 +108,7 @@ namespace SalesManagement.Web.Controllers
                 Method = "System", // Changed from "VietQR" to match DB constraint ('VNPay', 'System')
                 Status = "Pending",
                 TransactionCode = transactionCode,
-                Description = $"Náº¡p {coinAmount:N0} coin (VietQR)",
+                Description = $"Nạp {coinAmount:N0} coin (VietQR)",
                 CreatedDate = DateTime.Now
             };
 
@@ -159,7 +159,7 @@ namespace SalesManagement.Web.Controllers
             {
                 transaction.Status = "Cancelled";
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "ÄÃ£ há»§y giao dá»‹ch";
+                TempData["Success"] = "Đã hủy giao dịch";
             }
 
             return RedirectToAction(nameof(Index));

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SalesManagement.Web.ViewModels;
 using SalesManagement.BLL.Interfaces;
 using SalesManagement.Web.Models;
+using Microsoft.Extensions.Logging;
 
 namespace SalesManagement.Web.Controllers
 {
@@ -22,14 +23,14 @@ namespace SalesManagement.Web.Controllers
             int pageSize = 12;
             int pageNumber = page ?? 1;
 
-            _logger.LogInformation("HomeController.Index: Fetching products...");
+            if (searchString != null) pageNumber = 1;
+            else searchString = currentFilter;
+
+            ViewData["CurrentSort"] = sortOrder;
+            ViewData["CurrentFilter"] = searchString;
+
             var products = await _productService.GetPagedProductsAsync(pageNumber, pageSize, searchString, sortOrder);
-            _logger.LogInformation($"HomeController.Index: Found {products.Count()} products.");
-            
-            var count = await _productService.GetTotalProductCountAsync(searchString);
-            _logger.LogInformation($"HomeController.Index: Total count: {count}");
-            
-            int totalPages = (int)Math.Ceiling(count / (double)pageSize);
+            var totalCount = await _productService.GetTotalProductCountAsync(searchString);
 
             var viewModel = new HomeProductViewModel
             {
@@ -49,7 +50,7 @@ namespace SalesManagement.Web.Controllers
                                     ?? p.ProductImages.FirstOrDefault()?.ImageUrl
                 }).ToList(),
                 CurrentPage = pageNumber,
-                TotalPages = totalPages,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
                 SearchString = searchString,
                 SortOrder = sortOrder
             };
@@ -68,22 +69,7 @@ namespace SalesManagement.Web.Controllers
                 return NotFound();
             }
 
-            var viewModel = new ProductViewModel
-            {
-                ProductId = product.ProductId,
-                Code = product.Code,
-                Name = product.Name,
-                Description = product.Description,
-                CategoryId = product.CategoryId,
-                CategoryName = product.Category?.Name,
-                SellingPrice = product.SellingPrice,
-                StockQuantity = product.StockQuantity,
-                Status = product.Status,
-                PrimaryImageUrl = product.ProductImages.FirstOrDefault(i => i.IsPrimary == true)?.ImageUrl 
-                                ?? product.ProductImages.FirstOrDefault()?.ImageUrl
-            };
-
-            return View(viewModel);
+            return View(product);
         }
 
         public IActionResult Privacy()

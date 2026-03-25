@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SalesManagement.DAL.Data;
 using SalesManagement.DAL.Entities;
 using System.Security.Claims;

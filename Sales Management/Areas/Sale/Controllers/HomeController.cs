@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SalesManagement.DAL.Data;
 using SalesManagement.DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
 
-namespace SaleManagement.Areas.Sale.Controllers
+namespace SalesManagement.Web.Areas.Sale.Controllers
 {
     [Area("Sale")]
     [Authorize(Roles = "Sales")]

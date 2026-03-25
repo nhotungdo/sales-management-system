@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using SalesManagement.BLL.Interfaces;
 using SalesManagement.DAL.Entities;
 using SalesManagement.DAL.Interfaces;
@@ -40,42 +41,50 @@ namespace SalesManagement.BLL.Services
 
         public async Task<IEnumerable<Product>> GetPagedProductsAsync(int pageNumber, int pageSize, string searchString, string sortOrder)
         {
-            var products = await _productRepository.GetAllAsync();
-            products = products.Where(p => p.Status != "Deleted");
+            var query = _productRepository.GetQueryable()
+                .AsNoTracking()
+                .Include(p => p.Category)
+                .Include(p => p.ProductImages)
+                .Where(p => p.Status != "Deleted");
 
             if (!string.IsNullOrEmpty(searchString))
             {
-                products = products.Where(p => p.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase) || 
-                                               p.Description != null && p.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
-                                               p.Code.Contains(searchString, StringComparison.OrdinalIgnoreCase));
+                searchString = searchString.ToLower();
+                query = query.Where(p => p.Name.ToLower().Contains(searchString) || 
+                                       (p.Description != null && p.Description.ToLower().Contains(searchString)) ||
+                                       p.Code.ToLower().Contains(searchString));
             }
 
-            products = sortOrder switch
+            query = sortOrder switch
             {
-                "name_desc" => products.OrderByDescending(p => p.Name),
-                "Price" => products.OrderBy(p => p.SellingPrice),
-                "price_desc" => products.OrderByDescending(p => p.SellingPrice),
-                "Date" => products.OrderBy(p => p.CreatedDate),
-                "date_desc" => products.OrderByDescending(p => p.CreatedDate),
-                _ => products.OrderByDescending(p => p.CreatedDate)
+                "name_desc" => query.OrderByDescending(p => p.Name),
+                "Price" => query.OrderBy(p => p.SellingPrice),
+                "price_desc" => query.OrderByDescending(p => p.SellingPrice),
+                "Date" => query.OrderBy(p => p.CreatedDate),
+                "date_desc" => query.OrderByDescending(p => p.CreatedDate),
+                _ => query.OrderByDescending(p => p.CreatedDate)
             };
 
-            return products.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+            return await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
         }
 
         public async Task<int> GetTotalProductCountAsync(string searchString)
         {
-            var products = await _productRepository.GetAllAsync();
-            products = products.Where(p => p.Status != "Deleted");
+            var query = _productRepository.GetQueryable()
+                .Where(p => p.Status != "Deleted");
 
             if (!string.IsNullOrEmpty(searchString))
             {
-                products = products.Where(p => p.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase) || 
-                                               p.Description != null && p.Description.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
-                                               p.Code.Contains(searchString, StringComparison.OrdinalIgnoreCase));
+                searchString = searchString.ToLower();
+                query = query.Where(p => p.Name.ToLower().Contains(searchString) || 
+                                       (p.Description != null && p.Description.ToLower().Contains(searchString)) ||
+                                       p.Code.ToLower().Contains(searchString));
             }
 
-            return products.Count();
+            return await query.CountAsync();
         }
 
         public async Task<bool> AddProductAsync(Product product)
@@ -87,7 +96,7 @@ namespace SalesManagement.BLL.Services
             product.UpdatedDate = DateTime.Now;
             if (string.IsNullOrEmpty(product.Status)) product.Status = "Active";
 
-            product.CoinPrice = _coinService.CalculateCoin(product.SellingPrice);
+            product.CoinPrice = (int?)Math.Round(_coinService.CalculateCoin(product.SellingPrice));
             product.PriceCents = _currencyService.ConvertVndToCents(product.SellingPrice);
 
             await _productRepository.AddAsync(product);
@@ -115,7 +124,7 @@ namespace SalesManagement.BLL.Services
             existing.Status = product.Status ?? "Active";
             existing.UpdatedDate = DateTime.Now;
 
-            existing.CoinPrice = _coinService.CalculateCoin(product.SellingPrice);
+            existing.CoinPrice = (int?)Math.Round(_coinService.CalculateCoin(product.SellingPrice));
             existing.PriceCents = _currencyService.ConvertVndToCents(product.SellingPrice);
 
             _productRepository.Update(existing);
