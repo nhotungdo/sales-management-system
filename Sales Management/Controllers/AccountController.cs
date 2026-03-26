@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SalesManagement.Web.ViewModels;
+using Microsoft.EntityFrameworkCore;
+using SalesManagement.DAL.Data;
 using System.Security.Claims;
 using System;
 using System.Collections.Generic;
@@ -17,9 +20,11 @@ namespace SalesManagement.Web.Controllers
     public class AccountController : Controller
     {
         private readonly IAuthService _authService;
+        private readonly AppDbContext _context;
 
-        public AccountController(IAuthService authService)
+        public AccountController(AppDbContext context, IAuthService authService)
         {
+            _context = context;
             _authService = authService;
         }
 
@@ -30,6 +35,65 @@ namespace SalesManagement.Web.Controllers
             if (User.Identity != null && User.Identity.IsAuthenticated) return RedirectToAction("Index", "Home");
             ViewData["ReturnUrl"] = returnUrl;
             return View();
+        }
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View(new ForgotPasswordViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == model.Email && u.IsActive && !u.IsDeleted);
+
+            if (user == null)
+            {
+                ModelState.AddModelError("", "Email không tồn tại hoặc không thể đổi mật khẩu.");
+                return View(model);
+            }
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
+            user.UpdatedDate = DateTime.Now;
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Đổi mật khẩu thành công! Vui lòng đăng nhập.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        [HttpGet]
+        public IActionResult GoogleLogin(string? returnUrl = null)
+        {
+            var redirectUrl = Url.Action(nameof(GoogleCallback), "Account", new { returnUrl }) ?? "/";
+            var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
+            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+        }
+
+        [HttpGet]
+        public IActionResult GoogleCallback(string? returnUrl = null)
+        {
+            if (!User.Identity?.IsAuthenticated ?? true)
+            {
+                return RedirectToAction(nameof(Login));
+            }
+
+            if (User.IsInRole("Admin"))
+                return RedirectToAction("Index", "Home", new { area = "Admin" });
+            if (User.IsInRole("Sales"))
+                return RedirectToAction("Index", "Home", new { area = "Sale" });
+
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
+            return RedirectToAction("Index", "Home");
         }
 
         // POST: /Account/Login

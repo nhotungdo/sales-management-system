@@ -54,9 +54,20 @@
                     Đăng nhập
                 </button>
 
+                <div class="text-center my-3 text-secondary small">
+                    hoặc
+                </div>
+
+                <a asp-action="GoogleLogin" class="btn btn-outline-light w-100 d-flex align-items-center justify-content-center gap-2">
+                    <span class="fw-semibold">Đăng nhập với Google</span>
+                </a>
+
                 <div class="auth-footer">
                     Chưa có tài khoản? 
                     <a asp-action="Register">Tạo tài khoản mới</a>
+                    <div class="mt-2">
+                        <a asp-action="ForgotPassword" class="text-decoration-none text-secondary small">Quên mật khẩu?</a>
+                    </div>
                 </div>
             </form>
         </div>

@@ -1,6 +1,10 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.EntityFrameworkCore;
+
+using System.Security.Claims;
 using SalesManagement.DAL.Data;
+using SalesManagement.DAL.Entities;
 using SalesManagement.DAL.Interfaces;
 using SalesManagement.DAL.Repositories;
 using SalesManagement.BLL.Interfaces;
@@ -65,6 +69,108 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.AccessDeniedPath = "/";
         options.ExpireTimeSpan = TimeSpan.FromHours(10);
         options.SlidingExpiration = true;
+        options.Cookie.Name = "SalesManagement.Auth";
+    })
+    .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "";
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "";
+        options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+
+        options.Scope.Add("email");
+        options.Scope.Add("profile");
+
+        options.Events.OnCreatingTicket = async context =>
+        {
+            var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+
+            var googleSub = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? context.Principal?.FindFirstValue("sub");
+            var email = context.Principal?.FindFirstValue(ClaimTypes.Email)
+                ?? context.Principal?.FindFirstValue("email");
+            var fullName = context.Principal?.FindFirstValue(ClaimTypes.Name)
+                ?? context.Principal?.FindFirstValue("name");
+
+            if (string.IsNullOrWhiteSpace(googleSub) || string.IsNullOrWhiteSpace(email))
+            {
+                throw new InvalidOperationException("Google authentication did not return required claims (sub/email).");
+            }
+
+            var normalizedEmail = email.Trim();
+            var user = await db.Users.FirstOrDefaultAsync(u => u.GoogleId == googleSub);
+            if (user == null)
+            {
+                user = await db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
+            }
+
+            if (user != null && (user.IsDeleted || !user.IsActive))
+            {
+                throw new InvalidOperationException("User account is disabled.");
+            }
+
+            if (user == null)
+            {
+                user = new User
+                {
+                    Username = normalizedEmail,
+                    Email = normalizedEmail,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString("N")),
+                    FullName = fullName,
+                    GoogleId = googleSub,
+                    Role = "Customer",
+                    IsActive = true,
+                    IsDeleted = false,
+                    CreatedDate = DateTime.Now,
+                    UpdatedDate = DateTime.Now
+                };
+
+                db.Users.Add(user);
+                await db.SaveChangesAsync();
+
+                var customer = new Customer
+                {
+                    UserId = user.UserId,
+                    FullName = user.FullName ?? user.Username,
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    CreatedDate = DateTime.Now,
+                    Type = "Personal",
+                    CustomerLevel = "Regular"
+                };
+                db.Customers.Add(customer);
+                await db.SaveChangesAsync();
+
+                // Ensure wallet exists (Profile joins Wallets)
+                var wallet = new Wallet
+                {
+                    CustomerId = customer.CustomerId,
+                    Balance = 0,
+                    Status = "Active",
+                    UpdatedDate = DateTime.Now
+                };
+                db.Wallets.Add(wallet);
+                await db.SaveChangesAsync();
+            }
+            else if (string.IsNullOrWhiteSpace(user.GoogleId))
+            {
+                user.GoogleId = googleSub;
+                user.UpdatedDate = DateTime.Now;
+                await db.SaveChangesAsync();
+            }
+
+            // Replace principal with app cookie identity
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, user.Role),
+                new Claim("FullName", user.FullName ?? "")
+            };
+
+            context.Principal = new ClaimsPrincipal(
+                new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme));
+        };
     });
 
 builder.Services.AddSession(options =>
