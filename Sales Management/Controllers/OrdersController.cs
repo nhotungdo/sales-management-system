@@ -32,13 +32,13 @@ namespace SalesManagement.Web.Controllers
             if (result.Success)
             {
                 TempData["Success"] = result.Message;
+                return RedirectToAction(nameof(MyOrders));
             }
             else
             {
                 TempData["Error"] = result.Message;
+                return RedirectToAction("Index", "Home");
             }
-
-            return RedirectToAction("Index", "Home");
         }
 
         [Authorize]

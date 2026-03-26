@@ -126,9 +126,12 @@ namespace SalesManagement.BLL.Services
         {
             return await _context.Users
                 .Include(u => u.Customer)
-                .ThenInclude(c => c.Wallet)
+                    .ThenInclude(c => c.Wallet)
+                        .ThenInclude(w => w.WalletTransactions)
                 .Include(u => u.Customer)
-                .ThenInclude(c => c.Orders)
+                    .ThenInclude(c => c.Orders)
+                        .ThenInclude(o => o.OrderDetails)
+                            .ThenInclude(od => od.Product)
                 .FirstOrDefaultAsync(u => u.UserId == userId);
         }
 

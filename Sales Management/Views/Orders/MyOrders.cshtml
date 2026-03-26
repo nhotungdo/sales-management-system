@@ -62,7 +62,7 @@
                                     </td>
                                     <td>
                                         <span class="fw-bold text-dark">
-                                            @((order.TotalAmount ?? 0).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) đ
+                                            @((order.TotalAmount ?? 0).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu
                                         </span>
                                     </td>
                                     <td>
@@ -131,10 +131,10 @@
                                                                     </td>
                                                                     <td class="text-center py-2 align-middle">@detail.Quantity</td>
                                                                     <td class="text-end pe-3 py-2 text-muted align-middle">
-                                                                        @detail.UnitPrice.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) đ
+                                                                        @detail.UnitPrice.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) xu
                                                                     </td>
                                                                     <td class="text-end pe-3 py-2 fw-semibold text-dark align-middle">
-                                                                        @((detail.Total ?? 0m).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) đ
+                                                                        @((detail.Total ?? 0m).ToString("N0", new System.Globalization.CultureInfo("vi-VN"))) xu
                                                                     </td>
                                                                 </tr>
                                                             }

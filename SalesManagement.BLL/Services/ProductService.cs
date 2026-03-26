@@ -15,13 +15,15 @@ namespace SalesManagement.BLL.Services
         private readonly IRepository<ProductImage> _imageRepository;
         private readonly ICoinService _coinService;
         private readonly ICurrencyService _currencyService;
+        private readonly ICategoryService _categoryService;
 
-        public ProductService(IProductRepository productRepository, IRepository<ProductImage> imageRepository, ICoinService coinService, ICurrencyService currencyService)
+        public ProductService(IProductRepository productRepository, IRepository<ProductImage> imageRepository, ICoinService coinService, ICurrencyService currencyService, ICategoryService categoryService)
         {
             _productRepository = productRepository;
             _imageRepository = imageRepository;
             _coinService = coinService;
             _currencyService = currencyService;
+            _categoryService = categoryService;
         }
 
         public async Task<IEnumerable<Product>> GetAllProductsAsync()
@@ -39,13 +41,19 @@ namespace SalesManagement.BLL.Services
             return await _productRepository.GetByIdAsync(id);
         }
 
-        public async Task<IEnumerable<Product>> GetPagedProductsAsync(int pageNumber, int pageSize, string searchString, string sortOrder)
+        public async Task<IEnumerable<Product>> GetPagedProductsAsync(int pageNumber, int pageSize, string searchString, string sortOrder, int? categoryId = null)
         {
             var query = _productRepository.GetQueryable()
                 .AsNoTracking()
                 .Include(p => p.Category)
                 .Include(p => p.ProductImages)
                 .Where(p => p.Status != "Deleted");
+
+            if (categoryId.HasValue)
+            {
+                var categoryIds = await GetCategoryWithDescendantsAsync(categoryId.Value);
+                query = query.Where(p => categoryIds.Contains(p.CategoryId));
+            }
 
             if (!string.IsNullOrEmpty(searchString))
             {
@@ -71,10 +79,16 @@ namespace SalesManagement.BLL.Services
                 .ToListAsync();
         }
 
-        public async Task<int> GetTotalProductCountAsync(string searchString)
+        public async Task<int> GetTotalProductCountAsync(string searchString, int? categoryId = null)
         {
             var query = _productRepository.GetQueryable()
                 .Where(p => p.Status != "Deleted");
+
+            if (categoryId.HasValue)
+            {
+                var categoryIds = await GetCategoryWithDescendantsAsync(categoryId.Value);
+                query = query.Where(p => categoryIds.Contains(p.CategoryId));
+            }
 
             if (!string.IsNullOrEmpty(searchString))
             {
@@ -166,5 +180,28 @@ namespace SalesManagement.BLL.Services
             await _imageRepository.SaveAsync();
             return true;
         }
+
+        private async Task<List<int>> GetCategoryWithDescendantsAsync(int parentId)
+        {
+            var allCategories = await _categoryService.GetAllCategoriesAsync();
+            var result = new List<int> { parentId };
+            
+            void AddChildren(int pId)
+            {
+                var children = allCategories.Where(c => c.ParentId == pId).Select(c => c.CategoryId).ToList();
+                foreach (var childId in children)
+                {
+                    if (!result.Contains(childId))
+                    {
+                        result.Add(childId);
+                        AddChildren(childId);
+                    }
+                }
+            }
+            
+            AddChildren(parentId);
+            return result;
+        }
     }
 }
+

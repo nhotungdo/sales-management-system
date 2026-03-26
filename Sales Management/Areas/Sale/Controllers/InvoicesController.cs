@@ -29,8 +29,7 @@ namespace SalesManagement.Web.Areas.Sale.Controllers
             if (invoice == null) return NotFound();
 
             var payments = await _walletService.GetTransactionsAsync(null, null, null);
-            // Re-filtering based on invoice convention
-            var invoicePayments = payments.Where(t => t.Description != null && t.Description.Contains($"INV-{id}"));
+            var invoicePayments = payments.Where(t => t.InvoiceId == id).ToList();
 
             ViewBag.Payments = invoicePayments;
             return View(invoice);

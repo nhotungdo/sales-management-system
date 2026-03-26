@@ -21,12 +21,25 @@ namespace SalesManagement.Web.Areas.Sale.Controllers
         }
 
         // GET: Sale/Orders
-        public async Task<IActionResult> Index(string searchString, string statusFilter)
+        public async Task<IActionResult> Index(string searchString, string statusFilter, int? pageNumber)
         {
             var orders = await _orderService.GetOrdersOverviewAsync(searchString, statusFilter);
+            int pageSize = 10;
+            var pagedOrders = Models.PaginatedList<Order>.Create(orders.AsQueryable(), pageNumber ?? 1, pageSize);
+            
             ViewData["CurrentFilter"] = searchString;
-            ViewData["StatusFilter"] = statusFilter;
-            return View(orders);
+            ViewData["CurrentStatus"] = statusFilter;
+            return View(pagedOrders);
+        }
+
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var order = await _orderService.GetOrderDetailsAsync(id.Value);
+            if (order == null) return NotFound();
+
+            return View(order);
         }
 
         // GET: Sale/Orders/Create
@@ -58,6 +71,21 @@ namespace SalesManagement.Web.Areas.Sale.Controllers
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateStatus(int id, string status)
+        {
+            var result = await _orderService.UpdateOrderStatusAsync(id, status);
+            if (result)
+            {
+                TempData["SuccessMessage"] = "Cập nhật trạng thái thành công!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Lỗi khi cập nhật trạng thái.";
+            }
+            return RedirectToAction(nameof(Details), new { id = id });
         }
     }
 }

@@ -11,14 +11,16 @@ namespace SalesManagement.Web.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly IProductService _productService;
+        private readonly ICategoryService _categoryService;
 
-        public HomeController(ILogger<HomeController> logger, IProductService productService)
+        public HomeController(ILogger<HomeController> logger, IProductService productService, ICategoryService categoryService)
         {
             _logger = logger;
             _productService = productService;
+            _categoryService = categoryService;
         }
 
-        public async Task<IActionResult> Index(string sortOrder, string currentFilter, string searchString, int? page)
+        public async Task<IActionResult> Index(string sortOrder, string currentFilter, string searchString, int? categoryId, int? page)
         {
             int pageSize = 12;
             int pageNumber = page ?? 1;
@@ -28,9 +30,11 @@ namespace SalesManagement.Web.Controllers
 
             ViewData["CurrentSort"] = sortOrder;
             ViewData["CurrentFilter"] = searchString;
+            ViewData["CurrentCategory"] = categoryId;
 
-            var products = await _productService.GetPagedProductsAsync(pageNumber, pageSize, searchString, sortOrder);
-            var totalCount = await _productService.GetTotalProductCountAsync(searchString);
+            var products = await _productService.GetPagedProductsAsync(pageNumber, pageSize, searchString, sortOrder, categoryId);
+            var totalCount = await _productService.GetTotalProductCountAsync(searchString, categoryId);
+            var categories = await _categoryService.GetAllCategoriesAsync();
 
             var viewModel = new HomeProductViewModel
             {
@@ -52,8 +56,20 @@ namespace SalesManagement.Web.Controllers
                 CurrentPage = pageNumber,
                 TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
                 SearchString = searchString,
-                SortOrder = sortOrder
+                SortOrder = sortOrder,
+                CategoryId = categoryId,
+                Categories = categories.Select(c => new CategoryViewModel
+                {
+                    CategoryId = c.CategoryId,
+                    Name = c.Name,
+                    Description = c.Description
+                }).ToList()
             };
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return PartialView("_ProductList", viewModel);
+            }
 
             return View(viewModel);
         }

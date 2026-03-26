@@ -28,7 +28,7 @@ namespace SalesManagement.BLL.Services
             return Math.Round(price / exchangeRate, 2);
         }
 
-        public async Task<(bool Success, string Message)> UseCoins(string userId, decimal amount)
+        public async Task<(bool Success, string Message)> UseCoins(string userId, decimal amount, string description = "")
         {
             var customer = await _context.Customers
                 .Include(c => c.Wallet)
@@ -56,7 +56,7 @@ namespace SalesManagement.BLL.Services
                 TransactionType = "Payment",
                 Status = "Success",
                 CreatedDate = DateTime.Now,
-                Description = $"Thanh toán đơn hàng: -{amount} xu"
+                Description = string.IsNullOrEmpty(description) ? $"Thanh toán đơn hàng: -{amount} xu" : description
             };
 
             _context.WalletTransactions.Add(transaction);

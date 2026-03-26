@@ -7,7 +7,6 @@ using System.Text.Json;
 
 namespace SalesManagement.Web.Controllers
 {
-    [Authorize]
     public class CartController : Controller
     {
         private const string CartSessionKey = "ShoppingCart";
@@ -51,6 +50,10 @@ namespace SalesManagement.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> AddToCart(int productId, int quantity = 1)
         {
+            // Chưa đăng nhập → trả JSON để client tự redirect
+            if (!(User.Identity?.IsAuthenticated ?? false))
+                return Json(new { success = false, requireLogin = true });
+
             if (quantity < 1) quantity = 1;
 
             var product = await _productService.GetProductByIdAsync(productId);
@@ -98,6 +101,7 @@ namespace SalesManagement.Web.Controllers
         // POST: /Cart/Remove
         // ──────────────────────────────────────────────
         [HttpPost]
+        [Authorize]
         public IActionResult Remove(int productId)
         {
             var cart = GetCart();
@@ -110,6 +114,7 @@ namespace SalesManagement.Web.Controllers
         // POST: /Cart/UpdateQuantity  (AJAX)
         // ──────────────────────────────────────────────
         [HttpPost]
+        [Authorize]
         public IActionResult UpdateQuantity(int productId, int quantity)
         {
             if (quantity < 1)
@@ -132,6 +137,7 @@ namespace SalesManagement.Web.Controllers
         // POST: /Cart/CheckoutAll  — mua tất cả trong giỏ
         // ──────────────────────────────────────────────
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CheckoutAll()
         {
@@ -146,32 +152,28 @@ namespace SalesManagement.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var errors = new List<string>();
-            foreach (var item in cart)
-            {
-                var result = await _orderService.CheckoutAsync(userId, item.ProductId, item.Quantity);
-                if (!result.Success)
-                    errors.Add($"{item.Name}: {result.Message}");
-            }
+            var items = cart.Select(c => (c.ProductId, c.Quantity)).ToList();
+            var result = await _orderService.CheckoutCartAsync(userId, items);
 
-            if (errors.Any())
-            {
-                TempData["Error"] = string.Join(" | ", errors);
-            }
-            else
+            if (result.Success)
             {
                 // Xóa giỏ sau khi thanh toán thành công
                 HttpContext.Session.Remove(CartSessionKey);
-                TempData["Success"] = "Đặt hàng thành công! Cảm ơn bạn đã mua hàng.";
+                TempData["Success"] = result.Message;
+                return RedirectToAction("MyOrders", "Orders");
             }
-
-            return RedirectToAction("Index", "Home");
+            else
+            {
+                TempData["Error"] = result.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         // ──────────────────────────────────────────────
         // GET: /Cart/Count  (AJAX — đếm số item)
         // ──────────────────────────────────────────────
         [HttpGet]
+        [Authorize]
         public IActionResult Count()
         {
             var cart = GetCart();

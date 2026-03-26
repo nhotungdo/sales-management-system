@@ -8,5 +8,6 @@ namespace SalesManagement.Web.ViewModels
         public string? SearchString { get; set; }
         public string? SortOrder { get; set; }
         public int? CategoryId { get; set; }
+        public IEnumerable<CategoryViewModel> Categories { get; set; } = new List<CategoryViewModel>();
     }
 }

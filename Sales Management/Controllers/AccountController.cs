@@ -226,13 +226,13 @@ namespace SalesManagement.Web.Controllers
                  CustomerLevel = customer?.CustomerLevel,
                  WalletBalance = wallet?.Balance ?? 0,
                  WalletStatus = wallet?.Status,
-                 WalletUpdatedDate = wallet?.UpdatedDate,
+                 WalletUpdatedDate = wallet?.UpdatedDate, Transactions = (wallet?.WalletTransactions ?? new List<SalesManagement.DAL.Entities.WalletTransaction>()).OrderByDescending(t => t.CreatedDate).Select(t => new SalesManagement.Web.ViewModels.WalletTransactionViewModel { TransactionCode = t.TransactionCode, Amount = t.Amount, Type = t.TransactionType, Status = t.Status, Description = t.Description, CreatedDate = t.CreatedDate ?? DateTime.Now }).ToList(),
                  Orders = customer?.Orders.OrderByDescending(o => o.OrderDate).Select(o => new OrderHistoryViewModel
                  {
                       OrderId = o.OrderId,
                       OrderDate = o.OrderDate ?? DateTime.Now,
                       TotalAmount = o.TotalAmount ?? 0,
-                      Status = o.Status
+                      Status = o.Status, ProductNames = string.Join(", ", o.OrderDetails.Select(d => d.Product?.Name))
                  }).ToList() ?? new()
              };
 

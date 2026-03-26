@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = Model.Name;
+    bool isAuthenticated = User.Identity?.IsAuthenticated ?? false;
+    string loginUrl = Url.Action("Login", "Account", new { returnUrl = Context.Request.Path + Context.Request.QueryString })!;
     var primaryImg = Model.ProductImages.FirstOrDefault(p => p.IsPrimary == true)?.ImageUrl ?? (Model.ProductImages.FirstOrDefault()?.ImageUrl ?? "/images/no-image.png");
     var otherImages = Model.ProductImages.Where(p => p.ImageUrl != primaryImg).ToList();
 }
@@ -73,10 +75,11 @@
                         <label class="form-label fw-bold text-dark">Số lượng:</label>
                         <div class="input-group" style="width: 140px;">
                             <button class="btn btn-outline-secondary" type="button" onclick="decrementQty()">-</button>
-                            <input type="number" class="form-control text-center border-secondary" id="quantityInput" value="1" min="1" max="@Model.StockQuantity">
+                            <input type="number" class="form-control text-center border-secondary" id="quantityInput" 
+                                   value="1" min="1" max="@Model.StockQuantity" onchange="validateQty()" oninput="validateQty()">
                             <button class="btn btn-outline-secondary" type="button" onclick="incrementQty()">+</button>
                         </div>
-                        <div class="form-text mt-2">Còn @Model.StockQuantity sản phẩm trong kho</div>
+                        <div class="form-text mt-2 text-muted" id="stockStatus">Còn @Model.StockQuantity sản phẩm trong kho</div>
                     </div>
 
                     <div class="d-flex gap-3 mt-5">
@@ -85,6 +88,7 @@
                         </button>
 
                         <form id="buyNowForm" asp-controller="Orders" asp-action="Checkout" method="post" class="flex-grow-1">
+                            @Html.AntiForgeryToken()
                             <input type="hidden" name="productId" value="@Model.ProductId" />
                             <input type="hidden" name="quantity" id="hiddenQuantity" value="1" />
                             
@@ -212,7 +216,32 @@
 
 @section Scripts {
 <script>
+    var isAuthenticated = @Json.Serialize(isAuthenticated);
+    var loginUrl = '@Html.Raw(loginUrl)';
+
+    function redirectToLogin() {
+        Swal.fire({
+            title: 'Chưa đăng nhập',
+            text: 'Bạn cần đăng nhập để thực hiện chức năng này.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Đăng nhập ngay',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = loginUrl;
+            }
+        });
+    }
+
     function confirmPurchaseDetail() {
+        if (!isAuthenticated) {
+            redirectToLogin();
+            return;
+        }
+
         var qty = document.getElementById('quantityInput').value;
         document.getElementById('hiddenQuantity').value = qty;
 
@@ -245,17 +274,50 @@
     function incrementQty() {
         var input = document.getElementById('quantityInput');
         var max = parseInt(input.getAttribute('max'));
-        var value = parseInt(input.value);
-        if (value < max) input.value = value + 1;
+        var value = parseInt(input.value) || 0;
+        if (value < max) {
+            input.value = value + 1;
+        } else {
+            Swal.fire({
+                title: 'Thông báo',
+                text: 'Bạn đã chọn tối đa số lượng hiện có.',
+                icon: 'info',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }
     }
 
     function decrementQty() {
         var input = document.getElementById('quantityInput');
-        var value = parseInt(input.value);
+        var value = parseInt(input.value) || 0;
         if (value > 1) input.value = value - 1;
     }
 
+    function validateQty() {
+        var input = document.getElementById('quantityInput');
+        var max = parseInt(input.getAttribute('max'));
+        var value = parseInt(input.value);
+        
+        if (value > max) {
+            Swal.fire({
+                title: 'Số lượng không hợp lệ',
+                text: 'Rất tiếc, chúng tôi chỉ còn ' + max + ' sản phẩm trong kho.',
+                icon: 'warning',
+                confirmButtonText: 'Đồng ý'
+            });
+            input.value = max;
+        } else if (value < 1) {
+            input.value = 1;
+        }
+    }
+
     function addToCart(productId) {
+        if (!isAuthenticated) {
+            redirectToLogin();
+            return;
+        }
+
         var qty = document.getElementById('quantityInput').value;
         
         $.ajax({
@@ -266,7 +328,9 @@
                 quantity: qty 
             },
             success: function (response) {
-                if (response.success) {
+                if (response.requireLogin) {
+                    redirectToLogin();
+                } else if (response.success) {
                     Swal.fire({
                         title: 'Thành công!',
                         text: 'Đã thêm vào giỏ hàng',
@@ -275,7 +339,6 @@
                         timer: 1000, 
                         timerProgressBar: true 
                     }).then(() => {
-                        // Tùy chọn: reload hoặc cập nhật số icon giỏ hàng
                         location.reload(); 
                     });
                 } else {
@@ -283,7 +346,7 @@
                 }
             },
             error: function () {
-                Swal.fire('Lỗi!', 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại jQuery.', 'error');
+                Swal.fire('Lỗi!', 'Không thể kết nối đến máy chủ. Vui lòng thử lại.', 'error');
             }
         });
     } 

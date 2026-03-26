@@ -150,26 +150,49 @@
                                             foreach (var item in Model.Transactions)
                                             {
                                                 <tr>
-                                                    <td class="fw-bold small text-secondary">@item.TransactionCode</td>
+                                                    <td class="fw-bold small text-secondary">@(string.IsNullOrEmpty(item.TransactionCode) ? "N/A" : item.TransactionCode)</td>
                                                     <td>
                                                         @if (item.Type == "Payment")
                                                         {
                                                             <span class="text-danger small"><i class="bi bi-arrow-up-right me-1"></i>Thanh toán</span>
                                                         }
-                                                        else
+                                                        else if (item.Type == "Top-up")
                                                         {
                                                             <span class="text-success small"><i class="bi bi-arrow-down-left me-1"></i>Nạp tiền</span>
+                                                        }
+                                                        else if (item.Type == "Refund")
+                                                        {
+                                                            <span class="text-info small"><i class="bi bi-arrow-counterclockwise me-1"></i>Hoàn tiền</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-secondary small">@item.Type</span>
                                                         }
                                                     </td>
                                                     <td class="@(item.Type == "Payment" ? "text-danger" : "text-success") fw-bold">
                                                         @(item.Type == "Payment" ? "-" : "+")@item.Amount.ToString("N0") xu
                                                     </td>
                                                     <td>
-                                                        <span class="badge rounded-pill bg-success-subtle text-success px-3">Thành công</span>
+                                                        @if (item.Status == "Success" || item.Status == "Completed")
+                                                        {
+                                                            <span class="badge rounded-pill bg-success-subtle text-success px-3">Thành công</span>
+                                                        }
+                                                        else if (item.Status == "Pending")
+                                                        {
+                                                            <span class="badge rounded-pill bg-warning-subtle text-warning px-3">Đang chờ</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge rounded-pill bg-danger-subtle text-danger px-3">@item.Status</span>
+                                                        }
                                                     </td>
-                                                    <td class="text-muted small">@item.CreatedDate.ToString("HH:mm dd/MM")</td>
+                                                    <td class="text-muted small">@item.CreatedDate.ToString("HH:mm dd/MM/yyyy")</td>
                                                 </tr>
                                             }
+                                        }
+                                        else
+                                        {
+                                            <tr><td colspan="5" class="text-center py-4 text-muted small">Chưa có giao dịch nào</td></tr>
                                         }
                                     </tbody>
                                 </table>

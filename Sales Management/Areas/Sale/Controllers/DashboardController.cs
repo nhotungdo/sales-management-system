@@ -58,6 +58,7 @@ namespace SalesManagement.Web.Areas.Sale.Controllers
             // Step 2: Load Product details
             var productIds = topStats.Select(x => x.ProductId).ToList();
             var products = await _context.Products
+                .Include(p => p.ProductImages)
                 .Where(p => productIds.Contains(p.ProductId))
                 .ToListAsync();
 
