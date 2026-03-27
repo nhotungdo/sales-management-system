@@ -1103,6 +1103,11 @@ namespace SalesManagement.DAL.Migrations
                         .HasColumnType("decimal(15, 2)")
                         .HasDefaultValue(0m);
 
+                    b.Property<decimal>("CoinBalance")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(15, 2)")
+                        .HasDefaultValue(0m);
+
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 

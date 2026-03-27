@@ -1,0 +1,24 @@
+using System;
+using System.Collections.Generic;
+
+namespace SalesManagement.DAL.Entities;
+
+public partial class Wallet
+{
+    public int WalletId { get; set; }
+
+    public int CustomerId { get; set; }
+
+    public decimal? Balance { get; set; }
+
+    /// <summary>Số xu tích lũy (coin) của khách hàng</summary>
+    public decimal CoinBalance { get; set; }
+
+    public string? Status { get; set; }
+
+    public DateTime? UpdatedDate { get; set; }
+
+    public virtual Customer Customer { get; set; } = null!;
+
+    public virtual ICollection<WalletTransaction> WalletTransactions { get; set; } = new List<WalletTransaction>();
+}

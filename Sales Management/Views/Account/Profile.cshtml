@@ -1,4 +1,4 @@
-@model SalesManagement.Web.ViewModels.CustomerProfileViewModel
+@model SalesManagement.Web.Models.CustomerProfileViewModel
 
 @{
     ViewData["Title"] = "Thông tin tài khoản";
@@ -111,9 +111,30 @@
                                                     <td class="small">@order.ProductNames</td>
                                                     <td class="fw-bold text-dark">@order.TotalAmount.ToString("N0") xu</td>
                                                     <td>
-                                                        <span class="badge rounded-pill px-3 @(order.Status == "Completed" ? "bg-success-subtle text-success" : "bg-warning-subtle text-warning")">
-                                                            @(order.Status == "Completed" ? "Thành công" : "Đang xử lý")
-                                                        </span>
+                                                        @switch (order.Status)
+                                                        {
+                                                            case "Completed":
+                                                                <span class="badge rounded-pill px-3 bg-success-subtle text-success border border-success">
+                                                                    Thành công
+                                                                </span>
+                                                                break;
+                                                            case "Cancelled":
+                                                                <span class="badge rounded-pill px-3 bg-danger-subtle text-danger border border-danger">
+                                                                    Đã hủy
+                                                                </span>
+                                                                break;
+                                                            case "Confirmed":
+                                                            case "Processing":
+                                                                <span class="badge rounded-pill px-3 bg-info-subtle text-info border border-info">
+                                                                    Đang xử lý
+                                                                </span>
+                                                                break;
+                                                            default:
+                                                                <span class="badge rounded-pill px-3 bg-warning-subtle text-warning border border-warning">
+                                                                    @order.Status
+                                                                </span>
+                                                                break;
+                                                        }
                                                     </td>
                                                 </tr>
                                             }

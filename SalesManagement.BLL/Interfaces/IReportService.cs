@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using SalesManagement.BLL.Models;
+using SalesManagement.BLL.DTOs;
 
 namespace SalesManagement.BLL.Interfaces
 {

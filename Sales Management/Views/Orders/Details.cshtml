@@ -136,6 +136,23 @@
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Cập nhật trạng thái</button>
                     </form>
+
+                    @if (User.IsInRole("Admin") || User.IsInRole("Manager") || User.IsInRole("Sales"))
+                    {
+                        @if (Model.Status != "Cancelled" && Model.PaymentStatus != "Refunded")
+                        {
+                            <div class="mt-4 pt-3 border-top">
+                                <h6 class="text-danger fw-bold"><i class="bi bi-exclamation-triangle"></i> Khu vực nguy hiểm</h6>
+                                <p class="small text-muted mb-2">Hoàn tiền lại cho khách hàng và hủy đơn hàng này. Thao tác này không thể hoàn tác.</p>
+                                <form asp-action="Refund" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn hoàn tiền đơn hàng này? Thao tác này sẽ hủy đơn hàng và hoàn lại số tiền/xu vào ví khách hàng.')">
+                                    <input type="hidden" name="id" value="@Model.OrderId" />
+                                    <button type="submit" class="btn btn-outline-danger w-100">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Hoàn tiền (Refund)
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    }
                 </div>
             </div>
         </div>

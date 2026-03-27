@@ -4,15 +4,23 @@ using SalesManagement.BLL.Interfaces;
 using SalesManagement.DAL.Data;
 using SalesManagement.DAL.Entities;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace SalesManagement.BLL.Services
 {
+    /// <summary>
+    /// CoinService – quản lý xu tích lũy của khách hàng.
+    /// Coin được lưu vào Wallet.CoinBalance và ghi lịch sử qua WalletTransaction.
+    /// </summary>
     public class CoinService : ICoinService
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
+
+        // Tỉ lệ coin mặc định: 1% giá trị đơn hàng
+        private const decimal DefaultCoinRate = 0.01m;
 
         public CoinService(AppDbContext context, IConfiguration configuration)
         {
@@ -20,48 +28,113 @@ namespace SalesManagement.BLL.Services
             _configuration = configuration;
         }
 
-        public decimal CalculateCoin(decimal price)
+        /// <inheritdoc/>
+        public decimal CalculateCoin(decimal orderAmount)
         {
-            // Lấy tỉ giá cấu hình từ appsettings, mặc định 1000 VNĐ = 1 Xu
-            decimal exchangeRate = _configuration.GetValue<decimal>("CoinConfiguration:ExchangeRate", 1000);
-            if (exchangeRate <= 0) exchangeRate = 1000;
-            return Math.Round(price / exchangeRate, 2);
+            var rate = _configuration.GetValue<decimal>("CoinConfiguration:EarnRate", DefaultCoinRate);
+            if (rate <= 0 || rate > 1) rate = DefaultCoinRate;
+            return Math.Floor(orderAmount * rate); // Làm tròn xuống, 1 đồng là 1 xu
         }
 
-        public async Task<(bool Success, string Message)> UseCoins(string userId, decimal amount, string description = "")
+        /// <inheritdoc/>
+        public async Task<decimal> GetUserCoins(int userId)
         {
-            var customer = await _context.Customers
-                .Include(c => c.Wallet)
-                .FirstOrDefaultAsync(c => c.UserId == int.Parse(userId));
+            var wallet = await GetWalletByUserId(userId);
+            return wallet?.CoinBalance ?? 0;
+        }
 
-            var wallet = customer?.Wallet;
+        /// <inheritdoc/>
+        public async Task<bool> AddCoins(int userId, decimal amount, string description)
+        {
+            if (amount <= 0) return false;
 
-            if (wallet == null)
-            {
-                return (false, "Không tìm thấy ví của người dùng. Hãy thử khởi tạo ví.");
-            }
-            if ((wallet.Balance ?? 0) < amount)
-            {
-                return (false, $"Số dư ({wallet.Balance ?? 0} xu) không đủ để thanh toán {amount} xu.");
-            }
+            var wallet = await GetWalletByUserId(userId);
+            if (wallet == null) return false;
 
-            wallet.Balance -= amount;
+            wallet.CoinBalance += amount;
             wallet.UpdatedDate = DateTime.Now;
 
-            var transaction = new WalletTransaction
+            _context.WalletTransactions.Add(new WalletTransaction
             {
                 WalletId = wallet.WalletId,
-                TransactionCode = $"PAY{DateTime.Now:yyMMddHHmmss}",
-                Amount = -amount,
-                TransactionType = "Payment",
+                TransactionCode = $"COIN+{DateTime.Now:yyMMddHHmmss}",
+                Amount = amount,
+                TransactionType = "CoinEarned",
                 Status = "Success",
+                Method = "System",
                 CreatedDate = DateTime.Now,
-                Description = string.IsNullOrEmpty(description) ? $"Thanh toán đơn hàng: -{amount} xu" : description
-            };
+                Description = string.IsNullOrEmpty(description)
+                    ? $"Cộng {amount} xu"
+                    : description
+            });
 
-            _context.WalletTransactions.Add(transaction);
             await _context.SaveChangesAsync();
-            return (true, "Thanh toán bằng xu thành công!");
+            return true;
+        }
+
+        /// <inheritdoc/>
+        public async Task<(bool Success, string Message)> DeductCoins(int userId, decimal amount, string description)
+        {
+            if (amount <= 0) return (false, "Số xu phải lớn hơn 0.");
+
+            var wallet = await GetWalletByUserId(userId);
+            if (wallet == null) return (false, "Không tìm thấy ví. Hãy đảm bảo tài khoản đã được khởi tạo.");
+            if (wallet.CoinBalance < amount)
+                return (false, $"Số xu hiện tại ({wallet.CoinBalance:0} xu) không đủ để trừ {amount:0} xu.");
+
+            wallet.CoinBalance -= amount;
+            wallet.UpdatedDate = DateTime.Now;
+
+            _context.WalletTransactions.Add(new WalletTransaction
+            {
+                WalletId = wallet.WalletId,
+                TransactionCode = $"COIN-{DateTime.Now:yyMMddHHmmss}",
+                Amount = -amount,
+                TransactionType = "CoinUsed",
+                Status = "Success",
+                Method = "System",
+                CreatedDate = DateTime.Now,
+                Description = string.IsNullOrEmpty(description)
+                    ? $"Trừ {amount} xu"
+                    : description
+            });
+
+            await _context.SaveChangesAsync();
+            return (true, "Trừ xu thành công.");
+        }
+
+        /// <inheritdoc/>
+        public async Task<IEnumerable<WalletTransaction>> GetCoinTransactionHistory(int userId)
+        {
+            var wallet = await GetWalletByUserId(userId);
+            if (wallet == null) return Enumerable.Empty<WalletTransaction>();
+
+            return await _context.WalletTransactions
+                .Where(t => t.WalletId == wallet.WalletId
+                         && (t.TransactionType == "CoinEarned" || t.TransactionType == "CoinUsed"))
+                .OrderByDescending(t => t.CreatedDate)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+        /// <inheritdoc/>
+        public async Task<(bool Success, string Message)> UseCoins(string userId, decimal amount, string description = "")
+        {
+            if (!int.TryParse(userId, out var uid))
+                return (false, "UserId không hợp lệ.");
+
+            return await DeductCoins(uid, amount, string.IsNullOrEmpty(description)
+                ? $"Dùng {amount} xu để giảm giá đơn hàng"
+                : description);
+        }
+
+        // ─── Private helpers ─────────────────────────────────────────────────────────
+
+        private async Task<Wallet?> GetWalletByUserId(int userId)
+        {
+            return await _context.Wallets
+                .Include(w => w.Customer)
+                .FirstOrDefaultAsync(w => w.Customer.UserId == userId);
         }
     }
 }

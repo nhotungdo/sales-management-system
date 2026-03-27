@@ -26,38 +26,31 @@
                 </a>
             </li>
 
-            <li class="px-3 pt-3 pb-1 text-uppercase small text-muted font-weight-bold">Quản lý</li>
-
             <li class="nav-item">
                 <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Employees" ? "active" : "")" 
                    asp-area="Admin" asp-controller="Employees" asp-action="Index">
                     <i class="bi bi-people-fill"></i> Nhân viên
                 </a>
             </li>
+
             <li class="nav-item">
                 <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "AdminProducts" ? "active" : "")" 
                    asp-area="Admin" asp-controller="AdminProducts" asp-action="Index">
                     <i class="bi bi-box-seam-fill"></i> Sản phẩm
                 </a>
             </li>
+
             <li class="nav-item">
                 <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Categories" ? "active" : "")" 
                    asp-area="Admin" asp-controller="Categories" asp-action="Index">
                     <i class="bi bi-grid-fill"></i> Danh mục
                 </a>
             </li>
-            
+
             <li class="nav-item">
                 <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Discounts" ? "active" : "")" 
                    asp-area="Admin" asp-controller="Discounts" asp-action="Index">
                     <i class="bi bi-tags-fill"></i> Mã giảm giá
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "VipPackages" ? "active" : "")" 
-                   asp-area="Admin" asp-controller="VipPackages" asp-action="Index">
-                    <i class="bi bi-gem"></i> Gói VIP
                 </a>
             </li>
 
@@ -68,41 +61,20 @@
                 </a>
             </li>
 
-            <li class="px-3 pt-3 pb-1 text-uppercase small text-muted font-weight-bold">Hệ thống</li>
-
-             <li class="nav-item">
+            <li class="nav-item">
                 <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Users" ? "active" : "")" 
                    asp-area="Admin" asp-controller="Users" asp-action="Index">
-                    <i class="bi bi-person-badge"></i> Quản lý người dùng
+                    <i class="bi bi-person-badge"></i> Người dùng
                 </a>
             </li>
+
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#reportsSubmenu" data-bs-toggle="collapse" aria-expanded="false">
-                     <i class="bi bi-bar-chart-line-fill"></i> Báo cáo & Phân tích <i class="bi bi-chevron-down ms-auto" style="font-size: 0.8em;"></i>
+                <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" ? "active" : "")" 
+                   asp-area="Admin" asp-controller="Reports" asp-action="Index">
+                    <i class="bi bi-bar-chart-line-fill"></i> Báo cáo
                 </a>
-                <div class="collapse @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" ? "show" : "")" id="reportsSubmenu">
-                    <ul class="nav flex-column ms-3">
-                         <li class="nav-item">
-                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")" 
-                               asp-area="Admin" asp-controller="Reports" asp-action="Index">
-                                <i class="bi bi-graph-up-arrow me-2"></i> Doanh thu
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["Action"]?.ToString() == "Products" ? "active" : "")" 
-                               asp-area="Admin" asp-controller="Reports" asp-action="Products">
-                                <i class="bi bi-box-seam me-2"></i> Sản phẩm
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["Action"]?.ToString() == "Financials" ? "active" : "")" 
-                               asp-area="Admin" asp-controller="Reports" asp-action="Financials">
-                                <i class="bi bi-cash-coin me-2"></i> Tài chính
-                            </a>
-                        </li>
-                    </ul>
-                </div>
             </li>
+
             <li class="nav-item">
                 <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Settings" ? "active" : "")" 
                    asp-area="Admin" asp-controller="Settings" asp-action="Index">

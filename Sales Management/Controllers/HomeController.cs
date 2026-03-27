@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using SalesManagement.Web.ViewModels;
+using SalesManagement.Web.Models;
 using SalesManagement.BLL.Interfaces;
 using SalesManagement.Web.Models;
 using Microsoft.Extensions.Logging;
@@ -85,13 +85,13 @@ namespace SalesManagement.Web.Controllers
                 return NotFound();
             }
 
+            var relatedProducts = await _productService.GetRelatedProductsAsync(product.CategoryId, product.ProductId, 6);
+            ViewBag.RelatedProducts = relatedProducts;
+
             return View(product);
         }
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
+
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

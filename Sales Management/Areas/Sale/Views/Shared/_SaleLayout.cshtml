@@ -193,9 +193,7 @@
             <a asp-area="Sale" asp-controller="Customer" asp-action="Index" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Customer" ? "active" : "")">
                 <i class="bi bi-people"></i> Khách hàng
             </a>
-             <a asp-area="Sale" asp-controller="Invoices" asp-action="Index" class="nav-item-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Invoices" ? "active" : "")">
-                <i class="bi bi-receipt"></i> Hóa đơn
-            </a>
+
             <div class="border-top my-3"></div>
             <a asp-controller="Home" asp-action="Index" asp-area="" class="nav-item-link">
                 <i class="bi bi-arrow-left-circle"></i> Về trang chủ

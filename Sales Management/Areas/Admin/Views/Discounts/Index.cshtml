@@ -51,8 +51,7 @@
                 <thead class="bg-light">
                     <tr>
                         <th class="border-0 rounded-start-3">Mã Code</th>
-                        <th class="border-0">Loại</th>
-                        <th class="border-0">Giá trị</th>
+                        <th class="border-0">Giá trị giảm</th>
                         <th class="border-0">Thời gian</th>
                         <th class="border-0">Trạng thái</th>
                         <th class="border-0 rounded-end-3 text-end">Hành động</th>
@@ -71,29 +70,8 @@
                                     <span class="fw-bold text-dark">@item.Code</span>
                                 </div>
                             </td>
-                            <td>
-                                @if (item.DiscountType == "Percent")
-                                {
-                                    <span class="badge bg-info-subtle text-info rounded-pill">Phần trăm</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-warning-subtle text-warning rounded-pill">Tiền mặt</span>
-                                }
-                            </td>
                             <td class="fw-semibold text-primary">
-                                @if (item.DiscountType == "Percent")
-                                {
-                                    <span>@item.Value.ToString("0")%</span>
-                                    if(item.MaxDiscountAmount.HasValue)
-                                    {
-                                        <small class="text-muted d-block fw-normal" style="font-size: 0.75rem">Tối đa @item.MaxDiscountAmount?.ToString("F2") cents</small>
-                                    }
-                                }
-                                else
-                                {
-                                    <span>@item.Value.ToString("F2") cents</span>
-                                }
+                                <span>@item.Value.ToString("N0") xu</span>
                             </td>
                             <td>
                                 <div class="small">

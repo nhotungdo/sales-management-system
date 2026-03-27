@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using SalesManagement.DAL.Entities;
-using SalesManagement.Web.ViewModels;
+using SalesManagement.Web.Models;
 using SalesManagement.BLL.Interfaces;
 
 namespace SalesManagement.Web.Controllers

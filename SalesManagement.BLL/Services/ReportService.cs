@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using SalesManagement.BLL.Interfaces;
-using SalesManagement.BLL.Models;
+using SalesManagement.BLL.DTOs;
 using SalesManagement.DAL.Data;
 using System;
 using System.Collections.Generic;

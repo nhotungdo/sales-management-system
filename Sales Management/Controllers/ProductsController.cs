@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SalesManagement.BLL.Interfaces;
 using SalesManagement.DAL.Entities;
-using SalesManagement.Web.ViewModels;
+using SalesManagement.Web.Models;
 using System.Threading.Tasks;
 
 namespace SalesManagement.Web.Controllers
@@ -9,21 +9,28 @@ namespace SalesManagement.Web.Controllers
     public class ProductsController : Controller
     {
         private readonly IProductService _productService;
+        private readonly ICategoryService _categoryService;
 
-        public ProductsController(IProductService productService)
+        public ProductsController(IProductService productService, ICategoryService categoryService)
         {
             _productService = productService;
+            _categoryService = categoryService;
         }
 
         // GET: Products
-        public async Task<IActionResult> Index(string searchString, string sortOrder, int? pageNumber)
+        public async Task<IActionResult> Index(string searchString, string sortOrder, int? pageNumber, int? categoryId)
         {
+            // Normalize categoryId - if 0 or less, treat as "All"
+            if (categoryId.HasValue && categoryId.Value <= 0) categoryId = null;
+
             int pageSize = 12;
             int page = pageNumber ?? 1;
 
-            var products = await _productService.GetPagedProductsAsync(page, pageSize, searchString, sortOrder);
-            int totalProducts = await _productService.GetTotalProductCountAsync(searchString);
-            int totalPages = (int)Math.Ceiling(totalProducts / (double)pageSize);
+            var products = await _productService.GetPagedProductsAsync(page, pageSize, searchString, sortOrder, categoryId);
+            int totalProducts = await _productService.GetTotalProductCountAsync(searchString, categoryId);
+            int totalPages = (int)Math.Max(1, Math.Ceiling(totalProducts / (double)pageSize));
+
+            var categories = await _categoryService.GetAllCategoriesAsync();
 
             var viewModel = new HomeProductViewModel
             {
@@ -34,18 +41,27 @@ namespace SalesManagement.Web.Controllers
                     Name = p.Name,
                     Description = p.Description,
                     CategoryId = p.CategoryId,
-                    CategoryName = p.Category?.Name,
+                    CategoryName = p.Category?.Name ?? "General",
                     SellingPrice = p.SellingPrice,
                     CoinPrice = p.CoinPrice,
                     StockQuantity = p.StockQuantity,
                     Status = p.Status,
                     PrimaryImageUrl = p.ProductImages.FirstOrDefault(i => i.IsPrimary == true)?.ImageUrl 
                                     ?? p.ProductImages.FirstOrDefault()?.ImageUrl
+                                    ?? "/images/no-image.png"
                 }).ToList(),
                 CurrentPage = page,
                 TotalPages = totalPages,
                 SearchString = searchString,
-                SortOrder = sortOrder
+                SortOrder = sortOrder,
+                CategoryId = categoryId,
+                Categories = categories.Select(c => new CategoryViewModel
+                {
+                    CategoryId = c.CategoryId,
+                    Name = c.Name,
+                    Description = c.Description,
+                    DisplayOrder = c.DisplayOrder
+                }).ToList()
             };
 
             return View(viewModel);

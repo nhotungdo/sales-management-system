@@ -16,5 +16,6 @@ namespace SalesManagement.BLL.Interfaces
         Task<bool> DeleteProductAsync(int id);
         Task<bool> AddProductImageAsync(int productId, string imageUrl, bool isPrimary);
         Task<bool> RemoveProductImagesAsync(int productId);
+        Task<IEnumerable<Product>> GetRelatedProductsAsync(int categoryId, int currentProductId, int count);
     }
 }

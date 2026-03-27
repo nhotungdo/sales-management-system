@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SalesManagement.Web.ViewModels;
+using SalesManagement.Web.Models;
 using Microsoft.EntityFrameworkCore;
 using SalesManagement.DAL.Data;
 using System.Security.Claims;
@@ -21,11 +21,13 @@ namespace SalesManagement.Web.Controllers
     {
         private readonly IAuthService _authService;
         private readonly AppDbContext _context;
+        private readonly ICartService _cartService;
 
-        public AccountController(AppDbContext context, IAuthService authService)
+        public AccountController(AppDbContext context, IAuthService authService, ICartService cartService)
         {
             _context = context;
             _authService = authService;
+            _cartService = cartService;
         }
 
         // GET: /Account/Login
@@ -76,11 +78,15 @@ namespace SalesManagement.Web.Controllers
         }
 
         [HttpGet]
-        public IActionResult GoogleCallback(string? returnUrl = null)
+        public async Task<IActionResult> GoogleCallback(string? returnUrl = null)
         {
-            if (!User.Identity?.IsAuthenticated ?? true)
+            if (User.Identity?.IsAuthenticated ?? false)
             {
-                return RedirectToAction(nameof(Login));
+                var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (int.TryParse(userIdStr, out int userId))
+                {
+                    await MergeSessionCart(userId);
+                }
             }
 
             if (User.IsInRole("Admin"))
@@ -135,6 +141,9 @@ namespace SalesManagement.Web.Controllers
                         ? DateTimeOffset.UtcNow.AddDays(30) 
                         : DateTimeOffset.UtcNow.AddHours(10)
                 });
+
+            // Merge Session Cart
+            await MergeSessionCart(user.UserId);
 
             // Check-in cho Sales
             if (user.Role == "Sales")
@@ -226,7 +235,7 @@ namespace SalesManagement.Web.Controllers
                  CustomerLevel = customer?.CustomerLevel,
                  WalletBalance = wallet?.Balance ?? 0,
                  WalletStatus = wallet?.Status,
-                 WalletUpdatedDate = wallet?.UpdatedDate, Transactions = (wallet?.WalletTransactions ?? new List<SalesManagement.DAL.Entities.WalletTransaction>()).OrderByDescending(t => t.CreatedDate).Select(t => new SalesManagement.Web.ViewModels.WalletTransactionViewModel { TransactionCode = t.TransactionCode, Amount = t.Amount, Type = t.TransactionType, Status = t.Status, Description = t.Description, CreatedDate = t.CreatedDate ?? DateTime.Now }).ToList(),
+                 WalletUpdatedDate = wallet?.UpdatedDate, Transactions = (wallet?.WalletTransactions ?? new List<SalesManagement.DAL.Entities.WalletTransaction>()).OrderByDescending(t => t.CreatedDate).Select(t => new SalesManagement.Web.Models.WalletTransactionViewModel { TransactionCode = t.TransactionCode, Amount = t.Amount, Type = t.TransactionType, Status = t.Status, Description = t.Description, CreatedDate = t.CreatedDate ?? DateTime.Now }).ToList(),
                  Orders = customer?.Orders.OrderByDescending(o => o.OrderDate).Select(o => new OrderHistoryViewModel
                  {
                       OrderId = o.OrderId,
@@ -272,6 +281,36 @@ namespace SalesManagement.Web.Controllers
             }
 
             return RedirectToAction(nameof(Profile));
+        }
+
+        private async Task MergeSessionCart(int userId)
+        {
+            try 
+            {
+                var json = HttpContext.Session.GetString("ShoppingCart");
+                if (!string.IsNullOrEmpty(json))
+                {
+                    var sessionCart = System.Text.Json.JsonSerializer.Deserialize<List<CartItemViewModel>>(json);
+                    if (sessionCart != null && sessionCart.Any())
+                    {
+                        var dtos = sessionCart.Select(i => new SalesManagement.BLL.DTOs.CartItemDTO
+                        {
+                            ProductId = i.ProductId,
+                            Quantity = i.Quantity,
+                            Name = i.Name,
+                            ImageUrl = i.ImageUrl,
+                            Price = i.Price
+                        }).ToList();
+                        await _cartService.MergeCartAsync(userId, dtos);
+                        HttpContext.Session.Remove("ShoppingCart");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error if needed, but don't break login flow
+                Console.WriteLine($"Error merging cart: {ex.Message}");
+            }
         }
     }
 }

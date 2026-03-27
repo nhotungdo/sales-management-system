@@ -1,0 +1,155 @@
+@using SalesManagement.DAL.Entities
+@{
+    ViewData["Title"] = "Xu Tích Lũy (Rewards)";
+    decimal totalCoins = ViewBag.TotalCoins ?? 0;
+    var transactions = ViewBag.Transactions as IEnumerable<WalletTransaction> ?? Enumerable.Empty<WalletTransaction>();
+
+    // Pagination
+    int pageSize = 10;
+    int page = int.TryParse(Context.Request.Query["page"], out var p) && p > 0 ? p : 1;
+    var paged = transactions.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+    int totalPages = (int)Math.Ceiling(transactions.Count() / (double)pageSize);
+}
+
+@section Styles {
+<style>
+    .coin-hero {
+        background: linear-gradient(135deg, #f59e0b 0%, #f97316 50%, #ef4444 100%);
+        border-radius: 20px;
+        padding: 2.5rem 2rem;
+        color: white;
+        box-shadow: 0 8px 32px rgba(245, 158, 11, 0.35);
+        position: relative;
+        overflow: hidden;
+    }
+    .coin-hero::before {
+        content: "🪙";
+        position: absolute;
+        font-size: 8rem;
+        right: -10px;
+        top: -10px;
+        opacity: 0.15;
+    }
+    .coin-amount {
+        font-size: 3.5rem;
+        font-weight: 800;
+        letter-spacing: -1px;
+    }
+    .transaction-row-earn { border-left: 4px solid #22c55e; }
+    .transaction-row-use  { border-left: 4px solid #f97316; }
+    .badge-earn { background: #dcfce7; color: #166534; }
+    .badge-use  { background: #fef3c7; color: #92400e; }
+    .tbl-coin thead th { background: #0f172a; color: #fff; }
+</style>
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+            <li class="breadcrumb-item active">🎁 Xu Tích Lũy</li>
+        </ol>
+    </nav>
+
+    <h1 class="fw-bold mb-4">🎁 Xu Tích Lũy (Rewards)</h1>
+
+    <!-- Coin Hero Card -->
+    <div class="coin-hero mb-4">
+        <div class="text-warning-emphasis fw-semibold mb-1 opacity-90">Tổng xu hiện có</div>
+        <div class="coin-amount">@totalCoins.ToString("N0") <span style="font-size:1.5rem">xu</span></div>
+        <div class="mt-2 opacity-75 small">
+            <i class="bi bi-info-circle me-1"></i>
+            1% giá trị mỗi đơn hàng sẽ được quy đổi thành xu. Dùng xu để giảm giá khi thanh toán.
+        </div>
+    </div>
+
+    <!-- Lịch sử giao dịch -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">
+                <i class="bi bi-clock-history me-2 text-primary"></i>Lịch sử giao dịch xu
+            </h5>
+
+            @if (!paged.Any())
+            {
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-inbox fs-1"></i>
+                    <p class="mt-2">Chưa có giao dịch xu nào.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table tbl-coin align-middle mb-0 rounded-3 overflow-hidden">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Ngày</th>
+                                <th>Loại</th>
+                                <th>Số xu</th>
+                                <th>Mô tả</th>
+                                <th>Mã GD</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ int stt = (page - 1) * pageSize + 1; }
+                            @foreach (var tx in paged)
+                            {
+                                bool isEarn = tx.TransactionType == "CoinEarned";
+                                <tr class="@(isEarn ? "transaction-row-earn" : "transaction-row-use")">
+                                    <td class="text-muted">@(stt++)</td>
+                                    <td>@tx.CreatedDate?.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        @if (isEarn)
+                                        {
+                                            <span class="badge badge-earn rounded-pill px-3 py-2">
+                                                <i class="bi bi-plus-circle me-1"></i>Cộng xu
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-use rounded-pill px-3 py-2">
+                                                <i class="bi bi-dash-circle me-1"></i>Dùng xu
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="fw-bold @(isEarn ? "text-success" : "text-warning")">
+                                        @(isEarn ? "+" : "")@tx.Amount.ToString("N0") xu
+                                    </td>
+                                    <td>@tx.Description</td>
+                                    <td><code class="small">@tx.TransactionCode</code></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                @if (totalPages > 1)
+                {
+                    <nav class="mt-3 d-flex justify-content-center">
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item @(page <= 1 ? "disabled" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-page="@(page - 1)">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                            @for (int i = 1; i <= totalPages; i++)
+                            {
+                                <li class="page-item @(i == page ? "active" : "")">
+                                    <a class="page-link" asp-action="Index" asp-route-page="@i">@i</a>
+                                </li>
+                            }
+                            <li class="page-item @(page >= totalPages ? "disabled" : "")">
+                                <a class="page-link" asp-action="Index" asp-route-page="@(page + 1)">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+            }
+        </div>
+    </div>
+</div>

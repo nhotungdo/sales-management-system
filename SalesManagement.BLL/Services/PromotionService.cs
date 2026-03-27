@@ -87,5 +87,33 @@ namespace SalesManagement.BLL.Services
             await _promotionRepository.SaveAsync();
             return true;
         }
+
+        public async Task<(bool Success, string Message, decimal DiscountAmount)> ValidatePromotionAsync(string code, decimal orderValue)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+                return (false, "Vui lòng nhập mã giảm giá.", 0);
+
+            var all = await _promotionRepository.GetAllAsync();
+            var promo = all.FirstOrDefault(p => p.Code.Equals(code, StringComparison.OrdinalIgnoreCase) && p.Status == "Active");
+
+            if (promo == null)
+                return (false, "Mã giảm giá không tồn tại hoặc đã bị vô hiệu hóa.", 0);
+
+            if (promo.StartDate.HasValue && promo.StartDate > DateTime.Now)
+                return (false, "Chương trình khuyến mãi chưa bắt đầu.", 0);
+
+            if (promo.EndDate.HasValue && promo.EndDate < DateTime.Now)
+                return (false, "Mã giảm giá đã hết hạn.", 0);
+
+            if (orderValue < (promo.MinOrderValue ?? 0))
+                return (false, $"Đơn hàng tối thiểu {(promo.MinOrderValue ?? 0):N0} xu mới được áp dụng mã này.", 0);
+
+            decimal discount = promo.Value;
+
+            // Đảm bảo giảm giá không vượt quá giá trị đơn hàng
+            discount = Math.Min(discount, orderValue);
+
+            return (true, $"Áp dụng thành công mã '{promo.Code}'.", discount);
+        }
     }
 }

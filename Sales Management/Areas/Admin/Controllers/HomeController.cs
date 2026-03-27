@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SalesManagement.Web.Areas.Admin.ViewModels;
+using SalesManagement.Web.Areas.Admin.Models;
 using System.Threading.Tasks;
 using SalesManagement.BLL.Interfaces;
 using SalesManagement.DAL.Entities;

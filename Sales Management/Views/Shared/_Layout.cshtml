@@ -45,18 +45,10 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Trang chủ</a>
                         </li>
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            @if (User.IsInRole("Sales") || User.IsInRole("Admin") || User.IsInRole("Customer"))
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-area="" asp-controller="Products" asp-action="Index">Sản phẩm</a>
-                                </li>
-                            }
-                        }
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Riêng tư</a>
+                            <a class="nav-link" asp-area="" asp-controller="Products" asp-action="Index">Sản phẩm</a>
                         </li>
+
                     </ul>
                     <ul class="navbar-nav align-items-center gap-2">
                         @if (User.Identity?.IsAuthenticated == true)
@@ -86,13 +78,19 @@
                                         <li><a class="dropdown-item" asp-area="Sale" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-speedometer2 me-2"></i> Quản trị</a></li>
                                     }
                                     @if (!User.IsInRole("Admin") && !User.IsInRole("Sales"))
-                                    {
-                                        <li><a class="dropdown-item" asp-area="" asp-controller="Wallet" asp-action="Index"><i class="bi bi-wallet2 me-2"></i> Ví của tôi</a></li>
+                                     {
+                                         <li><a class="dropdown-item" asp-area="" asp-controller="Wallet" asp-action="Index"><i class="bi bi-wallet2 me-2"></i> Ví của tôi</a></li>
 
-                                        <li><a class="dropdown-item" asp-area="" asp-controller="Cart" asp-action="Index"><i class="bi bi-cart3 me-2"></i> Giỏ hàng của tôi</a></li>
+                                         <li><a class="dropdown-item" asp-area="" asp-controller="Cart" asp-action="Index"><i class="bi bi-cart3 me-2"></i> Giỏ hàng của tôi</a></li>
 
-                                        <li><a class="dropdown-item" asp-area="" asp-controller="Orders" asp-action="MyOrders"><i class="bi bi-bag-check me-2"></i> Đơn hàng của tôi</a></li>
-                                    }
+                                         <li><a class="dropdown-item" asp-area="" asp-controller="Orders" asp-action="MyOrders"><i class="bi bi-bag-check me-2"></i> Đơn hàng của tôi</a></li>
+
+                                         <li><a class="dropdown-item" asp-area="" asp-controller="Coin" asp-action="Index"><i class="bi bi-coin me-2 text-warning"></i> Xu tích lũy 🪙</a></li>
+                                     }
+                                    @if (User.IsInRole("Admin") || User.IsInRole("Sales"))
+                                     {
+                                         <li><a class="dropdown-item" asp-area="" asp-controller="Attendance" asp-action="Index"><i class="bi bi-clock-history me-2"></i> Báo cáo chấm công</a></li>
+                                     }
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">

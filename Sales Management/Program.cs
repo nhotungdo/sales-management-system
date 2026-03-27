@@ -39,6 +39,7 @@ builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 
 // 3. Dependency Injection: Services (BLL)
 builder.Services.AddScoped<IProductService, ProductService>();
@@ -53,12 +54,14 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<ISettingService, SettingService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IVipPackageService, VipPackageService>();
+
 builder.Services.AddScoped<IWalletService, WalletService>();
 builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+builder.Services.AddScoped<IAttendanceService, AttendanceService>();
+builder.Services.AddScoped<ICartService, CartService>();
 
 // Authentication & Session Configuration
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -210,5 +213,65 @@ app.MapHub<SystemHub>("/systemHub");
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// Seed default admin account from appsettings.json on first run
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    try 
+    {
+        // Tự động thêm cột CoinBalance nếu chưa tồn tại (Fix lỗi SqlException)
+        await context.Database.ExecuteSqlRawAsync(@"
+            IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Wallets') AND name = 'CoinBalance')
+            BEGIN
+                ALTER TABLE Wallets ADD CoinBalance DECIMAL(18, 2) NOT NULL DEFAULT 0;
+            END
+        ");
+        
+        // Cập nhật CHECK constraint cho WalletTransactions nếu cần
+        await context.Database.ExecuteSqlRawAsync(@"
+            IF EXISTS (SELECT * FROM sys.check_constraints WHERE name = 'CK__WalletTra__Trans__5DCAEF64')
+            BEGIN
+                ALTER TABLE WalletTransactions DROP CONSTRAINT CK__WalletTra__Trans__5DCAEF64;
+                ALTER TABLE WalletTransactions ADD CONSTRAINT CK__WalletTra__Trans__5DCAEF64 
+                CHECK (TransactionType IN ('Deposit', 'Withdrawal', 'Payment', 'Refund', 'Adjustment', 'CoinEarned', 'CoinUsed'));
+            END
+        ");
+
+        // Tự động tạo bảng Carts và CartItems nếu chưa có
+        await context.Database.ExecuteSqlRawAsync(@"
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Carts')
+            BEGIN
+                CREATE TABLE Carts (
+                    CartId INT PRIMARY KEY IDENTITY(1,1),
+                    UserId INT NOT NULL,
+                    CreatedDate DATETIME DEFAULT GETDATE(),
+                    UpdatedDate DATETIME DEFAULT GETDATE(),
+                    CONSTRAINT FK_Carts_Users FOREIGN KEY (UserId) REFERENCES Users(UserId) ON DELETE CASCADE
+                );
+            END
+
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'CartItems')
+            BEGIN
+                CREATE TABLE CartItems (
+                    CartItemId INT PRIMARY KEY IDENTITY(1,1),
+                    CartId INT NOT NULL,
+                    ProductId INT NOT NULL,
+                    Quantity INT NOT NULL,
+                    CONSTRAINT FK_CartItems_Carts FOREIGN KEY (CartId) REFERENCES Carts(CartId) ON DELETE CASCADE,
+                    CONSTRAINT FK_CartItems_Products FOREIGN KEY (ProductId) REFERENCES Products(ProductId)
+                );
+            END
+        ");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error updating schema: {ex.Message}");
+    }
+}
+
+await SalesManagement.Web.Extensions.AdminSeeder.SeedDefaultAdminAsync(
+    app.Services,
+    builder.Configuration);
 
 app.Run();

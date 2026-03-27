@@ -50,7 +50,7 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<SystemSetting> SystemSettings { get; set; }
 
-    public virtual DbSet<VipPackage> VipPackages { get; set; }
+
 
     public virtual DbSet<Shift> Shifts { get; set; }
 
@@ -61,6 +61,8 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<EmployeeSalaryComponent> EmployeeSalaryComponents { get; set; }
 
     public virtual DbSet<ConversionAuditLog> ConversionAuditLogs { get; set; }
+    public virtual DbSet<Cart> Carts { get; set; }
+    public virtual DbSet<CartItem> CartItems { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -367,6 +369,9 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Balance)
                 .HasDefaultValue(0m)
                 .HasColumnType("decimal(15, 2)");
+            entity.Property(e => e.CoinBalance)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(15, 2)");
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
                 .HasDefaultValue("Active");
@@ -467,6 +472,25 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.VndAmount).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.CentsAmount).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.ConversionRate).HasColumnType("decimal(18, 4)");
+        });
+
+        modelBuilder.Entity<Cart>(entity =>
+        {
+            entity.HasKey(e => e.CartId);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.UpdatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.HasOne(d => d.User).WithMany().HasForeignKey(d => d.UserId);
+        });
+
+        modelBuilder.Entity<CartItem>(entity =>
+        {
+            entity.HasKey(e => e.CartItemId);
+            entity.HasOne(d => d.Cart).WithMany(p => p.CartItems).HasForeignKey(d => d.CartId);
+            entity.HasOne(d => d.Product).WithMany().HasForeignKey(d => d.ProductId);
         });
 
         OnModelCreatingPartial(modelBuilder);

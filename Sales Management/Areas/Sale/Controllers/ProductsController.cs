@@ -12,18 +12,20 @@ namespace SalesManagement.Web.Areas.Sale.Controllers
     {
         private readonly IProductService _productService;
         private readonly ICategoryService _categoryService;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public ProductsController(IProductService productService, ICategoryService categoryService)
+        public ProductsController(IProductService productService, ICategoryService categoryService, IWebHostEnvironment webHostEnvironment)
         {
             _productService = productService;
             _categoryService = categoryService;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         // GET: Sale/Products
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? categoryId, string? searchString)
         {
-            var products = await _productService.GetPagedProductsAsync(1, 1000, null, null);
-            return View(products.Where(p => p.Status != "Deleted"));
+            var products = await _productService.GetPagedProductsAsync(1, 1000, searchString, null, categoryId);
+            return View(products);
         }
 
         // GET: Sale/Products/Create
@@ -50,7 +52,7 @@ namespace SalesManagement.Web.Areas.Sale.Controllers
                 {
                     if (imageFile != null && imageFile.Length > 0)
                     {
-                        var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
+                        var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products");
                         if (!Directory.Exists(uploadPath)) Directory.CreateDirectory(uploadPath);
 
                         var fileName = Guid.NewGuid() + Path.GetExtension(imageFile.FileName);
@@ -61,7 +63,7 @@ namespace SalesManagement.Web.Areas.Sale.Controllers
                             await imageFile.CopyToAsync(stream);
                         }
 
-                        await _productService.AddProductImageAsync(product.ProductId, "/images/" + fileName, true);
+                        await _productService.AddProductImageAsync(product.ProductId, "/images/products/" + fileName, true);
                     }
                     return RedirectToAction("Index", "Home", new { area = "Sale" });
                 }
@@ -102,7 +104,19 @@ namespace SalesManagement.Web.Areas.Sale.Controllers
                 {
                     if (imageFile != null && imageFile.Length > 0)
                     {
-                        var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
+                        // 1. Get current images to delete physical file
+                        var currentProduct = await _productService.GetProductByIdAsync(id);
+                        if (currentProduct != null)
+                        {
+                            foreach (var oldImage in currentProduct.ProductImages)
+                            {
+                                var oldFilePath = Path.Combine(_webHostEnvironment.WebRootPath, oldImage.ImageUrl.TrimStart('/'));
+                                if (System.IO.File.Exists(oldFilePath)) System.IO.File.Delete(oldFilePath);
+                            }
+                        }
+
+                        // 2. Save new file
+                        var uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "images", "products");
                         if (!Directory.Exists(uploadPath)) Directory.CreateDirectory(uploadPath);
 
                         var fileName = Guid.NewGuid() + Path.GetExtension(imageFile.FileName);
@@ -113,8 +127,9 @@ namespace SalesManagement.Web.Areas.Sale.Controllers
                             await imageFile.CopyToAsync(stream);
                         }
 
+                        // 3. Update database: Clear and set new primary image
                         await _productService.RemoveProductImagesAsync(id);
-                        await _productService.AddProductImageAsync(id, "/images/" + fileName, true);
+                        await _productService.AddProductImageAsync(id, "/images/products/" + fileName, true);
                     }
                     return RedirectToAction("Index", "Home", new { area = "Sale" });
                 }

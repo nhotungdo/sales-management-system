@@ -1,4 +1,4 @@
-using SalesManagement.BLL.Models;
+using SalesManagement.BLL.DTOs;
 using System.Threading.Tasks;
 
 namespace SalesManagement.BLL.Interfaces

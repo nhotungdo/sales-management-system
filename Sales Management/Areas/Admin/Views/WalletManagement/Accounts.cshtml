@@ -41,7 +41,8 @@
                         <tr>
                             <th class="ps-3 py-3">Khách hàng</th>
                             <th class="py-3">Thông tin liên hệ</th>
-                            <th class="py-3 text-end">Số dư Coin</th>
+                            <th class="py-3 text-end">Số dư Ví</th>
+                            <th class="py-3 text-end">Xu tích lũy</th>
                             <th class="py-3 text-center">Trạng thái</th>
                             <th class="py-3 text-end pe-3">Thao tác</th>
                         </tr>
@@ -58,8 +59,11 @@
                                     <div class="small"><i class="bi bi-envelope me-1"></i> @item.Customer?.Email</div>
                                     <div class="small text-muted"><i class="bi bi-telephone me-1"></i> @item.Customer?.PhoneNumber</div>
                                 </td>
-                                <td class="text-end fw-bold fs-5 text-primary">
-                                    @item.Balance?.ToString("N0")
+                                <td class="text-end fw-bold">
+                                    @((item.Balance ?? 0).ToString("N0")) <small class="text-muted">đ</small>
+                                </td>
+                                <td class="text-end fw-bold text-primary">
+                                    @item.CoinBalance.ToString("N0") <small class="text-muted">xu</small>
                                 </td>
                                 <td class="text-center">
                                     @if (item.Status == "Active")

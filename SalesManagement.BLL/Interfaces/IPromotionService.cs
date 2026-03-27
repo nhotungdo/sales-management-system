@@ -11,5 +11,6 @@ namespace SalesManagement.BLL.Interfaces
         Task<bool> AddPromotionAsync(Promotion promotion);
         Task<bool> UpdatePromotionAsync(Promotion promotion);
         Task<bool> DeletePromotionAsync(int id);
+        Task<(bool Success, string Message, decimal DiscountAmount)> ValidatePromotionAsync(string code, decimal orderValue);
     }
 }

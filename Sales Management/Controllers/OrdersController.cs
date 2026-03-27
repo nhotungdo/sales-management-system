@@ -82,5 +82,22 @@ namespace SalesManagement.Web.Controllers
 
             return RedirectToAction(nameof(Details), new { id = id });
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Manager")]
+        public async Task<IActionResult> Refund(int id)
+        {
+            var success = await _orderService.RefundOrderAsync(id);
+            if (success)
+            {
+                TempData["Success"] = "Đơn hàng đã được hoàn tiền và hủy thành công.";
+            }
+            else
+            {
+                TempData["Error"] = "Không thể hoàn tiền cho đơn hàng này. (Có thể đơn đã bị hủy hoặc không tồn tại)";
+            }
+            return RedirectToAction(nameof(Details), new { id = id });
+        }
     }
 }

@@ -47,20 +47,21 @@ namespace SalesManagement.BLL.Services
                 .AsNoTracking()
                 .Include(p => p.Category)
                 .Include(p => p.ProductImages)
-                .Where(p => p.Status != "Deleted");
+                // Filter out deleted products, handling potential NULL status in database
+                .Where(p => p.Status == null || p.Status != "Deleted");
 
-            if (categoryId.HasValue)
+            if (categoryId.HasValue && categoryId.Value > 0)
             {
                 var categoryIds = await GetCategoryWithDescendantsAsync(categoryId.Value);
                 query = query.Where(p => categoryIds.Contains(p.CategoryId));
             }
 
-            if (!string.IsNullOrEmpty(searchString))
+            if (!string.IsNullOrWhiteSpace(searchString))
             {
-                searchString = searchString.ToLower();
-                query = query.Where(p => p.Name.ToLower().Contains(searchString) || 
-                                       (p.Description != null && p.Description.ToLower().Contains(searchString)) ||
-                                       p.Code.ToLower().Contains(searchString));
+                string search = searchString.Trim().ToLower();
+                query = query.Where(p => p.Name.ToLower().Contains(search) || 
+                                       (p.Description != null && p.Description.ToLower().Contains(search)) ||
+                                       p.Code.ToLower().Contains(search));
             }
 
             query = sortOrder switch
@@ -74,7 +75,7 @@ namespace SalesManagement.BLL.Services
             };
 
             return await query
-                .Skip((pageNumber - 1) * pageSize)
+                .Skip((Math.Max(1, pageNumber) - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
         }
@@ -82,20 +83,20 @@ namespace SalesManagement.BLL.Services
         public async Task<int> GetTotalProductCountAsync(string searchString, int? categoryId = null)
         {
             var query = _productRepository.GetQueryable()
-                .Where(p => p.Status != "Deleted");
+                .Where(p => p.Status == null || p.Status != "Deleted");
 
-            if (categoryId.HasValue)
+            if (categoryId.HasValue && categoryId.Value > 0)
             {
                 var categoryIds = await GetCategoryWithDescendantsAsync(categoryId.Value);
                 query = query.Where(p => categoryIds.Contains(p.CategoryId));
             }
 
-            if (!string.IsNullOrEmpty(searchString))
+            if (!string.IsNullOrWhiteSpace(searchString))
             {
-                searchString = searchString.ToLower();
-                query = query.Where(p => p.Name.ToLower().Contains(searchString) || 
-                                       (p.Description != null && p.Description.ToLower().Contains(searchString)) ||
-                                       p.Code.ToLower().Contains(searchString));
+                string search = searchString.Trim().ToLower();
+                query = query.Where(p => p.Name.ToLower().Contains(search) || 
+                                       (p.Description != null && p.Description.ToLower().Contains(search)) ||
+                                       p.Code.ToLower().Contains(search));
             }
 
             return await query.CountAsync();
@@ -179,6 +180,17 @@ namespace SalesManagement.BLL.Services
             foreach (var img in images) _imageRepository.Delete(img);
             await _imageRepository.SaveAsync();
             return true;
+        }
+
+        public async Task<IEnumerable<Product>> GetRelatedProductsAsync(int categoryId, int currentProductId, int count)
+        {
+            return await _productRepository.GetQueryable()
+                .AsNoTracking()
+                .Include(p => p.ProductImages)
+                .Where(p => p.CategoryId == categoryId && p.ProductId != currentProductId && (p.Status == "Active" || p.Status == null))
+                .OrderByDescending(p => p.CreatedDate)
+                .Take(count)
+                .ToListAsync();
         }
 
         private async Task<List<int>> GetCategoryWithDescendantsAsync(int parentId)

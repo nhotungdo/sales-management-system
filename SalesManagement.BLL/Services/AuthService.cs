@@ -24,7 +24,10 @@ namespace SalesManagement.BLL.Services
 
         public async Task<User?> ValidateUser(string username, string password)
         {
-            var user = await _userRepository.GetByUsernameAsync(username);
+            // Support login by username OR email
+            var user = await _userRepository.GetByUsernameAsync(username)
+                    ?? await _userRepository.GetByEmailAsync(username);
+
             if (user == null || !user.IsActive) return null;
 
             bool isValid = false;

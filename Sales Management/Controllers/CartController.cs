@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SalesManagement.BLL.Interfaces;
-using SalesManagement.Web.ViewModels;
+using SalesManagement.Web.Models;
 using System.Security.Claims;
 using System.Text.Json;
 
@@ -12,18 +12,39 @@ namespace SalesManagement.Web.Controllers
         private const string CartSessionKey = "ShoppingCart";
         private readonly IProductService _productService;
         private readonly IOrderService _orderService;
+        private readonly IPromotionService _promotionService;
+        private readonly ICartService _cartService;
 
-        public CartController(IProductService productService, IOrderService orderService)
+        public CartController(IProductService productService, IOrderService orderService, IPromotionService promotionService, ICartService cartService)
         {
             _productService = productService;
             _orderService = orderService;
+            _promotionService = promotionService;
+            _cartService = cartService;
         }
 
         // ──────────────────────────────────────────────
         // Helpers
         // ──────────────────────────────────────────────
-        private List<CartItemViewModel> GetCart()
+        private async Task<List<CartItemViewModel>> GetCartItemsAsync()
         {
+            if (User.Identity?.IsAuthenticated ?? false)
+            {
+                var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (int.TryParse(userIdStr, out int userId))
+                {
+                    var items = await _cartService.GetCartByUserIdAsync(userId);
+                    return items.Select(i => new CartItemViewModel
+                    {
+                        ProductId = i.ProductId,
+                        Name = i.Name,
+                        ImageUrl = i.ImageUrl,
+                        Price = i.Price,
+                        Quantity = i.Quantity
+                    }).ToList();
+                }
+            }
+
             var json = HttpContext.Session.GetString(CartSessionKey);
             return string.IsNullOrEmpty(json)
                 ? new List<CartItemViewModel>()
@@ -32,15 +53,22 @@ namespace SalesManagement.Web.Controllers
 
         private void SaveCart(List<CartItemViewModel> cart)
         {
+            // Only used for guests. Authenticated users save directly to DB via service.
             HttpContext.Session.SetString(CartSessionKey, JsonSerializer.Serialize(cart));
         }
 
         // ──────────────────────────────────────────────
         // GET: /Cart/Index
         // ──────────────────────────────────────────────
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var cart = GetCart();
+            var cart = await GetCartItemsAsync();
+            var promotions = await _promotionService.GetAllPromotionsAsync("Active", null);
+            var now = DateTime.Now;
+            ViewBag.ActivePromotions = promotions.Where(p => 
+                (p.StartDate == null || p.StartDate <= now) && 
+                (p.EndDate == null || p.EndDate >= now)).ToList();
+
             return View(cart);
         }
 
@@ -50,10 +78,6 @@ namespace SalesManagement.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> AddToCart(int productId, int quantity = 1)
         {
-            // Chưa đăng nhập → trả JSON để client tự redirect
-            if (!(User.Identity?.IsAuthenticated ?? false))
-                return Json(new { success = false, requireLogin = true });
-
             if (quantity < 1) quantity = 1;
 
             var product = await _productService.GetProductByIdAsync(productId);
@@ -63,15 +87,30 @@ namespace SalesManagement.Web.Controllers
             if (product.Status != "Active")
                 return Json(new { success = false, message = "Sản phẩm không còn bán." });
 
-            var cart = GetCart();
-            var existing = cart.FirstOrDefault(c => c.ProductId == productId);
-
-            if (existing != null)
+            if (User.Identity?.IsAuthenticated ?? false)
             {
-                var newQty = existing.Quantity + quantity;
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+                
+                // Stock check before adding to DB
+                var existing = await _cartService.GetCartItemAsync(userId, productId);
+                if ((existing?.Quantity ?? 0) + quantity > product.StockQuantity)
+                    return Json(new { success = false, message = $"Chỉ còn {product.StockQuantity} sản phẩm trong kho." });
+
+                await _cartService.AddToCartAsync(userId, productId, quantity);
+                int count = await _cartService.GetCartCountAsync(userId);
+                return Json(new { success = true, message = "Đã thêm vào giỏ hàng!", cartCount = count });
+            }
+
+            // GUEST FLOW
+            var cart = await GetCartItemsAsync();
+            var guestExisting = cart.FirstOrDefault(c => c.ProductId == productId);
+
+            if (guestExisting != null)
+            {
+                var newQty = guestExisting.Quantity + quantity;
                 if (newQty > product.StockQuantity)
                     return Json(new { success = false, message = $"Chỉ còn {product.StockQuantity} sản phẩm trong kho." });
-                existing.Quantity = newQty;
+                guestExisting.Quantity = newQty;
             }
             else
             {
@@ -87,7 +126,7 @@ namespace SalesManagement.Web.Controllers
                     ProductId = product.ProductId,
                     Name = product.Name,
                     ImageUrl = primaryImg,
-                    Price = product.CoinPrice ?? 0,
+                    Price = product.SellingPrice,
                     Quantity = quantity
                 });
             }
@@ -101,12 +140,19 @@ namespace SalesManagement.Web.Controllers
         // POST: /Cart/Remove
         // ──────────────────────────────────────────────
         [HttpPost]
-        [Authorize]
-        public IActionResult Remove(int productId)
+        public async Task<IActionResult> Remove(int productId)
         {
-            var cart = GetCart();
-            cart.RemoveAll(c => c.ProductId == productId);
-            SaveCart(cart);
+            if (User.Identity?.IsAuthenticated ?? false)
+            {
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+                await _cartService.RemoveFromCartAsync(userId, productId);
+            }
+            else
+            {
+                var cart = await GetCartItemsAsync();
+                cart.RemoveAll(c => c.ProductId == productId);
+                SaveCart(cart);
+            }
             return RedirectToAction(nameof(Index));
         }
 
@@ -114,51 +160,82 @@ namespace SalesManagement.Web.Controllers
         // POST: /Cart/UpdateQuantity  (AJAX)
         // ──────────────────────────────────────────────
         [HttpPost]
-        [Authorize]
-        public IActionResult UpdateQuantity(int productId, int quantity)
+        public async Task<IActionResult> UpdateQuantity(int productId, int quantity)
         {
             if (quantity < 1)
                 return Json(new { success = false, message = "Số lượng không hợp lệ." });
 
-            var cart = GetCart();
-            var item = cart.FirstOrDefault(c => c.ProductId == productId);
-            if (item == null)
+            if (User.Identity?.IsAuthenticated ?? false)
+            {
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+                await _cartService.UpdateQuantityAsync(userId, productId, quantity);
+                
+                var items = await _cartService.GetCartByUserIdAsync(userId);
+                var item = items.FirstOrDefault(i => i.ProductId == productId);
+                decimal cartTotal = items.Sum(i => i.Total);
+                
+                return Json(new { 
+                    success = true, 
+                    newItemTotal = (item?.Total ?? 0).ToString("N0"), 
+                    cartTotal = cartTotal.ToString("N0") 
+                });
+            }
+
+            var cart = await GetCartItemsAsync();
+            var guestItem = cart.FirstOrDefault(c => c.ProductId == productId);
+            if (guestItem == null)
                 return Json(new { success = false, message = "Không tìm thấy sản phẩm trong giỏ." });
 
-            item.Quantity = quantity;
+            guestItem.Quantity = quantity;
             SaveCart(cart);
 
-            decimal newTotal = item.Price * item.Quantity;
-            decimal cartTotal = cart.Sum(c => c.Price * c.Quantity);
-            return Json(new { success = true, newItemTotal = newTotal.ToString("N0"), cartTotal = cartTotal.ToString("N0") });
+            decimal newTotal = guestItem.Price * guestItem.Quantity;
+            decimal total = cart.Sum(c => c.Price * c.Quantity);
+            return Json(new { success = true, newItemTotal = newTotal.ToString("N0"), cartTotal = total.ToString("N0") });
         }
 
-        // ──────────────────────────────────────────────
-        // POST: /Cart/CheckoutAll  — mua tất cả trong giỏ
-        // ──────────────────────────────────────────────
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CheckoutAll()
+        public async Task<IActionResult> CheckoutAll(List<int> selectedProductIds, bool usePoints = false, string? promoCode = null)
         {
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userIdString == null) return Unauthorized();
             int userId = int.Parse(userIdString);
 
-            var cart = GetCart();
-            if (!cart.Any())
+            var fullCart = await GetCartItemsAsync();
+            if (selectedProductIds == null || !selectedProductIds.Any())
             {
-                TempData["Error"] = "Giỏ hàng trống. Vui lòng thêm sản phẩm trước khi thanh toán.";
+                TempData["Error"] = "Vui lòng chọn ít nhất 1 sản phẩm để thanh toán.";
                 return RedirectToAction(nameof(Index));
             }
 
-            var items = cart.Select(c => (c.ProductId, c.Quantity)).ToList();
-            var result = await _orderService.CheckoutCartAsync(userId, items);
+            var selectedItems = fullCart.Where(c => selectedProductIds.Contains(c.ProductId)).ToList();
+            if (!selectedItems.Any())
+            {
+                TempData["Error"] = "Sản phẩm chọn mua không còn trong giỏ hàng.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var itemsToCheckout = selectedItems.Select(c => (c.ProductId, c.Quantity)).ToList();
+            var result = await _orderService.CheckoutCartAsync(userId, itemsToCheckout, usePoints, promoCode);
 
             if (result.Success)
             {
-                // Xóa giỏ sau khi thanh toán thành công
-                HttpContext.Session.Remove(CartSessionKey);
+                // Chỉ xóa những sản phẩm đã được thanh toán thành công khỏi giỏ hàng
+                if (User.Identity?.IsAuthenticated ?? false)
+                {
+                    foreach (var id in selectedProductIds)
+                    {
+                        await _cartService.RemoveFromCartAsync(userId, id);
+                    }
+                }
+                else
+                {
+                    var updatedCart = fullCart.Where(c => !selectedProductIds.Contains(c.ProductId)).ToList();
+                    SaveCart(updatedCart);
+                }
+
                 TempData["Success"] = result.Message;
                 return RedirectToAction("MyOrders", "Orders");
             }
@@ -173,11 +250,34 @@ namespace SalesManagement.Web.Controllers
         // GET: /Cart/Count  (AJAX — đếm số item)
         // ──────────────────────────────────────────────
         [HttpGet]
-        [Authorize]
-        public IActionResult Count()
+        public async Task<IActionResult> Count()
         {
-            var cart = GetCart();
+            if (User.Identity?.IsAuthenticated ?? false)
+            {
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+                int count = await _cartService.GetCartCountAsync(userId);
+                return Json(new { count = count });
+            }
+            var cart = await GetCartItemsAsync();
             return Json(new { count = cart.Sum(c => c.Quantity) });
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> ValidatePromo(string code, List<int> selectedProductIds)
+        {
+            var cart = await GetCartItemsAsync();
+            var selectedItems = cart.Where(c => selectedProductIds != null && selectedProductIds.Contains(c.ProductId)).ToList();
+            
+            decimal totalOrderAmount = selectedItems.Sum(c => c.Price * c.Quantity);
+            
+            var result = await _promotionService.ValidatePromotionAsync(code, totalOrderAmount);
+            return Json(new { 
+                success = result.Success, 
+                message = result.Message, 
+                discountAmount = result.DiscountAmount,
+                discountAmountDisplay = result.DiscountAmount.ToString("N0")
+            });
         }
     }
 }
