@@ -16,6 +16,14 @@ public partial class AppDbContext : DbContext
     {
     }
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseSqlServer("Server=NHOTUNG\\SQLEXPRESS;Database=SalesManagement;User Id=sa;Password=123;TrustServerCertificate=True;");
+        }
+    }
+
     public virtual DbSet<Category> Categories { get; set; }
 
     public virtual DbSet<Customer> Customers { get; set; }
@@ -64,6 +72,9 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<Cart> Carts { get; set; }
     public virtual DbSet<CartItem> CartItems { get; set; }
 
+    public virtual DbSet<Wishlist> Wishlists { get; set; }
+    public virtual DbSet<ProductReview> ProductReviews { get; set; }
+    public virtual DbSet<Notification> Notifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

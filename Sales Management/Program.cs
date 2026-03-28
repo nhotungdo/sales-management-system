@@ -62,7 +62,9 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 builder.Services.AddScoped<ICartService, CartService>();
-
+builder.Services.AddScoped<IWishlistService, WishlistService>();
+builder.Services.AddScoped<IProductReviewService, ProductReviewService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 // Authentication & Session Configuration
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -193,7 +195,12 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+var provider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+provider.Mappings[".webp"] = "image/webp";
+app.UseStaticFiles(new StaticFileOptions
+{
+    ContentTypeProvider = provider
+});
 app.UseRouting();
 
 app.UseAuthentication();
@@ -260,6 +267,47 @@ using (var scope = app.Services.CreateScope())
                     Quantity INT NOT NULL,
                     CONSTRAINT FK_CartItems_Carts FOREIGN KEY (CartId) REFERENCES Carts(CartId) ON DELETE CASCADE,
                     CONSTRAINT FK_CartItems_Products FOREIGN KEY (ProductId) REFERENCES Products(ProductId)
+                );
+            END
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Wishlists')
+            BEGIN
+                CREATE TABLE Wishlists (
+                    WishlistId INT PRIMARY KEY IDENTITY(1,1),
+                    UserId INT NOT NULL,
+                    ProductId INT NOT NULL,
+                    CreatedDate DATETIME NOT NULL DEFAULT GETDATE(),
+                    CONSTRAINT FK_Wishlists_Users FOREIGN KEY (UserId) REFERENCES Users(UserId) ON DELETE CASCADE,
+                    CONSTRAINT FK_Wishlists_Products FOREIGN KEY (ProductId) REFERENCES Products(ProductId) ON DELETE CASCADE
+                );
+            END
+
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ProductReviews')
+            BEGIN
+                CREATE TABLE ProductReviews (
+                    ReviewId INT PRIMARY KEY IDENTITY(1,1),
+                    ProductId INT NOT NULL,
+                    UserId INT NOT NULL,
+                    Rating INT NOT NULL CHECK(Rating >= 1 AND Rating <= 5),
+                    Comment NVARCHAR(1000) NULL,
+                    CreatedDate DATETIME NOT NULL DEFAULT GETDATE(),
+                    IsVerifiedPurchase BIT NOT NULL DEFAULT 0,
+                    CONSTRAINT FK_ProductReviews_Products FOREIGN KEY (ProductId) REFERENCES Products(ProductId) ON DELETE CASCADE,
+                    CONSTRAINT FK_ProductReviews_Users FOREIGN KEY (UserId) REFERENCES Users(UserId)
+                );
+            END
+
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Notifications')
+            BEGIN
+                CREATE TABLE Notifications (
+                    NotificationId INT PRIMARY KEY IDENTITY(1,1),
+                    UserId INT NULL,
+                    Title NVARCHAR(200) NOT NULL,
+                    Message NVARCHAR(MAX) NOT NULL,
+                    IsRead BIT NOT NULL DEFAULT 0,
+                    CreatedDate DATETIME NOT NULL DEFAULT GETDATE(),
+                    NotificationType NVARCHAR(50) NULL,
+                    ActionUrl NVARCHAR(255) NULL,
+                    CONSTRAINT FK_Notifications_Users FOREIGN KEY (UserId) REFERENCES Users(UserId) ON DELETE CASCADE
                 );
             END
         ");
